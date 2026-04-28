@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Impact RPG: The Full Story</title>
+    <style>
+        :root { 
+            --boy: #00d2ff; --girl: #ff007f; --accent: #f1c40f; 
+            --bg: #0a0b16; --card-bg: rgba(25, 28, 45, 0.9);
+            --event: #ff9f43; --heal: #2ecc71; --miss: #3498db; --info: #00ffcc;
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: radial-gradient(circle at center, #1a1c2c 0%, var(--bg) 100%);
+            color: white; display: flex; flex-direction: column; align-items: center; 
+            height: 100vh; margin: 0; overflow: hidden; position: fixed; width: 100%;
+        }
+
+        /* Overlays */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(15px);
+        }
+        .modal {
+            text-align: center; padding: 30px; border-radius: 40px; width: 85%; max-width: 500px;
+            border: 5px solid white; box-shadow: 0 0 50px rgba(255,255,255,0.2);
+        }
+
+        /* Selection Screen with Info */
+        #selection-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .job-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 900px; }
+        
+        .job-card { 
+            background: var(--card-bg); border: 2px solid #333; padding: 15px; border-radius: 20px; 
+            cursor: pointer; transition: 0.2s; display: flex; flex-direction: column;
+        }
+        .job-card:active { transform: scale(0.95); border-color: var(--accent); }
+        .job-card h3 { color: var(--accent); text-align: center; margin: 0 0 10px 0; font-size: 1.3rem; letter-spacing: 1px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        
+        .job-info { font-size: 0.8rem; color: #ddd; line-height: 1.5; margin: 0; padding: 0; list-style: none; }
+        .job-info li { margin-bottom: 4px; padding-left: 15px; position: relative; }
+        .job-info li::before { content: '◈'; position: absolute; left: 0; color: var(--info); }
+        .job-info b { color: var(--info); }
+
+        /* Arena Layout */
+        .arena { display: none; width: 100%; height: 100%; padding: 10px; justify-content: space-around; align-items: center; gap: 10px; }
+        .card { width: 48%; background: var(--card-bg); border: 2px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 15px; position: relative; height: 95%; display: flex; flex-direction: column; }
+        
+        .hp-container { width: 100%; height: 35px; background: rgba(0,0,0,0.6); border-radius: 10px; border: 2px solid rgba(255,255,255,0.2); overflow: hidden; position: relative; margin-bottom: 8px; }
+        .hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4d4d, #f9ca24); transition: 0.4s ease; position: absolute; }
+        .hp-text { position: absolute; width: 100%; height: 100%; z-index: 10; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; text-shadow: 0 2px 4px #000; }
+        
+        .en-row { display: flex; gap: 4px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap; }
+        .en-dot { width: 12px; height: 12px; border-radius: 50%; background: #1a1c2c; border: 1px solid #333; }
+        .en-dot.active { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-grow: 1; }
+        button { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 5px; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: manipulation; }
+        button:active:not(:disabled) { background: rgba(255,255,255,0.2); transform: scale(0.96); }
+        button:disabled { opacity: 0.15; }
+        
+        .sk-name { font-weight: 800; font-size: 0.8rem; text-transform: uppercase; }
+        .sk-val { font-size: 0.7rem; font-weight: bold; color: #ff7675; }
+        .sk-desc { font-size: 0.6rem; color: #aaa; text-align: center; font-style: italic; }
+        .btn-ult { grid-column: span 2; background: linear-gradient(45deg, #4834d4, #686de0); }
+
+        .dmg-float { position: absolute; font-weight: 900; pointer-events: none; z-index: 100; animation: pop 0.8s ease-out forwards; left: 35%; top: 30%; }
+        @keyframes pop { 0% { opacity: 0; transform: translateY(0) scale(0.6); } 30% { opacity: 1; transform: translateY(-30px) scale(1); } 100% { opacity: 0; transform: translateY(-80px); } }
+        
+        @media (max-width: 768px) { 
+            .arena { flex-direction: column; } .card { width: 95%; height: 48%; } 
+            .job-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body scroll="no">
+
+    <!-- Win & Event Overlays -->
+    <div id="win-overlay" class="overlay"><div class="modal" id="win-modal"><h1 id="win-title" style="font-size: 3rem;">WINNER</h1><p id="win-job"></p><button onclick="location.reload()" style="min-height: 60px; width: 100%; font-size: 1.3rem; background: white; color: black; font-weight: 900; border-radius: 50px; margin-top:20px;">REMATCH</button></div></div>
+    <div id="event-overlay" class="overlay"><div class="modal" style="border-color: var(--event);"><h2 style="color: var(--event); font-size: 2rem;">10% CHAOS EVENT!</h2><h3 id="ev-name"></h3><p id="ev-desc" style="color: #ccc;"></p><button onclick="closeEvent()" style="min-height: 50px; width: 100%; background: var(--event); color: black; font-weight: 900; border-radius: 15px; margin-top:15px;">OK</button></div></div>
+
+    <!-- Selection Screen -->
+    <div id="selection-screen">
+        <h1 style="color:var(--accent); font-size: 2rem; margin-bottom: 5px;">CHRONO ARENA</h1>
+        <h2 id="turn-title" style="margin-bottom: 20px; font-size: 1.1rem; color: var(--boy);">BOY: CHOOSE YOUR DESTINY</h2>
+        <div class="job-grid">
+            <div class="job-card" onclick="pick('Warrior')">
+                <h3>WARRIOR</h3>
+                <ul class="job-info">
+                    <li>Health: <b>150 HP</b> (High)</li>
+                    <li>Passive: <b>Counter-EN</b> (Gain 1 EN when hit)</li>
+                    <li>Playstyle: Defensive tank with stun control.</li>
+                </ul>
+            </div>
+            <div class="job-card" onclick="pick('Mage')">
+                <h3>MAGE</h3>
+                <ul class="job-info">
+                    <li>Health: <b>90 HP</b> (Low)</li>
+                    <li>Passive: <b>Mana Flow</b> (+3 EN per Meditate)</li>
+                    <li>Playstyle: Glass cannon. Huge elemental burst.</li>
+                </ul>
+            </div>
+            <div class="job-card" onclick="pick('Berserker')">
+                <h3>BERSERKER</h3>
+                <ul class="job-info">
+                    <li>Passive: <b>Bloodlust</b> (30% Crit & Lifesteal)</li>
+                    <li>Downside: <b>No Guard</b> (Cannot use Shield)</li>
+                    <li>Playstyle: High risk, high sustain. Aggressive.</li>
+                </ul>
+            </div>
+            <div class="job-card" onclick="pick('Archer')">
+                <h3>ARCHER</h3>
+                <ul class="job-info">
+                    <li>Passive: <b>Agility</b> (80% Dodge on Evasion)</li>
+                    <li>Passive: <b>Multi-Shot</b> (75% Double Volley)</li>
+                    <li>Playstyle: Evasive specialist. Fast & Nimble.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Arena Screen -->
+    <div class="arena" id="arena">
+        <div id="card-boy" class="card">
+            <h2 style="color:var(--boy); text-align:center; margin: 5px 0;">BOY</h2>
+            <div class="hp-container"><div id="bar-boy" class="hp-fill"></div><div class="hp-text" id="txt-boy">0/0</div></div>
+            <div id="en-boy" class="en-row"></div>
+            <div class="btn-grid" id="btns-boy"></div>
+        </div>
+        <div id="card-girl" class="card">
+            <h2 style="color:var(--girl); text-align:center; margin: 5px 0;">GIRL</h2>
+            <div class="hp-container"><div id="bar-girl" class="hp-fill"></div><div class="hp-text" id="txt-girl">0/0</div></div>
+            <div id="en-girl" class="en-row"></div>
+            <div class="btn-grid" id="btns-girl"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectingPlayer = 'boy';
+        let isGameOver = false;
+
+        const data = {
+            boy: { hp: 0, maxHp: 0, en: 0, job: '', def: 0, stunned: false, isGuarding: false, isDodging: false },
+            girl: { hp: 0, maxHp: 0, en: 0, job: '', def: 0, stunned: false, isGuarding: false, isDodging: false }
+        };
+
+        const jobData = {
+            Warrior: { hp: 150, def: 0.3, skills: [
+                { name: "Strike", cost: 0, dmg: [7, 11], desc: "Basic Slash" },
+                { name: "Charge", cost: 0, type: 'charge', val: 2, desc: "+2 Energy" },
+                { name: "Slam", cost: 3, dmg: [15, 20], effect: 'stun', chance: 0.4, desc: "40% STUN" },
+                { name: "Guard", cost: 1, type: 'def', duration: 2500, desc: "Defend Mode" },
+                { name: "Fix", cost: 2, type: 'heal', val: [20, 35], desc: "Heal HP" },
+                { name: "Earthquake", cost: 9, dmg: [65, 85], type: 'ult', desc: "Final Slam" }
+            ]},
+            Mage: { hp: 90, def: 0, skills: [
+                { name: "Bolt", cost: 0, dmg: [8, 13], desc: "Magic spark" },
+                { name: "Meditate", cost: 0, type: 'charge', val: 3, desc: "+3 Energy" },
+                { name: "Burn", cost: 3, dmg: [18, 26], effect: 'burn', val: 3, desc: "Drain Enemy EN" },
+                { name: "Shield", cost: 2, type: 'def', duration: 3500, desc: "Magic Wall" },
+                { name: "Drain", cost: 2, type: 'heal', val: [15, 30], desc: "Life Tap" },
+                { name: "Meteor", cost: 9, dmg: [90, 120], type: 'ult', desc: "Star Fall" }
+            ]},
+            Berserker: { hp: 120, def: 0.1, skills: [
+                { name: "Slash", cost: 0, dmg: [12, 17], desc: "Heavy Blade" },
+                { name: "Lust", cost: 0, type: 'charge', val: 2, desc: "+2 Energy" },
+                { name: "Frenzy", cost: 3, dmg: [24, 34], effect: 'leech', val: 0.6, desc: "Lifesteal" },
+                { name: "LOCKED", cost: 0, type: 'disabled', desc: "No Shield" },
+                { name: "Boil", cost: 1, type: 'heal', val: [12, 22], desc: "Pain Relief" },
+                { name: "Judgment", cost: 9, dmg: [85, 115], type: 'ult', desc: "Rage Finish" }
+            ]},
+            Archer: { hp: 105, def: 0.15, skills: [
+                { name: "Shot", cost: 0, dmg: [9, 12], desc: "Arrow Shot" },
+                { name: "Reload", cost: 0, type: 'charge', val: 2, desc: "+2 Energy" },
+                { name: "Volley", cost: 3, dmg: [11, 16], effect: 'double', chance: 0.75, desc: "75% Double Shot" },
+                { name: "Evasion", cost: 1, type: 'dodge', duration: 2500, desc: "80% DODGE" },
+                { name: "Herbs", cost: 1, type: 'heal', val: [15, 22], desc: "Wild Herbs" },
+                { name: "Rain Arrow", cost: 9, dmg: [75, 100], type: 'ult', desc: "Sky Pierce" }
+            ]}
+        };
+
+        function pick(j) {
+            data[selectingPlayer].job = j; data[selectingPlayer].maxHp = jobData[j].hp; data[selectingPlayer].hp = jobData[j].hp; data[selectingPlayer].def = jobData[j].def;
+            if(selectingPlayer === 'boy') { 
+                selectingPlayer = 'girl'; 
+                document.getElementById('turn-title').innerText = "GIRL: CHOOSE YOUR DESTINY"; 
+                document.getElementById('turn-title').style.color = "var(--girl)"; 
+            } else { 
+                document.getElementById('selection-screen').style.display = 'none'; 
+                document.getElementById('arena').style.display = 'flex'; 
+                initButtons(); updateUI(); 
+            }
+        }
+
+        function act(p, idx) {
+            if(isGameOver || data[p].stunned) return;
+            const sk = jobData[data[p].job].skills[idx];
+            const opp = p === 'boy' ? 'girl' : 'boy';
+            if(data[p].en < sk.cost) return;
+            data[p].en -= sk.cost;
+
+            if(sk.type === 'charge') data[p].en = Math.min(10, data[p].en + sk.val);
+            else if(sk.type === 'heal') { let h = Math.floor(Math.random()*(sk.val[1]-sk.val[0]+1))+sk.val[0]; data[p].hp = Math.min(data[p].maxHp, data[p].hp + h); pop(p, `+${h}`, "color:var(--heal);"); } 
+            else if(sk.type === 'def') { data[p].isGuarding = true; setTimeout(() => { data[p].isGuarding = false; updateUI(); }, sk.duration); }
+            else if(sk.type === 'dodge') { data[p].isDodging = true; setTimeout(() => { data[p].isDodging = false; updateUI(); }, sk.duration); }
+            else {
+                let d = Math.floor(Math.random()*(sk.dmg[1]-sk.dmg[0]+1))+sk.dmg[0];
+                let crit = Math.random() < (data[p].job==='Berserker'?0.3:0.12);
+                if(crit) d *= 2;
+                let final = Math.max(1, Math.floor(d * (1 - (data[opp].isGuarding?0.75:data[opp].def))));
+                data[opp].hp = Math.max(0, data[opp].hp - final); pop(opp, `-${final}${crit?'!':''}`, `color:#ff4d4d; font-size:${crit?'4rem':'3rem'};`);
+                if(sk.effect === 'leech') data[p].hp = Math.min(data[p].maxHp, data[p].hp + Math.floor(final*sk.val));
+                if(sk.effect === 'stun' && Math.random() < sk.chance) { data[opp].stunned = true; setTimeout(()=> {data[opp].stunned=false; updateUI();}, 2000); }
+                if(sk.effect === 'burn') data[opp].en = Math.max(0, data[opp].en - sk.val);
+                if(data[opp].job === 'Warrior') data[opp].en = Math.min(10, data[opp].en + 1);
+            }
+            updateUI(); if(!checkWin() && Math.random() < 0.1) triggerEvent();
+        }
+
+        function triggerEvent() {
+            const evs = [
+                { n: "SOLAR FLARE", d: "It's getting hot! Both players take 25 Damage.", f: () => { data.boy.hp -= 25; data.girl.hp -= 25; } },
+                { n: "MANA STORM", d: "Energy is in the air! Both gain 5 Energy.", f: () => { data.boy.en += 5; data.girl.en += 5; } },
+                { n: "EMERGENCY HEAL", d: "Healing drones arrive! Both recover 30 HP.", f: () => { data.boy.hp += 30; data.girl.hp += 30; } }
+            ];
+            const ev = evs[Math.floor(Math.random()*evs.length)];
+            document.getElementById('ev-name').innerText = ev.n;
+            document.getElementById('ev-desc').innerText = ev.d;
+            ev.f(); document.getElementById('event-overlay').style.display = 'flex';
+        }
+
+        function closeEvent() { 
+            document.getElementById('event-overlay').style.display = 'none'; 
+            ['boy','girl'].forEach(p => { 
+                data[p].hp = Math.max(0, Math.min(data[p].maxHp, data[p].hp)); 
+                data[p].en = Math.max(0, Math.min(10, data[p].en)); 
+            });
+            updateUI(); checkWin(); 
+        }
+
+        function initButtons() {
+            ['boy', 'girl'].forEach(p => {
+                const c = document.getElementById(`btns-${p}`); c.innerHTML = '';
+                jobData[data[p].job].skills.forEach((sk, i) => {
+                    const b = document.createElement('button');
+                    if(sk.type === 'ult') b.className = 'btn-ult';
+                    b.innerHTML = `<div class="sk-name">${sk.name} ${sk.cost>0?'('+sk.cost+')':''}</div><div class="sk-val">${sk.dmg?sk.dmg[0]+'-'+sk.dmg[1]:''}</div><div class="sk-desc">${sk.desc}</div>`;
+                    if(sk.type === 'disabled') b.disabled = true; else b.onclick = () => act(p, i);
+                    c.appendChild(b);
+                });
+            });
+        }
+
+        function updateUI() {
+            ['boy','girl'].forEach(p => {
+                const s = data[p];
+                document.getElementById(`txt-${p}`).innerText = `${Math.floor(s.hp)}/${s.maxHp}`;
+                document.getElementById(`bar-${p}`).style.width = (s.hp/s.maxHp*100) + "%";
+                const g = document.getElementById(`en-${p}`); g.innerHTML = '';
+                for(let i=0; i<10; i++) {
+                    const d = document.createElement('div'); d.className = `en-dot ${i < s.en ? 'active' : ''}`; g.appendChild(d);
+                }
+                document.querySelectorAll(`#btns-${p} button`).forEach((b, i) => {
+                    b.disabled = (s.en < jobData[s.job].skills[i].cost || s.stunned);
+                });
+            });
+        }
+
+        function pop(t, m, s) {
+            const p = document.createElement('div'); p.className = 'dmg-float'; p.innerText = m; p.style = s;
+            document.getElementById(`card-${t}`).appendChild(p);
+            setTimeout(() => p.remove(), 800);
+        }
+
+        function checkWin() {
+            if(isGameOver) return true;
+            let w = (data.boy.hp <= 0) ? 'girl' : (data.girl.hp <= 0 ? 'boy' : null);
+            if(w) {
+                isGameOver = true;
+                document.getElementById('win-title').innerText = `${w.toUpperCase()} WINS`;
+                document.getElementById('win-job').innerText = `WITH ${data[w].job.toUpperCase()} CLASS`;
+                document.getElementById('win-overlay').style.display = 'flex';
+                return true;
+            }
+            return false;
+        }
+        document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Impact RPG: The Full Story</title>
+    <style>
+        :root { 
+            --boy: #00d2ff; --girl: #ff007f; --accent: #f1c40f; 
+            --bg: #0a0b16; --card-bg: rgba(25, 28, 45, 0.9);
+            --event: #ff9f43; --heal: #2ecc71; --miss: #3498db; --info: #00ffcc;
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: radial-gradient(circle at center, #1a1c2c 0%, var(--bg) 100%);
+            color: white; display: flex; flex-direction: column; align-items: center; 
+            height: 100vh; margin: 0; overflow: hidden; position: fixed; width: 100%;
+        }
+
+        /* Overlays */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(15px);
+        }
+        .modal {
+            text-align: center; padding: 30px; border-radius: 40px; width: 85%; max-width: 500px;
+            border: 5px solid white; box-shadow: 0 0 50px rgba(255,255,255,0.2);
+        }
+
+        /* Selection Screen with Info */
+        #selection-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .job-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 900px; }
+        
+        .job-card { 
+            background: var(--card-bg); border: 2px solid #333; padding: 15px; border-radius: 20px; 
+            cursor: pointer; transition: 0.2s; display: flex; flex-direction: column;
+        }
+        .job-card:active { transform: scale(0.95); border-color: var(--accent); }
+        .job-card h3 { color: var(--accent); text-align: center; margin: 0 0 10px 0; font-size: 1.3rem; letter-spacing: 1px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        
+        .job-info { font-size: 0.8rem; color: #ddd; line-height: 1.5; margin: 0; padding: 0; list-style: none; }
+        .job-info li { margin-bottom: 4px; padding-left: 15px; position: relative; }
+        .job-info li::before { content: '◈'; position: absolute; left: 0; color: var(--info); }
+        .job-info b { color: var(--info); }
+
+        /* Arena Layout */
+        .arena { display: none; width: 100%; height: 100%; padding: 10px; justify-content: space-around; align-items: center; gap: 10px; }
+        .card { width: 48%; background: var(--card-bg); border: 2px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 15px; position: relative; height: 95%; display: flex; flex-direction: column; }
+        
+        .hp-container { width: 100%; height: 35px; background: rgba(0,0,0,0.6); border-radius: 10px; border: 2px solid rgba(255,255,255,0.2); overflow: hidden; position: relative; margin-bottom: 8px; }
+        .hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4d4d, #f9ca24); transition: 0.4s ease; position: absolute; }
+        .hp-text { position: absolute; width: 100%; height: 100%; z-index: 10; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; text-shadow: 0 2px 4px #000; }
+        
+        .en-row { display: flex; gap: 4px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap; }
+        .en-dot { width: 12px; height: 12px; border-radius: 50%; background: #1a1c2c; border: 1px solid #333; }
+        .en-dot.active { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-grow: 1; }
+        button { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 5px; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: manipulation; }
+        button:active:not(:disabled) { background: rgba(255,255,255,0.2); transform: scale(0.96); }
+        button:disabled { opacity: 0.15; }
+        
+        .sk-name { font-weight: 800; font-size: 0.8rem; text-transform: uppercase; }
+        .sk-val { font-size: 0.7rem; font-weight: bold; color: #ff7675; }
+        .sk-desc { font-size: 0.6rem; color: #aaa; text-align: center; font-style: italic; }
+        .btn-ult { grid-column: span 2; background: linear-gradient(45deg, #4834d4, #686de0); }
+
+        .dmg-float { position: absolute; font-weight: 900; pointer-events: none; z-index: 100; animation: pop 0.8s ease-out forwards; left: 35%; top: 30%; }
+        @keyframes pop { 0% { opacity: 0; transform: translateY(0) scale(0.6); } 30% { opacity: 1; transform: translateY(-30px) scale(1); } 100% { opacity: 0; transform: translateY(-80px); } }
+        
+        @media (max-width: 768px) { 
+            .arena { flex-direction: column; } .card { width: 95%; height: 48%; } 
+            .job-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body scroll="no">
+
+    <!-- Win & Event Overlays -->
+    <div id="win-overlay" class="overlay"><div class="modal" id="win-modal"><h1 id="win-title" style="font-size: 3rem;">WINNER</h1><p id="win-job"></p><button onclick="location.reload()" style="min-height: 60px; width: 100%; font-size: 1.3rem; background: white; color: black; font-weight: 900; border-radius: 50px; margin-top:20px;">REMATCH</button></div></div>
+    <div id="event-overlay" class="overlay"><div class="modal" style="border-color: var(--event);"><h2 style="color: var(--event); font-size: 2rem;">10% CHAOS EVENT!</h2><h3 id="ev-name"></h3><p id="ev-desc" style="color: #ccc;"></p><button onclick="closeEvent()" style="min-height: 50px; width: 100%; background: var(--event); color: black; font-weight: 900; border-radius: 15px; margin-top:15px;">OK</button></div></div>
+
+    <!-- Selection Screen -->
+    <div id="selection-screen">
+        <h1 style="color:var(--accent); font-size: 2rem; margin-bottom: 5px;">CHRONO ARENA</h1>
+        <h2 id="turn-title" style="margin-bottom: 20px; font-size: 1.1rem; color: var(--boy);">BOY: CHOOSE YOUR DESTINY</h2>
+        <div class="job-grid">
+            <div class="job-card" onclick="pick('Warrior')">
+                <h3>WARRIOR</h3>
+                <ul class="job-info">
+                    <li>Health: <b>150 HP</b> (High)</li>
+                    <li>Passive: <b>Counter-EN</b> (Gain 1 EN when hit)</li>
+                    <li>Playstyle: Defensive tank with stun control.</li>
+                </ul>
+            </div>
+            <div class="job-card" onclick="pick('Mage')">
+                <h3>MAGE</h3>
+                <ul class="job-info">
+                    <li>Health: <b>90 HP</b> (Low)</li>
+                    <li>Passive: <b>Mana Flow</b> (+3 EN per Meditate)</li>
+                    <li>Playstyle: Glass cannon. Huge elemental burst.</li>
+                </ul>
+            </div>
+            <div class="job-card" onclick="pick('Berserker')">
+                <h3>BERSERKER</h3>
+                <ul class="job-info">
+                    <li>Passive: <b>Bloodlust</b> (30% Crit & Lifesteal)</li>
+                    <li>Downside: <b>No Guard</b> (Cannot use Shield)</li>
+                    <li>Playstyle: High risk, high sustain. Aggressive.</li>
+                </ul>
+            </div>
+            <div class="job-card" onclick="pick('Archer')">
+                <h3>ARCHER</h3>
+                <ul class="job-info">
+                    <li>Passive: <b>Agility</b> (80% Dodge on Evasion)</li>
+                    <li>Passive: <b>Multi-Shot</b> (75% Double Volley)</li>
+                    <li>Playstyle: Evasive specialist. Fast & Nimble.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Arena Screen -->
+    <div class="arena" id="arena">
+        <div id="card-boy" class="card">
+            <h2 style="color:var(--boy); text-align:center; margin: 5px 0;">BOY</h2>
+            <div class="hp-container"><div id="bar-boy" class="hp-fill"></div><div class="hp-text" id="txt-boy">0/0</div></div>
+            <div id="en-boy" class="en-row"></div>
+            <div class="btn-grid" id="btns-boy"></div>
+        </div>
+        <div id="card-girl" class="card">
+            <h2 style="color:var(--girl); text-align:center; margin: 5px 0;">GIRL</h2>
+            <div class="hp-container"><div id="bar-girl" class="hp-fill"></div><div class="hp-text" id="txt-girl">0/0</div></div>
+            <div id="en-girl" class="en-row"></div>
+            <div class="btn-grid" id="btns-girl"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectingPlayer = 'boy';
+        let isGameOver = false;
+
+        const data = {
+            boy: { hp: 0, maxHp: 0, en: 0, job: '', def: 0, stunned: false, isGuarding: false, isDodging: false },
+            girl: { hp: 0, maxHp: 0, en: 0, job: '', def: 0, stunned: false, isGuarding: false, isDodging: false }
+        };
+
+        const jobData = {
+            Warrior: { hp: 150, def: 0.3, skills: [
+                { name: "Strike", cost: 0, dmg: [7, 11], desc: "Basic Slash" },
+                { name: "Charge", cost: 0, type: 'charge', val: 2, desc: "+2 Energy" },
+                { name: "Slam", cost: 3, dmg: [15, 20], effect: 'stun', chance: 0.4, desc: "40% STUN" },
+                { name: "Guard", cost: 1, type: 'def', duration: 2500, desc: "Defend Mode" },
+                { name: "Fix", cost: 2, type: 'heal', val: [20, 35], desc: "Heal HP" },
+                { name: "Earthquake", cost: 9, dmg: [65, 85], type: 'ult', desc: "Final Slam" }
+            ]},
+            Mage: { hp: 90, def: 0, skills: [
+                { name: "Bolt", cost: 0, dmg: [8, 13], desc: "Magic spark" },
+                { name: "Meditate", cost: 0, type: 'charge', val: 3, desc: "+3 Energy" },
+                { name: "Burn", cost: 3, dmg: [18, 26], effect: 'burn', val: 3, desc: "Drain Enemy EN" },
+                { name: "Shield", cost: 2, type: 'def', duration: 3500, desc: "Magic Wall" },
+                { name: "Drain", cost: 2, type: 'heal', val: [15, 30], desc: "Life Tap" },
+                { name: "Meteor", cost: 9, dmg: [90, 120], type: 'ult', desc: "Star Fall" }
+            ]},
+            Berserker: { hp: 120, def: 0.1, skills: [
+                { name: "Slash", cost: 0, dmg: [12, 17], desc: "Heavy Blade" },
+                { name: "Lust", cost: 0, type: 'charge', val: 2, desc: "+2 Energy" },
+                { name: "Frenzy", cost: 3, dmg: [24, 34], effect: 'leech', val: 0.6, desc: "Lifesteal" },
+                { name: "LOCKED", cost: 0, type: 'disabled', desc: "No Shield" },
+                { name: "Boil", cost: 1, type: 'heal', val: [12, 22], desc: "Pain Relief" },
+                { name: "Judgment", cost: 9, dmg: [85, 115], type: 'ult', desc: "Rage Finish" }
+            ]},
+            Archer: { hp: 105, def: 0.15, skills: [
+                { name: "Shot", cost: 0, dmg: [9, 12], desc: "Arrow Shot" },
+                { name: "Reload", cost: 0, type: 'charge', val: 2, desc: "+2 Energy" },
+                { name: "Volley", cost: 3, dmg: [11, 16], effect: 'double', chance: 0.75, desc: "75% Double Shot" },
+                { name: "Evasion", cost: 1, type: 'dodge', duration: 2500, desc: "80% DODGE" },
+                { name: "Herbs", cost: 1, type: 'heal', val: [15, 22], desc: "Wild Herbs" },
+                { name: "Rain Arrow", cost: 9, dmg: [75, 100], type: 'ult', desc: "Sky Pierce" }
+            ]}
+        };
+
+        function pick(j) {
+            data[selectingPlayer].job = j; data[selectingPlayer].maxHp = jobData[j].hp; data[selectingPlayer].hp = jobData[j].hp; data[selectingPlayer].def = jobData[j].def;
+            if(selectingPlayer === 'boy') { 
+                selectingPlayer = 'girl'; 
+                document.getElementById('turn-title').innerText = "GIRL: CHOOSE YOUR DESTINY"; 
+                document.getElementById('turn-title').style.color = "var(--girl)"; 
+            } else { 
+                document.getElementById('selection-screen').style.display = 'none'; 
+                document.getElementById('arena').style.display = 'flex'; 
+                initButtons(); updateUI(); 
+            }
+        }
+
+        function act(p, idx) {
+            if(isGameOver || data[p].stunned) return;
+            const sk = jobData[data[p].job].skills[idx];
+            const opp = p === 'boy' ? 'girl' : 'boy';
+            if(data[p].en < sk.cost) return;
+            data[p].en -= sk.cost;
+
+            if(sk.type === 'charge') data[p].en = Math.min(10, data[p].en + sk.val);
+            else if(sk.type === 'heal') { let h = Math.floor(Math.random()*(sk.val[1]-sk.val[0]+1))+sk.val[0]; data[p].hp = Math.min(data[p].maxHp, data[p].hp + h); pop(p, `+${h}`, "color:var(--heal);"); } 
+            else if(sk.type === 'def') { data[p].isGuarding = true; setTimeout(() => { data[p].isGuarding = false; updateUI(); }, sk.duration); }
+            else if(sk.type === 'dodge') { data[p].isDodging = true; setTimeout(() => { data[p].isDodging = false; updateUI(); }, sk.duration); }
+            else {
+                let d = Math.floor(Math.random()*(sk.dmg[1]-sk.dmg[0]+1))+sk.dmg[0];
+                let crit = Math.random() < (data[p].job==='Berserker'?0.3:0.12);
+                if(crit) d *= 2;
+                let final = Math.max(1, Math.floor(d * (1 - (data[opp].isGuarding?0.75:data[opp].def))));
+                data[opp].hp = Math.max(0, data[opp].hp - final); pop(opp, `-${final}${crit?'!':''}`, `color:#ff4d4d; font-size:${crit?'4rem':'3rem'};`);
+                if(sk.effect === 'leech') data[p].hp = Math.min(data[p].maxHp, data[p].hp + Math.floor(final*sk.val));
+                if(sk.effect === 'stun' && Math.random() < sk.chance) { data[opp].stunned = true; setTimeout(()=> {data[opp].stunned=false; updateUI();}, 2000); }
+                if(sk.effect === 'burn') data[opp].en = Math.max(0, data[opp].en - sk.val);
+                if(data[opp].job === 'Warrior') data[opp].en = Math.min(10, data[opp].en + 1);
+            }
+            updateUI(); if(!checkWin() && Math.random() < 0.1) triggerEvent();
+        }
+
+        function triggerEvent() {
+            const evs = [
+                { n: "SOLAR FLARE", d: "It's getting hot! Both players take 25 Damage.", f: () => { data.boy.hp -= 25; data.girl.hp -= 25; } },
+                { n: "MANA STORM", d: "Energy is in the air! Both gain 5 Energy.", f: () => { data.boy.en += 5; data.girl.en += 5; } },
+                { n: "EMERGENCY HEAL", d: "Healing drones arrive! Both recover 30 HP.", f: () => { data.boy.hp += 30; data.girl.hp += 30; } }
+            ];
+            const ev = evs[Math.floor(Math.random()*evs.length)];
+            document.getElementById('ev-name').innerText = ev.n;
+            document.getElementById('ev-desc').innerText = ev.d;
+            ev.f(); document.getElementById('event-overlay').style.display = 'flex';
+        }
+
+        function closeEvent() { 
+            document.getElementById('event-overlay').style.display = 'none'; 
+            ['boy','girl'].forEach(p => { 
+                data[p].hp = Math.max(0, Math.min(data[p].maxHp, data[p].hp)); 
+                data[p].en = Math.max(0, Math.min(10, data[p].en)); 
+            });
+            updateUI(); checkWin(); 
+        }
+
+        function initButtons() {
+            ['boy', 'girl'].forEach(p => {
+                const c = document.getElementById(`btns-${p}`); c.innerHTML = '';
+                jobData[data[p].job].skills.forEach((sk, i) => {
+                    const b = document.createElement('button');
+                    if(sk.type === 'ult') b.className = 'btn-ult';
+                    b.innerHTML = `<div class="sk-name">${sk.name} ${sk.cost>0?'('+sk.cost+')':''}</div><div class="sk-val">${sk.dmg?sk.dmg[0]+'-'+sk.dmg[1]:''}</div><div class="sk-desc">${sk.desc}</div>`;
+                    if(sk.type === 'disabled') b.disabled = true; else b.onclick = () => act(p, i);
+                    c.appendChild(b);
+                });
+            });
+        }
+
+        function updateUI() {
+            ['boy','girl'].forEach(p => {
+                const s = data[p];
+                document.getElementById(`txt-${p}`).innerText = `${Math.floor(s.hp)}/${s.maxHp}`;
+                document.getElementById(`bar-${p}`).style.width = (s.hp/s.maxHp*100) + "%";
+                const g = document.getElementById(`en-${p}`); g.innerHTML = '';
+                for(let i=0; i<10; i++) {
+                    const d = document.createElement('div'); d.className = `en-dot ${i < s.en ? 'active' : ''}`; g.appendChild(d);
+                }
+                document.querySelectorAll(`#btns-${p} button`).forEach((b, i) => {
+                    b.disabled = (s.en < jobData[s.job].skills[i].cost || s.stunned);
+                });
+            });
+        }
+
+        function pop(t, m, s) {
+            const p = document.createElement('div'); p.className = 'dmg-float'; p.innerText = m; p.style = s;
+            document.getElementById(`card-${t}`).appendChild(p);
+            setTimeout(() => p.remove(), 800);
+        }
+
+        function checkWin() {
+            if(isGameOver) return true;
+            let w = (data.boy.hp <= 0) ? 'girl' : (data.girl.hp <= 0 ? 'boy' : null);
+            if(w) {
+                isGameOver = true;
+                document.getElementById('win-title').innerText = `${w.toUpperCase()} WINS`;
+                document.getElementById('win-job').innerText = `WITH ${data[w].job.toUpperCase()} CLASS`;
+                document.getElementById('win-overlay').style.display = 'flex';
+                return true;
+            }
+            return false;
+        }
+        document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    </script>
+</body>
+</html>
