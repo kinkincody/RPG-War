@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Chrono Arena RPG</title>
+    <style>
+        :root { 
+            --boy: #00d2ff; --girl: #ff007f; --accent: #f1c40f; 
+            --bg: #0a0b16; --card-bg: rgba(25, 28, 45, 0.95);
+            --event: #ff9f43; --heal: #2ecc71; --info: #00ffcc; --dmg: #ff4d4d;
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg); color: white; margin: 0; padding: 0;
+            height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+
+        #selection-screen { 
+            position: absolute; inset: 0; background: var(--bg); z-index: 1000; 
+            display: flex; flex-direction: column; align-items: center; padding: 20px;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+        }
+        .job-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; padding-bottom: 40px; }
+        
+        .job-card { background: var(--card-bg); border: 2px solid #444; padding: 18px; border-radius: 20px; text-align: left; }
+        .job-card h3 { color: var(--accent); margin: 0 0 10px 0; font-size: 1.4rem; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        .job-stats { font-size: 0.85rem; color: var(--info); margin-bottom: 10px; font-weight: bold; text-align: center; }
+        .job-desc { font-size: 0.8rem; color: #bbb; line-height: 1.4; margin: 0; padding-left: 15px; }
+
+        .arena { display: none; width: 100%; height: 100%; padding: 15px; gap: 10px; }
+        .card { flex: 1; background: var(--card-bg); border-radius: 25px; padding: 12px; display: flex; flex-direction: column; position: relative; border: 1px solid #333; }
+        
+        .hp-container { width: 100%; height: 28px; background: #000; border-radius: 10px; overflow: hidden; position: relative; margin: 5px 0; border: 1px solid #444; }
+        .hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4d4d, #f9ca24); transition: 0.3s; }
+        .hp-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; text-shadow: 1px 1px 2px #000; }
+        
+        .en-row { display: flex; gap: 4px; justify-content: center; margin-bottom: 10px; }
+        .en-dot { width: 12px; height: 12px; border-radius: 50%; background: #222; border: 1px solid #444; }
+        .en-dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-grow: 1; }
+        button { 
+            background: #2a2d3e; color: white; border: 1px solid #444; border-radius: 12px; 
+            padding: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 85px;
+        }
+        button:active:not(:disabled) { background: #3d425e; transform: scale(0.97); }
+        button:disabled { opacity: 0.2; }
+        
+        .btn-ult { grid-column: span 2; background: linear-gradient(45deg, #4834d4, #686de0); border: 1px solid #a29bfe; }
+        
+        .sk-name { font-size: 0.85rem; font-weight: 800; color: #fff; margin-bottom: 2px; }
+        .sk-val { font-size: 0.75rem; color: var(--dmg); font-weight: bold; }
+        .sk-effect { font-size: 0.65rem; color: #aaa; text-align: center; line-height: 1.1; margin-top: 3px; }
+
+        .dmg-float { position: absolute; font-weight: 900; pointer-events: none; animation: pop 0.8s ease-out forwards; left: 40%; top: 20%; z-index: 500; font-size: 2.5rem; }
+        @keyframes pop { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-100px); } }
+
+        @media (max-width: 768px) { .arena { flex-direction: column; } .job-grid { grid-template-columns: 1fr; } .card { height: 49%; } .btn-grid { gap: 5px; } button { min-height: 65px; } }
+    </style>
+</head>
+<body>
+
+    <div id="event-overlay" class="overlay">
+        <div style="background: #1e272e; padding: 30px; border-radius: 30px; border: 4px solid var(--event); text-align: center; width: 85%; max-width: 450px;">
+            <h2 id="ev-name" style="color: var(--event); margin: 0;"></h2>
+            <p id="ev-desc" style="color: #bdc3c7; margin: 15px 0;"></p>
+            <button onclick="closeEvent()" style="width: 100%; min-height: 50px; background: var(--event); color: black;">OK</button>
+        </div>
+    </div>
+
+    <div id="win-overlay" class="overlay">
+        <div style="text-align: center;">
+            <h1 id="win-title" style="font-size: 4rem; color: var(--accent); margin:0;"></h1>
+            <p id="win-job" style="font-size: 1.5rem; color: #ccc;"></p>
+            <button onclick="location.reload()" style="padding: 15px 50px; border-radius: 50px; background: white; color: black; font-weight: bold;">REMATCH</button>
+        </div>
+    </div>
+
+    <div id="selection-screen">
+        <h1 style="color: var(--accent); margin-top: 20px;">CHRONO ARENA</h1>
+        <p id="turn-title" style="color: var(--boy); font-weight: bold; margin-bottom: 20px;">BOY: SELECT CLASS</p>
+        <div class="job-grid" id="job-list"></div>
+    </div>
+
+    <div class="arena" id="arena">
+        <div id="card-boy" class="card">
+            <h2 style="color:var(--boy); text-align:center; margin:0;">BOY</h2>
+            <div class="hp-container"><div id="bar-boy" class="hp-fill"></div><div class="hp-text" id="txt-boy"></div></div>
+            <div id="en-boy" class="en-row"></div>
+            <div class="btn-grid" id="btns-boy"></div>
+        </div>
+        <div id="card-girl" class="card">
+            <h2 style="color:var(--girl); text-align:center; margin:0;">GIRL</h2>
+            <div class="hp-container"><div id="bar-girl" class="hp-fill"></div><div class="hp-text" id="txt-girl"></div></div>
+            <div id="en-girl" class="en-row"></div>
+            <div class="btn-grid" id="btns-girl"></div>
+        </div>
+    </div>
+
+    <script>
+        let selecting = 'boy', isOver = false;
+        const state = {
+            boy: { hp:0, max:0, en:0, job:'', def:0, stunned:false, guard:false, dodge:false },
+            girl: { hp:0, max:0, en:0, job:'', def:0, stunned:false, guard:false, dodge:false }
+        };
+
+        const jobs = {
+            Warrior: { hp: 150, def: 0.3, skills: [
+                { n: "Strike", c: 0, d: [8, 12], e: "Basic physical hit" },
+                { n: "Charge", c: 0, v: 2, t: 'en', e: "Recover +2 Energy" },
+                { n: "Shield Slam", c: 3, d: [15, 20], t: 'stun', e: "40% chance to STUN" },
+                { n: "Iron Guard", c: 1, t: 'def', e: "Block 75% dmg (3s)" },
+                { n: "Recover", c: 2, v: [25, 40], t: 'heal', e: "Heal 25-40 HP" },
+                { n: "EARTHQUAKE", c: 9, d: [70, 95], e: "Massive ground smash" }
+            ]},
+            Mage: { hp: 90, def: 0, skills: [
+                { n: "Magic Bolt", c: 0, d: [10, 15], e: "Arcane spark" },
+                { n: "Meditate", c: 0, v: 3, t: 'en', e: "Recover +3 Energy" },
+                { n: "Mana Burn", c: 3, d: [20, 28], t: 'burn', e: "Drain 2 enemy Energy" },
+                { n: "Ice Barrier", c: 2, t: 'def', e: "Block 75% dmg (3s)" },
+                { n: "Life Tap", c: 2, v: [15, 30], t: 'heal', e: "Absorb 15-30 HP" },
+                { n: "METEOR", c: 9, d: [100, 130], e: "Destructive star fall" }
+            ]},
+            Berserker: { hp: 120, def: 0.1, skills: [
+                { n: "Heavy Slash", c: 0, d: [13, 19], e: "Brutal blade swing" },
+                { n: "Blood Lust", c: 0, v: 2, t: 'en', e: "Recover +2 Energy" },
+                { n: "Frenzy", c: 3, d: [25, 38], t: 'leech', e: "Heal 50% of dmg dealt" },
+                { n: "LOCKED", c: 0, t: 'skip', e: "Cannot use shields" },
+                { n: "Inner Rage", c: 1, v: [15, 25], t: 'heal', e: "Recover 15-25 HP" },
+                { n: "DECIMATE", c: 9, d: [95, 120], e: "Execute with pure fury" }
+            ]},
+            Archer: { hp: 105, def: 0.15, skills: [
+                { n: "Aim Shot", c: 0, d: [11, 15], e: "Precise arrow hit" },
+                { n: "Reload", c: 0, v: 2, t: 'en', e: "Recover +2 Energy" },
+                { n: "Volley", c: 3, d: [13, 19], t: 'double', e: "75% chance to double hit" },
+                { n: "Evasion", c: 1, t: 'dodge', e: "80% Dodge chance (2.5s)" },
+                { n: "Wild Herbs", c: 1, v: [15, 25], t: 'heal', e: "Heal 15-25 HP" },
+                { n: "ARROW RAIN", c: 9, d: [85, 110], e: "Strike from the sky" }
+            ]}
+        };
+
+        function initSelection() {
+            const list = document.getElementById('job-list');
+            for(let j in jobs) {
+                const card = document.createElement('div'); card.className = 'job-card'; card.onclick = () => pick(j);
+                card.innerHTML = `<h3>${j.toUpperCase()}</h3><div class="job-stats">HP: ${jobs[j].hp} | DEF: ${jobs[j].def*100}%</div>
+                <ul class="job-desc"><li><b>Skill Focus:</b> ${j==='Warrior'?'Tanking/Stun':j==='Mage'?'Energy/Burst':j==='Berserker'?'Crit/Leech':'Dodge/Multi-hit'}</li>
+                <li><b>Passive:</b> ${j==='Warrior'?'Counter-EN':j==='Mage'?'High Meditate':j==='Berserker'?'30% Crit/Leech':'80% Dodge'}</li></ul>`;
+                list.appendChild(card);
+            }
+        }
+
+        function pick(j) {
+            state[selecting].job = j; state[selecting].max = jobs[j].hp; state[selecting].hp = jobs[j].hp; state[selecting].def = jobs[j].def;
+            if(selecting === 'boy') { selecting = 'girl'; document.getElementById('turn-title').innerText = "GIRL: SELECT CLASS"; document.getElementById('turn-title').style.color = "var(--girl)"; }
+            else { document.getElementById('selection-screen').style.display = 'none'; document.getElementById('arena').style.display = 'flex'; renderBtns(); update(); }
+        }
+
+        function act(p, i) {
+            if(isOver || state[p].stunned) return;
+            const s = jobs[state[p].job].skills[i]; const opp = p === 'boy' ? 'girl' : 'boy';
+            if(state[p].en < s.c || s.t === 'skip') return;
+            state[p].en -= s.c;
+
+            if(s.t === 'en') state[p].en = Math.min(10, state[p].en + s.v);
+            else if(s.t === 'heal') { let h = r(s.v[0], s.v[1]); state[p].hp = Math.min(state[p].max, state[p].hp + h); pop(p, `+${h}`, 'var(--heal)'); }
+            else if(s.t === 'def') { state[p].guard = true; setTimeout(()=> {state[p].guard=false; update();}, 3000); }
+            else if(s.t === 'dodge') { state[p].dodge = true; setTimeout(()=> {state[p].dodge=false; update();}, 2500); }
+            else {
+                let hits = (s.t === 'double' && Math.random() < 0.75) ? 2 : 1;
+                for(let h=0; h<hits; h++){
+                    if(state[opp].dodge && Math.random() < 0.8) { pop(opp, "MISS", "#3498db"); }
+                    else {
+                        let d = r(s.d[0], s.d[1]); if(Math.random() < (state[p].job==='Berserker'?0.3:0.12)) d *= 2;
+                        let f = Math.max(1, Math.floor(d * (1 - (state[opp].guard?0.75:state[opp].def))));
+                        state[opp].hp -= f; pop(opp, `-${f}`, "var(--dmg)");
+                        if(s.t === 'leech') state[p].hp = Math.min(state[p].max, state[p].hp + Math.floor(f*0.5));
+                        if(s.t === 'stun' && Math.random() < 0.4) { state[opp].stunned = true; setTimeout(()=>{state[opp].stunned=false; update();}, 2000); }
+                        if(s.t === 'burn') state[opp].en = Math.max(0, state[opp].en - 2);
+                        if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
+                    }
+                }
+            }
+            update(); if(!checkWin() && Math.random() < 0.1) triggerEvent();
+        }
+
+        function triggerEvent() {
+            const evs = [
+                { n: "TIME SLOW", d: "Both players take 25 Damage.", f: () => { state.boy.hp -= 25; state.girl.hp -= 25; } },
+                { n: "ENERGY WAVE", d: "Both players gain 5 Energy.", f: () => { state.boy.en += 5; state.girl.en += 5; } }
+            ];
+            const e = evs[r(0, 1)]; document.getElementById('ev-name').innerText = e.n; document.getElementById('ev-desc').innerText = e.d; e.f();
+            document.getElementById('event-overlay').style.display = 'flex';
+        }
+
+        function closeEvent() { document.getElementById('event-overlay').style.display = 'none'; update(); checkWin(); }
+
+        function renderBtns() {
+            ['boy','girl'].forEach(p => {
+                const box = document.getElementById(`btns-${p}`); box.innerHTML = '';
+                jobs[state[p].job].skills.forEach((s, i) => {
+                    const b = document.createElement('button'); if(i === 5) b.className = 'btn-ult';
+                    b.innerHTML = `<span class="sk-name">${s.n} ${s.c>0?`(${s.c})`:''}</span>
+                    <span class="sk-val">${s.d?s.d[0]+'-'+s.d[1]:(s.v? (Array.isArray(s.v)?s.v[0]+'-'+s.v[1]:'+'+s.v) :'')}</span>
+                    <span class="sk-effect">${s.e}</span>`;
+                    b.onclick = () => act(p, i); box.appendChild(b);
+                });
+            });
+        }
+
+        function update() {
+            ['boy','girl'].forEach(p => {
+                const s = state[p]; s.hp = Math.max(0, Math.min(s.max, s.hp)); s.en = Math.min(10, s.en);
+                document.getElementById(`txt-${p}`).innerText = `${Math.floor(s.hp)}/${s.max}`;
+                document.getElementById(`bar-${p}`).style.width = (s.hp/s.max*100) + "%";
+                const enBox = document.getElementById(`en-${p}`); enBox.innerHTML = '';
+                for(let i=0; i<10; i++) { const dot = document.createElement('div'); dot.className = `en-dot ${i < s.en ? 'active' : ''}`; enBox.appendChild(dot); }
+                document.querySelectorAll(`#btns-${p} button`).forEach((b, i) => b.disabled = (s.en < jobs[s.job].skills[i].c || s.stunned));
+            });
+        }
+
+        function pop(t, m, c) {
+            const el = document.createElement('div'); el.className = 'dmg-float'; el.innerText = m; el.style.color = `var(${c})`;
+            document.getElementById(`card-${t}`).appendChild(el); setTimeout(() => el.remove(), 800);
+        }
+
+        function checkWin() {
+            let w = state.boy.hp <= 0 ? 'GIRL' : (state.girl.hp <= 0 ? 'BOY' : null);
+            if(w) { isOver = true; document.getElementById('win-title').innerText = `${w} WINS!`; document.getElementById('win-overlay').style.display = 'flex'; return true; }
+            return false;
+        }
+
+        function r(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
+        initSelection();
+    </script>
+</body>
+</html>
