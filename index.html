@@ -20,29 +20,50 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
-        .overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999;
+        /* Top Save Bar */
+        .save-bar {
+            position: absolute; top: 10px; right: 10px; z-index: 2000; display: flex; gap: 8px;
+        }
+        .save-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid #555; color: white;
+            padding: 5px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: bold;
+        }
+        .save-btn:active { background: var(--accent); color: black; }
+
+        /* Multi-Slot Overlay */
+        #slot-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000;
             display: none; flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+        .slot-card {
+            width: 80%; max-width: 300px; background: #1e272e; margin: 10px; padding: 15px;
+            border-radius: 15px; border: 2px solid #444; text-align: center;
+        }
+        .slot-card h4 { margin: 0 0 10px 0; color: var(--accent); }
+        .slot-card p { font-size: 0.8rem; color: #aaa; margin: 0 0 10px 0; }
+        .slot-card button { width: 100%; min-height: 40px; margin: 0; }
+
+        .overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
         }
 
         #selection-screen { 
             position: absolute; inset: 0; background: var(--bg); z-index: 1000; 
             display: flex; flex-direction: column; align-items: center; padding: 20px;
-            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
         }
         .job-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; padding-bottom: 40px; }
         
         .job-card { background: var(--card-bg); border: 2px solid #444; padding: 18px; border-radius: 20px; text-align: left; transition: 0.3s; }
-        .job-card:active { border-color: var(--accent); transform: scale(0.98); }
         .job-card h3 { color: var(--accent); margin: 0 0 10px 0; font-size: 1.4rem; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
         .job-stats { font-size: 0.85rem; color: var(--info); margin-bottom: 12px; font-weight: bold; text-align: center; }
         .job-desc { font-size: 0.75rem; color: #bbb; line-height: 1.5; margin: 0; padding-left: 10px; list-style: none; }
         .job-desc li { margin-bottom: 6px; position: relative; }
         .job-desc li::before { content: "▸"; position: absolute; left: -12px; color: var(--accent); }
-        .job-desc b { color: #fff; }
 
-        .arena { display: none; width: 100%; height: 100%; padding: 10px; gap: 10px; }
+        .arena { display: none; width: 100%; height: 100%; padding: 10px; gap: 10px; padding-top: 50px; }
         .card { flex: 1; background: var(--card-bg); border-radius: 20px; padding: 10px; display: flex; flex-direction: column; position: relative; border: 1px solid #333; overflow: hidden;}
         
         .hp-container { width: 100%; height: 22px; background: #000; border-radius: 10px; overflow: hidden; position: relative; margin: 3px 0; border: 1px solid #444; }
@@ -62,7 +83,6 @@
             min-height: 60px; transition: filter 0.2s, opacity 0.2s;
         }
         button:active:not(:disabled) { background: #3d425e; transform: scale(0.97); }
-        button:disabled { cursor: not-allowed; }
         
         .btn-ult { grid-column: span 2; background: linear-gradient(45deg, #4834d4, #686de0); border: 1px solid #a29bfe; min-height: 50px;}
         
@@ -78,6 +98,18 @@
     </style>
 </head>
 <body>
+
+    <div class="save-bar">
+        <button class="save-btn" onclick="openSlotMenu('save')">SAVE</button>
+        <button class="save-btn" onclick="openSlotMenu('load')">LOAD</button>
+    </div>
+
+    <!-- Multi-Slot Selection Overlay -->
+    <div id="slot-overlay">
+        <h2 id="slot-title">SELECT SLOT</h2>
+        <div id="slot-list"></div>
+        <button onclick="closeSlotMenu()" style="background: none; border: 1px solid white; margin-top: 20px; width: 100px; min-height: 40px;">CANCEL</button>
+    </div>
 
     <div id="event-overlay" class="overlay">
         <div style="background: #1e272e; padding: 30px; border-radius: 30px; border: 4px solid var(--event); text-align: center; width: 85%; max-width: 450px;">
@@ -119,66 +151,72 @@
 
     <script>
         let selecting = 'boy', isOver = false;
+        let currentMode = 'save';
         const state = {
             boy: { hp:0, max:0, en:0, job:'', def:0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:false, focused:false, marked:false },
             girl: { hp:0, max:0, en:0, job:'', def:0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:false, focused:false, marked:false }
         };
 
         const jobs = {
-            Warrior: { hp: 160, def: 0.25, desc: [
-                "<b>Passive: Iron Will</b> - Automatically gains 1 Energy whenever attacked.",
-                "<b>Tanker</b>: Highest base HP and physical defense reduction.",
-                "<b>Strategic</b>: Use 'Shield Bash' to stun and 'Iron Guard' to survive big hits."
-            ], skills: [
-                { n: "Strike", c: 0, d: [8, 12], e: "Physical dmg" },
-                { n: "Charge", c: 0, v: 2, t: 'en', e: "+2 Energy" },
-                { n: "Shield Bash", c: 1, d: [10, 14], t: 'stun', e: "20% Stun Chance" },
-                { n: "War Cry", c: 2, t: 'weak', e: "Target next hit -50%" },
-                { n: "Iron Guard", c: 1, t: 'def', e: "80% Block (1 Act)" },
-                { n: "Recover", c: 2, v: [25, 40], t: 'heal', e: "Heal HP" },
-                { n: "EARTHQUAKE", c: 9, d: [70, 95], e: "ULTIMATE" }
+            Warrior: { hp: 160, def: 0.25, desc: ["<b>Passive: Iron Will</b> - Energy gains when hit.", "<b>Tanker</b>: High HP and Physical Defense.", "<b>Strategic</b>: Stun enemies with Shield Bash."], skills: [
+                { n: "Strike", c: 0, d: [8, 12], e: "Physical dmg" }, { n: "Charge", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Shield Bash", c: 1, d: [10, 14], t: 'stun', e: "20% Stun Chance" }, { n: "War Cry", c: 2, t: 'weak', e: "Target next hit -50%" }, { n: "Iron Guard", c: 1, t: 'def', e: "80% Block (1 Act)" }, { n: "Recover", c: 2, v: [25, 40], t: 'heal', e: "Heal HP" }, { n: "EARTHQUAKE", c: 9, d: [70, 95], e: "ULTIMATE" }
             ]},
-            Mage: { hp: 95, def: 0, desc: [
-                "<b>Passive: Mana Echo</b> - Energy recovery skills are more effective.",
-                "<b>Controller</b>: 'Frostbite' forces enemy to spend double energy.",
-                "<b>Mirror Feedback</b>: Reflects 100% of raw damage back to the attacker."
-            ], skills: [
-                { n: "Magic Bolt", c: 0, d: [10, 15], e: "Arcane dmg" },
-                { n: "Meditate", c: 0, v: 3, t: 'en', e: "+3 Energy" },
-                { n: "Life Siphon", c: 2, d: [18, 28], t: 'leech', e: "100% Lifesteal" },
-                { n: "Frostbite", c: 2, t: 'frost', e: "Target next Cost x2" },
-                { n: "Mirror Feedback", c: 2, t: 'reflect', e: "100% Damage Reflect" },
-                { n: "Mana Burn", c: 2, t: 'burn', e: "Drain 2 Enemy EN" },
-                { n: "METEOR", c: 9, d: [105, 130], e: "ULTIMATE" }
+            Mage: { hp: 95, def: 0, desc: ["<b>Passive: Mana Echo</b> - Efficient EN recovery.", "<b>Controller</b>: Frostbite doubles enemy costs.", "<b>Feedback</b>: Reflect 100% of damage."], skills: [
+                { n: "Magic Bolt", c: 0, d: [10, 15], e: "Arcane dmg" }, { n: "Meditate", c: 0, v: 3, t: 'en', e: "+3 Energy" }, { n: "Life Siphon", c: 2, d: [18, 28], t: 'leech', e: "100% Lifesteal" }, { n: "Frostbite", c: 2, t: 'frost', e: "Target next Cost x2" }, { n: "Mirror Feedback", c: 2, t: 'reflect', e: "100% Damage Reflect" }, { n: "Mana Burn", c: 2, t: 'burn', e: "Drain 2 Enemy EN" }, { n: "METEOR", c: 9, d: [105, 130], e: "ULTIMATE" }
             ]},
-            Berserker: { hp: 130, def: 0.1, desc: [
-                "<b>Passive: Bloodlust</b> - 30% innate chance to deal 200% Critical damage.",
-                "<b>Slayer</b>: 'Execute' deals massive damage if enemy HP is below 50%.",
-                "<b>Burst</b>: 'Adrenaline' ensures your next hit is a guaranteed Critical."
-            ], skills: [
-                { n: "Heavy Slash", c: 0, d: [13, 19], e: "Brutal swing" },
-                { n: "Blood Lust", c: 0, v: 2, t: 'en', e: "+2 Energy" },
-                { n: "Adrenaline", c: 2, t: 'focus', e: "Next hit 100% Crit" },
-                { n: "Frenzy", c: 3, d: [25, 38], t: 'leech', e: "50% Lifesteal" },
-                { n: "Execute", c: 4, d: [30, 45], t: 'exec', e: "+50% dmg if HP < 50%" },
-                { n: "Inner Rage", c: 1, v: [15, 25], t: 'heal', e: "Self Heal" },
-                { n: "DECIMATE", c: 9, d: [95, 120], e: "ULTIMATE" }
+            Berserker: { hp: 130, def: 0.1, desc: ["<b>Passive: Bloodlust</b> - 30% Crit chance.", "<b>Slayer</b>: Execute deals +50% dmg if HP<50%.", "<b>Burst</b>: Guaranteed next Critical."], skills: [
+                { n: "Heavy Slash", c: 0, d: [13, 19], e: "Brutal swing" }, { n: "Blood Lust", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Adrenaline", c: 2, t: 'focus', e: "Next hit 100% Crit" }, { n: "Frenzy", c: 3, d: [25, 38], t: 'leech', e: "50% Lifesteal" }, { n: "Execute", c: 4, d: [30, 45], t: 'exec', e: "+50% dmg if HP < 50%" }, { n: "Inner Rage", c: 1, v: [15, 25], t: 'heal', e: "Self Heal" }, { n: "DECIMATE", c: 9, d: [95, 120], e: "ULTIMATE" }
             ]},
-            Archer: { hp: 110, def: 0.15, desc: [
-                "<b>Passive: Rapid Fire</b> - 100% chance to trigger a free second attack.",
-                "<b>Agility</b>: Rely on 'Evasion' to completely dodge incoming strikes.",
-                "<b>Marking</b>: Ignores enemy defense and blocks completely."
-            ], skills: [
-                { n: "Aim Shot", c: 0, d: [11, 15], e: "Pierce dmg" },
-                { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" },
-                { n: "Quick Shot", c: 1, d: [10, 14], t: 'double', e: "Guaranteed Double Hit" },
-                { n: "Mark Target", c: 2, t: 'mark', e: "Ignore Defense" },
-                { n: "Evasion", c: 1, t: 'dodge', e: "80% Dodge (2 Turns)" },
-                { n: "Volley", c: 3, d: [15, 22], t: 'triple', e: "100% Triple Strike" },
-                { n: "ARROW RAIN", c: 9, d: [85, 110], e: "ULTIMATE" }
+            Archer: { hp: 110, def: 0.15, desc: ["<b>Passive: Rapid Fire</b> - 100% Double Hit.", "<b>Agility</b>: High Evasion chance.", "<b>Marking</b>: Ignore all defenses."], skills: [
+                { n: "Aim Shot", c: 0, d: [11, 15], e: "Pierce dmg" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Quick Shot", c: 1, d: [10, 14], t: 'double', e: "Guaranteed Double Hit" }, { n: "Mark Target", c: 2, t: 'mark', e: "Ignore Defense" }, { n: "Evasion", c: 1, t: 'dodge', e: "80% Dodge (2 Turns)" }, { n: "Volley", c: 3, d: [15, 22], t: 'triple', e: "100% Triple Strike" }, { n: "ARROW RAIN", c: 9, d: [85, 110], e: "ULTIMATE" }
             ]}
         };
 
+        // --- Save System Logic ---
+        function openSlotMenu(mode) {
+            currentMode = mode;
+            document.getElementById('slot-title').innerText = mode === 'save' ? "SAVE TO SLOT" : "LOAD FROM SLOT";
+            const list = document.getElementById('slot-list');
+            list.innerHTML = '';
+            
+            for(let i=1; i<=3; i++) {
+                const raw = localStorage.getItem(`chronoArena_slot_${i}`);
+                const data = raw ? JSON.parse(raw) : null;
+                const div = document.createElement('div');
+                div.className = 'slot-card';
+                div.innerHTML = `
+                    <h4>SLOT ${i}</h4>
+                    <p>${data ? `${data.boy.job} vs ${data.girl.job}` : 'EMPTY'}</p>
+                    <button onclick="handleSlotAction(${i})">${mode.toUpperCase()}</button>
+                `;
+                list.appendChild(div);
+            }
+            document.getElementById('slot-overlay').style.display = 'flex';
+        }
+
+        function handleSlotAction(slot) {
+            const key = `chronoArena_slot_${slot}`;
+            if(currentMode === 'save') {
+                if(!state.boy.job || !state.girl.job) return alert("Select jobs first!");
+                localStorage.setItem(key, JSON.stringify(state));
+                alert(`Saved to Slot ${slot}`);
+            } else {
+                const data = localStorage.getItem(key);
+                if(!data) return alert("Slot is empty!");
+                Object.assign(state.boy, JSON.parse(data).boy);
+                Object.assign(state.girl, JSON.parse(data).girl);
+                document.getElementById('selection-screen').style.display = 'none';
+                document.getElementById('arena').style.display = 'flex';
+                renderBtns();
+                update();
+                alert(`Loaded Slot ${slot}`);
+            }
+            closeSlotMenu();
+        }
+
+        function closeSlotMenu() { document.getElementById('slot-overlay').style.display = 'none'; }
+
+        // --- Core Game Logic ---
         function initSelection() {
             const list = document.getElementById('job-list');
             for(let j in jobs) {
@@ -208,19 +246,11 @@
 
         function act(p, i) {
             if(isOver) return;
-            if(state[p].stunned) {
-                state[p].stunned = false; 
-                pop(p, "STUNNED!", "var(--dmg)");
-                update();
-                return; 
-            }
+            if(state[p].stunned) { state[p].stunned = false; pop(p, "STUNNED!", "var(--dmg)"); update(); return; }
             const s = jobs[state[p].job].skills[i]; const opp = p === 'boy' ? 'girl' : 'boy';
-            let cost = s.c; let consumedFrost = false;
-            if(state[p].frost && cost > 0) { cost *= 2; consumedFrost = true; }
+            let cost = s.c; if(state[p].frost && cost > 0) cost *= 2;
             if(state[p].en < cost) return;
-            state[p].en -= cost;
-            if(consumedFrost) state[p].frost = false;
-            state[p].guard = false; state[p].reflect = false; 
+            state[p].en -= cost; state[p].frost = false; state[p].guard = false; state[p].reflect = false; 
 
             if(s.t === 'en') state[p].en = Math.min(10, state[p].en + s.v);
             else if(s.t === 'def') { state[p].guard = true; pop(p, "SHIELD", "var(--info)"); }
@@ -235,7 +265,6 @@
             else {
                 let hits = 1; if(s.t === 'double') hits = 2; if(s.t === 'triple') hits = 3;
                 for(let h=0; h<hits; h++){
-                    const delay = h * 180;
                     setTimeout(() => {
                         if(isOver) return;
                         if(state[opp].dodge > 0 && Math.random() < 0.8) { pop(opp, "MISS", "#3498db", h); } 
@@ -244,24 +273,16 @@
                             if(s.t === 'exec' && state[opp].hp < (state[opp].max * 0.5)) baseD *= 1.5;
                             if(state[p].focused || Math.random() < (state[p].job==='Berserker'?0.3:0.12)) { baseD *= 2; state[p].focused = false; }
                             if(state[p].weakened) { baseD *= 0.5; state[p].weakened = false; }
-                            let reduction = state[opp].marked ? 0 : state[opp].def;
-                            if(state[opp].guard) reduction = 0.8;
-                            if(state[opp].reflect) {
-                                state[p].hp -= baseD; pop(p, `-${Math.floor(baseD)}`, "var(--dmg)", h);
-                                pop(opp, "REFLECT", "var(--info)", h); reduction = 0.5;
-                            }
-                            let f = Math.max(1, Math.floor(baseD * (1 - reduction)));
+                            let red = state[opp].marked ? 0 : (state[opp].guard ? 0.8 : state[opp].def);
+                            if(state[opp].reflect) { state[p].hp -= baseD; pop(p, `-${Math.floor(baseD)}`, "var(--dmg)", h); pop(opp, "REFLECT", "var(--info)", h); red = 0.5; }
+                            let f = Math.max(1, Math.floor(baseD * (1 - red)));
                             state[opp].hp -= f; pop(opp, `-${f}`, "var(--dmg)", h);
-                            if(s.t === 'leech') {
-                                let healAmt = state[p].job === 'Mage' ? f : Math.floor(f*0.5);
-                                state[p].hp = Math.min(state[p].max, state[p].hp + healAmt);
-                                pop(p, `+${healAmt}`, "var(--heal)", h);
-                            }
-                            if(s.t === 'stun' && Math.random() < (s.n==='Shield Bash'?0.2:0.4)) { state[opp].stunned = true; }
+                            if(s.t === 'leech') { let hA = state[p].job === 'Mage' ? f : Math.floor(f*0.5); state[p].hp = Math.min(state[p].max, state[p].hp + hA); pop(p, `+${hA}`, "var(--heal)", h); }
+                            if(s.t === 'stun' && Math.random() < 0.3) state[opp].stunned = true;
                             if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
                         }
                         update(); checkWin();
-                    }, delay);
+                    }, h * 180);
                 }
                 if(state[opp].dodge > 0) state[opp].dodge--; state[opp].marked = false;
             }
@@ -269,65 +290,40 @@
         }
 
         function triggerEvent(p) {
-            const evs = [{ n: "DANCING FEVER!", d: "+2 EN and Extra Turn!", f: () => { state[p].en = Math.min(10, state[p].en + 2); }}];
-            const e = evs[0]; document.getElementById('ev-name').innerText = e.n; document.getElementById('ev-desc').innerText = e.d; 
-            e.f(); document.getElementById('event-overlay').style.display = 'flex';
+            const ev = { n: "DANCING FEVER!", d: "+2 EN and Extra Turn!" };
+            state[p].en = Math.min(10, state[p].en + 2);
+            document.getElementById('ev-name').innerText = ev.n; document.getElementById('ev-desc').innerText = ev.d; 
+            document.getElementById('event-overlay').style.display = 'flex';
         }
 
-        function closeEvent() { document.getElementById('event-overlay').style.display = 'none'; update(); checkWin(); }
+        function closeEvent() { document.getElementById('event-overlay').style.display = 'none'; update(); }
 
         function update() {
             ['boy','girl'].forEach(p => {
                 const s = state[p]; s.hp = Math.max(0, Math.min(s.max, s.hp)); 
                 document.getElementById(`txt-${p}`).innerText = `${Math.floor(s.hp)}/${s.max}`;
                 document.getElementById(`bar-${p}`).style.width = (s.hp/s.max*100) + "%";
-                
-                let st = "";
-                if(s.guard) st += "🛡️GUARD "; if(s.reflect) st += "✨REFLECT ";
-                if(s.dodge > 0) st += `💨EVADE(${s.dodge}) `;
-                if(s.weakened) st += "📉WEAK "; if(s.frost) st += "❄️FROST ";
-                if(s.focused) st += "🔥FOCUS "; if(s.marked) st += "🎯MARK ";
-                if(s.stunned) st += "💫STUNNED ";
+                let st = (s.guard?"🛡️G ":"") + (s.reflect?"✨R ":"") + (s.dodge>0?`💨E(${s.dodge}) `:"") + (s.weakened?"📉W ":"") + (s.frost?"❄️F ":"") + (s.focused?"🔥F ":"") + (s.marked?"🎯M ":"") + (s.stunned?"💫S ":"");
                 document.getElementById(`status-${p}`).innerText = st;
-
                 const enBox = document.getElementById(`en-${p}`); enBox.innerHTML = '';
-                for(let i=0; i<10; i++) { const dot = document.createElement('div'); dot.className = `en-dot ${i < s.en ? 'active' : ''}`; enBox.appendChild(dot); }
-                
+                for(let i=0; i<10; i++) { const d = document.createElement('div'); d.className = `en-dot ${i < s.en ? 'active' : ''}`; enBox.appendChild(d); }
                 if(s.job) {
                     jobs[s.job].skills.forEach((sk, i) => {
                         const btn = document.getElementById(`btn-${p}-${i}`);
-                        if(!btn) return;
-                        let displayCost = sk.c;
-                        let costColor = "var(--info)";
-                        if(s.frost && displayCost > 0) { displayCost *= 2; costColor = "var(--dmg)"; }
-                        
-                        btn.innerHTML = `<span class="sk-name">${sk.n}</span>
-                        <span class="sk-cost" style="color:${costColor}">cost: ${displayCost}</span>
-                        <span class="sk-val">${sk.d?sk.d[0]+'-'+sk.d[1]:(sk.v? (Array.isArray(sk.v)?sk.v[0]+'-'+sk.v[1]:'+'+sk.v) :'')}</span>
-                        <span class="sk-effect">${sk.e}</span>`;
-                        
-                        // Cost Logic for Dimming
-                        const canAfford = s.en >= displayCost;
-                        btn.disabled = !canAfford; 
-                        
-                        // UI Styling: Dim if can't afford, Fade if stunned
-                        if(!canAfford) {
-                            btn.style.filter = "brightness(0.35) grayscale(0.5)";
-                            btn.style.opacity = "0.7";
-                        } else {
-                            btn.style.filter = "none";
-                            btn.style.opacity = s.stunned ? "0.6" : "1";
-                        }
+                        let cost = sk.c; if(s.frost && cost > 0) cost *= 2;
+                        btn.innerHTML = `<span class="sk-name">${sk.n}</span><span class="sk-cost" style="color:${s.frost && cost>0?'var(--dmg)':'var(--info)'}">cost: ${cost}</span><span class="sk-val">${sk.d?sk.d[0]+'-'+sk.d[1]:(sk.v? (Array.isArray(sk.v)?sk.v[0]+'-'+sk.v[1]:'+'+sk.v) :'')}</span><span class="sk-effect">${sk.e}</span>`;
+                        const can = s.en >= cost; btn.disabled = !can; 
+                        btn.style.filter = !can ? "brightness(0.35) grayscale(0.5)" : "none";
+                        btn.style.opacity = s.stunned && can ? "0.6" : "1";
                     });
                 }
             });
         }
 
-        function pop(t, m, c, hitIndex = 0) {
+        function pop(t, m, c, hI = 0) {
             const el = document.createElement('div'); el.className = 'dmg-float'; el.innerText = m; el.style.color = `var(${c})`;
-            const baseLeft = 40; const baseTop = 25; const horizontalStep = 10; const verticalStep = 5; const jitter = (Math.random() * 10) - 5;
-            el.style.left = (baseLeft + (hitIndex * horizontalStep) + jitter) + "%";
-            el.style.top = (baseTop - (hitIndex * verticalStep)) + "%";
+            el.style.left = (40 + (hI * 10) + (Math.random()*10-5)) + "%";
+            el.style.top = (25 - (hI * 5)) + "%";
             document.getElementById(`card-${t}`).appendChild(el); 
             setTimeout(() => el.remove(), 800);
         }
