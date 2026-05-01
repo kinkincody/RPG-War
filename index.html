@@ -20,7 +20,6 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* 特效層 */
         #fx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 800; overflow: hidden; }
         .fx-slash { position: absolute; width: 150px; height: 6px; background: white; box-shadow: 0 0 15px white; animation: slash 0.3s ease-out forwards; }
         @keyframes slash { 0% { transform: scaleX(0) rotate(-45deg); opacity: 1; } 100% { transform: scaleX(1.5) rotate(-45deg); opacity: 0; } }
@@ -103,13 +102,11 @@
     <div id="win-overlay" class="overlay"><h1 id="win-title" style="font-size:4rem; color:var(--accent);"></h1><button onclick="location.reload()" style="padding:15px 50px; border-radius:50px; background:white; color:black; font-weight:bold; border:none;">REMATCH</button></div>
 
     <script>
-        // 音效系統
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSfx(type) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
-            
             const now = audioCtx.currentTime;
             if(type === 'slash') {
                 osc.type = 'triangle'; osc.frequency.setValueAtTime(1000, now);
@@ -146,22 +143,22 @@
         };
 
         const jobs = {
-            Warrior: { icon: "🛡️", hp: 150, def: 0.20, desc: ["Passive: EN gains when hit.", "Defensive: Guard breaks after hit.", "Ultimate: 100% Stun Target."], skills: [
+            Warrior: { icon: "🛡️", hp: 150, def: 0.20, desc: ["Passive: EN gains when hit.", "Guard: 80% Block (Once).", "ULT: 100% Stun Target."], skills: [
                 { n: "Strike", c: 0, d: [8, 12], fx: "slash", e: "Physical dmg" }, { n: "Charge", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Shield Bash", c: 1, d: [10, 14], t: 'stun', v: 0.2, fx: "slash", e: "20% Stun Chance" }, { n: "War Cry", c: 2, t: 'weak', e: "Target hit -50%" }, { n: "Iron Guard", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Recover", c: 2, v: [25, 40], t: 'heal', e: "Heal HP" }, { n: "EARTHQUAKE", c: 9, d: [70, 95], t: 'stun', v: 1.0, fx: "shake", e: "DMG + 100% STUN" }
             ]},
-            Mage: { icon: "🔮", hp: 95, def: 0, desc: ["Passive: EN efficiency.", "Control: Freeze costs EN.", "Ultimate: Deep Freeze (x3 cost)."], skills: [
+            Mage: { icon: "🔮", hp: 95, def: 0, desc: ["Passive: EN efficiency.", "Mirror: 100% Reflect (Once).", "ULT: DMG + 3x EN Cost."], skills: [
                 { n: "Magic Bolt", c: 0, d: [10, 15], fx: "bolt", e: "Arcane dmg" }, { n: "Meditate", c: 0, v: 3, t: 'en', e: "+3 Energy" }, { n: "Life Siphon", c: 2, d: [18, 28], t: 'leech', fx: "bolt", e: "100% Lifesteal" }, { n: "Frostbite", c: 2, d: [14, 22], t: 'frost', v: 1, fx: "bolt", e: "Dmg + Frost (x2)" }, { n: "Mirror Feedback", c: 2, t: 'reflect', e: "100% Reflect (Once)" }, { n: "Mana Burn", c: 2, d: [12, 18], t: 'burn', fx: "bolt", e: "DMG + Drain 2 EN" }, { n: "METEOR", c: 9, d: [105, 130], t: 'frost', v: 2, fx: "shake", e: "DMG + DEEP FREEZE" }
             ]},
-            Berserker: { icon: "🪓", hp: 130, def: 0.1, desc: ["Passive: Crit 30% / Hit: Loss 1 EN.", "Slayer: Execute low HP.", "Ultimate: Heal + Refund EN."], skills: [
+            Berserker: { icon: "🪓", hp: 130, def: 0.1, desc: ["Passive: Crit 30% / Hit: Loss 1 EN.", "Execute: +50% dmg if <50%HP.", "ULT: Leech + Full EN."], skills: [
                 { n: "Heavy Slash", c: 0, d: [13, 19], fx: "slash", e: "Brutal swing" }, { n: "Blood Lust", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Adrenaline", c: 2, t: 'focus', e: "Next hit 100% Crit" }, { n: "Frenzy", c: 3, d: [25, 38], t: 'leech', v: 0.5, fx: "slash", e: "50% Lifesteal" }, { n: "Execute", c: 4, d: [30, 45], t: 'exec', fx: "slash", e: "+50% dmg if <50%HP" }, { n: "Inner Rage", c: 1, v: [15, 25], t: 'heal', e: "Self Heal" }, { n: "DECIMATE", c: 9, d: [95, 120], t: 'berserk_ult', fx: "shake", e: "Leech + FULL EN" }
             ]},
-            Archer: { icon: "🏹", hp: 110, def: 0.15, desc: ["Passive: Rapid Double Hit.", "Agility: Evasion.", "Ultimate: 4-Hit + Pierce."], skills: [
+            Archer: { icon: "🏹", hp: 110, def: 0.15, desc: ["Passive: Rapid Double Hit.", "Evasion: 100% Dodge (2 Acts).", "ULT: 4x DMG + Mark."], skills: [
                 { n: "Aim Shot", c: 0, d: [11, 15], fx: "arrow", e: "Pierce dmg" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Quick Shot", c: 1, d: [10, 14], t: 'double', fx: "arrow", e: "Double Hit" }, { n: "Mark Target", c: 2, t: 'mark', e: "Ignore Defense" }, { n: "Evasion", c: 1, t: 'dodge', e: "100% Dodge (2 Acts)" }, { n: "Volley", c: 3, d: [15, 22], t: 'triple', fx: "arrow", e: "Triple Strike" }, { n: "ARROW RAIN", c: 9, d: [25, 35], t: 'archer_ult', fx: "arrow", e: "4x DMG + MARKED" }
             ]}
         };
 
         function triggerFX(type, attacker, target) {
-            playSfx(type); // 觸發音效
+            playSfx(type);
             const layer = document.getElementById('fx-layer');
             const targetRect = document.getElementById(`card-${target}`).getBoundingClientRect();
             const attackerRect = document.getElementById(`card-${attacker}`).getBoundingClientRect();
@@ -199,7 +196,15 @@
 
             if(s.t === 'en') { playSfx('en'); state[p].en = Math.min(10, state[p].en + s.v); }
             else if(s.t === 'heal') { playSfx('heal'); let h = r(s.v[0], s.v[1]); state[p].hp = Math.min(state[p].max, state[p].hp + h); pop(p, `+${h}`, 'var(--heal)'); }
-            else if(s.t === 'def' || s.t === 'reflect' || s.t === 'dodge' || s.t === 'weak' || s.t === 'focus' || s.t === 'mark') { playSfx('bolt'); if(s.t==='def') state[p].guard=true; if(s.t==='reflect') state[p].reflect=true; if(s.t==='dodge') state[p].dodge=2; if(s.t==='weak') state[opp].weakened=true; if(s.t==='focus') state[p].focused=true; if(s.t==='mark') state[opp].marked=true; }
+            else if(['def','reflect','dodge','weak','focus','mark'].includes(s.t)) { 
+                playSfx('bolt'); 
+                if(s.t==='def') state[p].guard=true; 
+                if(s.t==='reflect') state[p].reflect=true; 
+                if(s.t==='dodge') state[p].dodge=2; 
+                if(s.t==='weak') state[opp].weakened=true; 
+                if(s.t==='focus') state[p].focused=true; 
+                if(s.t==='mark') state[opp].marked=true; 
+            }
             else {
                 if(s.t === 'burn') state[opp].en = Math.max(0, state[opp].en - 2);
                 let hits = s.t==='double'?2:(s.t==='triple'?3:(s.t==='archer_ult'?4:1));
@@ -208,24 +213,44 @@
                     setTimeout(() => {
                         if(state.boy.hp <= 0 || state.girl.hp <= 0) return;
                         if(s.fx) triggerFX(s.fx, p, opp);
-                        if(state[opp].dodge > 0) { pop(opp, "MISS", "#3498db", h); } 
-                        else {
-                            let baseD = r(s.d[0], s.d[1]);
-                            if(s.t==='exec' && state[opp].hp < (state[opp].max*0.5)) baseD *= 1.5;
-                            if(state[p].focused || Math.random() < (state[p].job==='Berserker'?0.3:0.12)) { baseD *= 2; state[p].focused = false; }
+                        
+                        let baseD = r(s.d[0], s.d[1]);
+                        if(s.t==='exec' && state[opp].hp < (state[opp].max*0.5)) baseD *= 1.5;
+                        if(state[p].focused || Math.random() < (state[p].job==='Berserker'?0.3:0.12)) { baseD *= 2; state[p].focused = false; }
+                        
+                        if(state[opp].dodge > 0) { 
+                            pop(opp, "MISS", "#3498db", h); 
+                        } else {
                             let red = state[opp].marked ? 0 : (state[opp].guard ? 0.8 : state[opp].def);
                             if(state[opp].reflect) { state[p].hp -= baseD; pop(p, `-${Math.floor(baseD)}`, "var(--dmg)", h); red = 0.5; state[opp].reflect = false; }
+                            
                             let f = Math.max(1, Math.floor(baseD * (1 - red)));
                             state[opp].hp -= f; pop(opp, `-${f}`, "var(--dmg)", h);
                             if(state[opp].guard) state[opp].guard = false;
+
+                            // 處理吸血邏輯 (Frenzy or Ult)
+                            if(s.t === 'leech' || s.t === 'berserk_ult') {
+                                let ratio = s.t === 'berserk_ult' ? 1.0 : (s.v || 0.5);
+                                let healVal = Math.floor(f * ratio);
+                                state[p].hp = Math.min(state[p].max, state[p].hp + healVal);
+                                if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', h);
+                            }
+
                             if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
                             if(s.t === 'frost') state[opp].frost = s.v;
                             if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
                             if(state[opp].job === 'Berserker') state[opp].en = Math.max(0, state[opp].en - 1);
                         }
+
+                        // 大招結算邏輯 (確保即便 MISS 也能觸發回能或標記)
+                        if(h === hits - 1) {
+                            if(s.t === 'berserk_ult') { state[p].en = 10; playSfx('en'); }
+                            if(s.t === 'archer_ult') state[opp].marked = true;
+                            if(state[opp].dodge > 0) state[opp].dodge--;
+                        }
+                        
                         update(); checkWin();
-                        if(h === hits-1 && state[opp].dodge > 0) state[opp].dodge--;
-                    }, h * 180);
+                    }, h * 200);
                 }
             }
             update();
@@ -236,9 +261,11 @@
                 const s = state[p]; s.hp = Math.max(0, Math.min(s.max, s.hp)); 
                 document.getElementById(`txt-${p}`).innerText = `${Math.floor(s.hp)}/${s.max}`;
                 document.getElementById(`bar-${p}`).style.width = (s.hp/s.max*100) + "%";
-                document.getElementById(`status-${p}`).innerText = (s.guard?"🛡️G ":"")+(s.reflect?"✨R ":"")+(s.dodge>0?`💨E(${s.dodge}) `:"")+(s.frost>0?"❄️F ":"")+(s.stunned?"💫S ":"");
+                document.getElementById(`status-${p}`).innerText = (s.guard?"🛡️G ":"")+(s.reflect?"✨R ":"")+(s.dodge>0?`💨E(${s.dodge}) `:"")+(s.frost>0? (s.frost===2?"❄️❄️DF ":"❄️F ") :"")+(s.stunned?"💫S ":"")+(s.marked?"🎯M ":"");
+                
                 const enBox = document.getElementById(`en-${p}`); enBox.innerHTML = '';
                 for(let i=0; i<10; i++) { const d = document.createElement('div'); d.className = `en-dot ${i < s.en ? 'active' : ''}`; enBox.appendChild(d); }
+                
                 if(s.job) {
                     document.getElementById(`name-${p}`).innerText = `${p.toUpperCase()} (${jobs[s.job].icon})`;
                     const box = document.getElementById(`btns-${p}`); box.innerHTML = '';
@@ -246,7 +273,7 @@
                         const b = document.createElement('button'); if(idx === 6) b.className = 'btn-ult';
                         let cost = (s.frost > 0 && sk.c > 0) ? sk.c * (s.frost === 2 ? 3 : 2) : sk.c;
                         b.disabled = s.en < cost || isOver;
-                        b.innerHTML = `<span class="sk-name">${sk.n}</span><span class="sk-cost">EN: ${cost}</span><span class="sk-val">${sk.d?sk.d[0]+'-'+sk.d[1]:(sk.v?'+'+sk.v:'')}</span><span class="sk-effect">${sk.e}</span>`;
+                        b.innerHTML = `<span class="sk-name">${sk.n}</span><span class="sk-cost">EN: ${cost}</span><span class="sk-val">${sk.d?sk.d[0]+'-'+sk.d[1]:(sk.v && Array.isArray(sk.v) ? sk.v[0]+'-'+sk.v[1] : (sk.v||''))}</span><span class="sk-effect">${sk.e}</span>`;
                         b.onclick = () => act(p, idx); box.appendChild(b);
                     });
                 }
@@ -255,7 +282,7 @@
 
         function pop(t, m, c, hI = 0) {
             const el = document.createElement('div'); el.className = 'dmg-float'; el.innerText = m; el.style.color = c;
-            el.style.left = (40 + (hI * 10)) + "%"; el.style.top = "25%";
+            el.style.left = (40 + (hI * 5)) + "%"; el.style.top = (25 - (hI * 2)) + "%";
             document.getElementById(`card-${t}`).appendChild(el); setTimeout(() => el.remove(), 800);
         }
 
