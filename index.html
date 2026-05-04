@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Chrono Arena RPG - Boxer Buffed</title>
+    <title>Chrono Arena RPG - Rock King Expansion</title>
     <style>
         :root { 
             --boy: #00d2ff; --girl: #ff007f; --accent: #f1c40f; 
             --bg: #0a0b16; --card-bg: rgba(25, 28, 45, 0.95);
             --event: #ff9f43; --heal: #2ecc71; --info: #00ffcc; --dmg: #ff4d4d;
+            --rock: #95a5a6;
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
@@ -157,8 +158,8 @@
 
         let selecting = 'boy', isOver = false;
         let state = {
-            boy: { hp:0, max:0, en:0, job:'', def:0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false },
-            girl: { hp:0, max:0, en:0, job:'', def:0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false }
+            boy: { hp:0, max:0, en:0, job:'', def:0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0 },
+            girl: { hp:0, max:0, en:0, job:'', def:0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0 }
         };
 
         const jobs = {
@@ -175,29 +176,18 @@
                 { n: "Aim Shot", c: 0, d: [11, 15], fx: "arrow", e: "Pierce dmg" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Quick Shot", c: 1, d: [10, 14], t: 'double', fx: "arrow", e: "Double Hit" }, { n: "Mark Target", c: 2, t: 'mark', e: "Ignore Defense" }, { n: "Evasion", c: 1, t: 'dodge', v: 1.0, e: "100% Dodge (2 Acts)" }, { n: "Volley", c: 3, d: [15, 22], t: 'triple', fx: "arrow", e: "Triple Strike" }, { n: "ARROW RAIN", c: 9, d: [25, 35], t: 'archer_ult', fx: "arrow", e: "4x DMG + MARKED" }
             ]},
             Gunner: { icon: "🔫", hp: 105, def: 0.05, desc: ["Passive: High EN Recovery.", "Lock-On: High Crit Rate.", "ULT: Massive DMG + EN Wipe."], skills: [
-                { n: "Pistol Shot", c: 0, d: [6, 9], t: 'double', fx: "arrow", e: "2x Fast Shots" }, 
-                { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, 
-                { n: "Headshot", c: 2, d: [20, 28], fx: "arrow", e: "High base dmg" }, { n: "Lock On", c: 1, t: 'focus', e: "Next 100% Crit" }, { n: "Grenade", c: 3, d: [22, 30], t: 'burn', fx: "bolt", e: "DMG + Drain 2 EN" }, 
-                { n: "Cover Fire", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, 
-                { n: "SATELLITE BEAM", c: 9, d: [110, 140], t: 'gunner_ult', fx: "bolt", e: "AOE + TARGET EN=0" }
+                { n: "Pistol Shot", c: 0, d: [6, 9], t: 'double', fx: "arrow", e: "2x Fast Shots" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Headshot", c: 2, d: [20, 28], fx: "arrow", e: "High base dmg" }, { n: "Lock On", c: 1, t: 'focus', e: "Next 100% Crit" }, { n: "Grenade", c: 3, d: [22, 30], t: 'burn', fx: "bolt", e: "DMG + Drain 2 EN" }, { n: "Cover Fire", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "SATELLITE BEAM", c: 9, d: [110, 140], t: 'gunner_ult', fx: "bolt", e: "AOE + TARGET EN=0" }
             ]},
             Boxer: { icon: "🥊", hp: 140, def: 0.12, desc: ["Passive: Dodge gains 2 EN.", "Counter: 20 DMG Rebound.", "ULT: Ignore Def/Dodge + <30% Kill."], skills: [
-                { n: "Jab", c: 0, d: [9, 13], fx: "slash", e: "Quick punch" }, { n: "Deep Breath", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Counter Stance", c: 2, t: 'counter', e: "Rebound 20 Dmg" }, 
-                { n: "Sway", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts)" }, 
-                { n: "Uppercut", c: 2, d: [12, 18], t: 'stun', v: 0.3, fx: "slash", e: "30% Stun Chance" }, { n: "Body Blow", c: 2, d: [15, 22], t: 'weak', e: "DMG + Weaken" }, { n: "K.O. PUNCH", c: 9, d: [85, 110], t: 'boxer_ult', fx: "shake", e: "Sure Hit + Ignore Def" }
+                { n: "Jab", c: 0, d: [9, 13], fx: "slash", e: "Quick punch" }, { n: "Deep Breath", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Counter Stance", c: 2, t: 'counter', e: "Rebound 20 Dmg" }, { n: "Sway", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts)" }, { n: "Uppercut", c: 2, d: [12, 18], t: 'stun', v: 0.3, fx: "slash", e: "30% Stun Chance" }, { n: "Body Blow", c: 2, d: [15, 22], t: 'weak', e: "DMG + Weaken" }, { n: "K.O. PUNCH", c: 9, d: [85, 110], t: 'boxer_ult', fx: "shake", e: "Sure Hit + Ignore Def" }
+            ]},
+            RockKing: { icon: "🪨", hp: 180, def: 0.30, desc: ["Passive: IMMUNE to EN loss.", "Hardened: Damage stacks DEF.", "ULT: Petrification (Stun 2 Turns)."], skills: [
+                { n: "Rock Throw", c: 0, d: [7, 10], fx: "slash", e: "Heavy toss" }, { n: "Rooting", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Granite Armor", c: 1, t: 'harden', v: 0.05, e: "Perm +5% DEF (Max 50%)" }, { n: "Stone Wall", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Earth Smash", c: 2, d: [15, 20], t: 'stun', v: 0.25, fx: "shake", e: "25% Stun Chance" }, { n: "Reconstruction", c: 3, v: [30, 50], t: 'heal', e: "Restores massive HP" }, { n: "GIGA MONOLITH", c: 9, d: [75, 100], t: 'rock_ult', fx: "shake", e: "DMG + STUN 2 TURNS" }
             ]}
         };
 
         function saveGame(slot) {
-            const data = {
-                state: state,
-                selecting: selecting,
-                isOver: isOver,
-                displayArena: document.getElementById('arena').style.display,
-                displaySelection: document.getElementById('selection-screen').style.display,
-                turnTitle: document.getElementById('turn-title').innerText,
-                turnColor: document.getElementById('turn-title').style.color
-            };
+            const data = { state: state, selecting: selecting, isOver: isOver, displayArena: document.getElementById('arena').style.display, displaySelection: document.getElementById('selection-screen').style.display, turnTitle: document.getElementById('turn-title').innerText, turnColor: document.getElementById('turn-title').style.color };
             localStorage.setItem(`chrono_arena_save_${slot}`, JSON.stringify(data));
             alert(`Slot ${slot} 儲存成功！`);
         }
@@ -206,15 +196,12 @@
             const raw = localStorage.getItem(`chrono_arena_save_${slot}`);
             if(!raw) return alert("該存檔位置為空！");
             const data = JSON.parse(raw);
-            state = data.state;
-            selecting = data.selecting;
-            isOver = data.isOver;
+            state = data.state; selecting = data.selecting; isOver = data.isOver;
             document.getElementById('arena').style.display = data.displayArena;
             document.getElementById('selection-screen').style.display = data.displaySelection;
             document.getElementById('turn-title').innerText = data.turnTitle;
             document.getElementById('turn-title').style.color = data.turnColor;
-            update();
-            alert(`Slot ${slot} 讀取成功！`);
+            update(); alert(`Slot ${slot} 讀取成功！`);
         }
 
         function triggerFX(type, attacker, target) {
@@ -246,7 +233,11 @@
 
         function act(p, i) {
             if(isOver) return;
-            if(state[p].stunned) { state[p].stunned = false; pop(p, "STUNNED!", "var(--dmg)"); update(); return; }
+            if(state[p].stunned) { 
+                if(typeof state[p].stunned === 'number') state[p].stunned--;
+                else state[p].stunned = false;
+                pop(p, "STUNNED!", "var(--dmg)"); update(); return; 
+            }
             const s = jobs[state[p].job].skills[i], opp = p === 'boy' ? 'girl' : 'boy';
             let cost = (state[p].frost > 0 && s.c > 0) ? s.c * (state[p].frost === 2 ? 3 : 2) : s.c;
             if(state[p].en < cost) return;
@@ -256,6 +247,7 @@
 
             if(s.t === 'en') { playSfx('en'); state[p].en = Math.min(10, state[p].en + s.v); }
             else if(s.t === 'heal') { playSfx('heal'); let h = r(s.v[0], s.v[1]); state[p].hp = Math.min(state[p].max, state[p].hp + h); pop(p, `+${h}`, 'var(--heal)'); }
+            else if(s.t === 'harden') { playSfx('en'); state[p].def = Math.min(0.5, state[p].def + s.v); pop(p, "DEF UP", "var(--info)"); }
             else if(['def','reflect','dodge','weak','focus','mark','counter'].includes(s.t)) { 
                 playSfx('bolt'); 
                 if(s.t==='def') state[p].guard=true; 
@@ -267,7 +259,7 @@
                 if(s.t==='counter') state[p].counter=true;
             }
             else {
-                if(s.t === 'burn') state[opp].en = Math.max(0, state[opp].en - 2);
+                if(s.t === 'burn' && state[opp].job !== 'RockKing') state[opp].en = Math.max(0, state[opp].en - 2);
                 let hits = s.t==='double'?2:(s.t==='triple'?3:(s.t==='archer_ult'?4:1));
                 
                 for(let h=0; h<hits; h++){
@@ -280,21 +272,15 @@
                         if(s.t==='boxer_ult' && state[opp].hp < (state[opp].max*0.3)) baseD = 999;
                         if(state[p].focused || Math.random() < (state[p].job==='Berserker'?0.3:0.12)) { baseD *= 2; state[p].focused = false; }
                         
-                        // --- 修改重點 1：判定迴避 (如果是 boxer_ult 則必中) ---
                         let dodgeSkill = jobs[state[opp].job].skills.find(sk => sk.t === 'dodge');
                         let dodgeChance = dodgeSkill ? (dodgeSkill.v || 1.0) : 1.0;
 
-                        // 判斷是否迴避：對手有次數、機率中、且不是 Boxer 大招
                         if(s.t !== 'boxer_ult' && state[opp].dodge > 0 && Math.random() < dodgeChance) { 
                             pop(opp, "EVADE", "#3498db", h); 
                             if(state[opp].job === 'Boxer') state[opp].en = Math.min(10, state[opp].en + 2);
                         } else {
-                            // --- 修改重點 2：計算減傷 (如果是 boxer_ult 則無視防禦) ---
-                            // red = 減傷比例。如果被標記或發動 Boxer 大招，減傷為 0。
                             let red = (state[opp].marked || s.t === 'boxer_ult') ? 0 : (state[opp].guard ? 0.8 : state[opp].def);
-                            
                             if(state[opp].reflect) { state[p].hp -= baseD; pop(p, `-${Math.floor(baseD)}`, "var(--dmg)", h); red = 0.5; state[opp].reflect = false; }
-                            
                             if(state[opp].counter) { state[p].hp -= 20; pop(p, "-20", "var(--dmg)", h); state[opp].counter = false; }
 
                             let f = Math.max(1, Math.floor(baseD * (1 - red)));
@@ -309,19 +295,20 @@
                             }
 
                             if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
+                            if(s.t === 'rock_ult') state[opp].stunned = 2; // 2 Turns
                             if(s.t === 'frost') state[opp].frost = s.v;
+
+                            // Passive Checks
                             if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
-                            if(state[opp].job === 'Berserker') state[opp].en = Math.max(0, state[opp].en - 1);
+                            if(state[opp].job === 'Berserker' && state[opp].job !== 'RockKing') state[opp].en = Math.max(0, state[opp].en - 1);
                         }
 
                         if(h === hits - 1) {
                             if(s.t === 'berserk_ult') { state[p].en = 10; playSfx('en'); }
                             if(s.t === 'archer_ult') state[opp].marked = true;
-                            if(s.t === 'gunner_ult') { state[opp].en = 0; playSfx('bolt'); }
-                            // 如果發生了攻擊（無論中沒中），扣除對手的閃避次數（大招消耗掉對手閃避也是合理的平衡）
+                            if(s.t === 'gunner_ult' && state[opp].job !== 'RockKing') { state[opp].en = 0; playSfx('bolt'); }
                             if(state[opp].dodge > 0) state[opp].dodge--;
                         }
-                        
                         update(); checkWin();
                     }, h * 200);
                 }
@@ -334,7 +321,8 @@
                 const s = state[p]; s.hp = Math.max(0, Math.min(s.max, s.hp)); 
                 document.getElementById(`txt-${p}`).innerText = `${Math.floor(s.hp)}/${s.max}`;
                 document.getElementById(`bar-${p}`).style.width = (s.hp/s.max*100) + "%";
-                document.getElementById(`status-${p}`).innerText = (s.guard?"🛡️G ":"")+(s.reflect?"✨R ":"")+(s.dodge>0?`💨E(${s.dodge}) `:"")+(s.frost>0? (s.frost===2?"❄️❄️DF ":"❄️F ") :"")+(s.stunned?"💫S ":"")+(s.marked?"🎯M ":"")+(s.counter?"🥊C ":"");
+                let stStr = (s.guard?"🛡️G ":"")+(s.reflect?"✨R ":"")+(s.dodge>0?`💨E(${s.dodge}) `:"")+(s.frost>0? (s.frost===2?"❄️❄️DF ":"❄️F ") :"")+(s.stunned?"💫S ":"")+(s.marked?"🎯M ":"")+(s.counter?"🥊C ":"")+(s.def > jobs[s.job].def ? "💎H ":"");
+                document.getElementById(`status-${p}`).innerText = stStr;
                 
                 const enBox = document.getElementById(`en-${p}`); enBox.innerHTML = '';
                 for(let i=0; i<10; i++) { const d = document.createElement('div'); d.className = `en-dot ${i < s.en ? 'active' : ''}`; enBox.appendChild(d); }
