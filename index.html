@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Chrono Arena RPG</title>
+    <title>Chrono Arena RPG - Boxer Buffed</title>
     <style>
         :root { 
             --boy: #00d2ff; --girl: #ff007f; --accent: #f1c40f; 
@@ -19,6 +19,19 @@
             height: 100vh; width: 100vw; overflow: hidden;
             display: flex; flex-direction: column; align-items: center;
         }
+
+        #save-system {
+            position: absolute; top: 10px; right: 10px; z-index: 2000;
+            display: flex; gap: 5px; flex-direction: column; align-items: flex-end;
+        }
+        .save-row { display: flex; gap: 4px; }
+        .save-btn { 
+            font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; border: 1px solid #555;
+            background: #1a1c2c; color: #fff; cursor: pointer; transition: 0.2s;
+        }
+        .save-btn:active { transform: scale(0.9); }
+        .btn-s { border-color: var(--heal); color: var(--heal); }
+        .btn-l { border-color: var(--info); color: var(--info); }
 
         #fx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 800; overflow: hidden; }
         .fx-slash { position: absolute; width: 150px; height: 6px; background: white; box-shadow: 0 0 15px white; animation: slash 0.3s ease-out forwards; }
@@ -73,6 +86,12 @@
     </style>
 </head>
 <body>
+
+    <div id="save-system">
+        <div class="save-row"><span>S1</span><button class="save-btn btn-s" onclick="saveGame(1)">SAVE</button><button class="save-btn btn-l" onclick="loadGame(1)">LOAD</button></div>
+        <div class="save-row"><span>S2</span><button class="save-btn btn-s" onclick="saveGame(2)">SAVE</button><button class="save-btn btn-l" onclick="loadGame(2)">LOAD</button></div>
+        <div class="save-row"><span>S3</span><button class="save-btn btn-s" onclick="saveGame(3)">SAVE</button><button class="save-btn btn-l" onclick="loadGame(3)">LOAD</button></div>
+    </div>
 
     <div id="fx-layer"></div>
 
@@ -137,7 +156,7 @@
         }
 
         let selecting = 'boy', isOver = false;
-        const state = {
+        let state = {
             boy: { hp:0, max:0, en:0, job:'', def:0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false },
             girl: { hp:0, max:0, en:0, job:'', def:0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false }
         };
@@ -153,15 +172,50 @@
                 { n: "Heavy Slash", c: 0, d: [13, 19], fx: "slash", e: "Brutal swing" }, { n: "Blood Lust", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Adrenaline", c: 2, t: 'focus', e: "Next hit 100% Crit" }, { n: "Frenzy", c: 3, d: [25, 38], t: 'leech', v: 0.5, fx: "slash", e: "50% Lifesteal" }, { n: "Execute", c: 4, d: [30, 45], t: 'exec', fx: "slash", e: "+50% dmg if <50%HP" }, { n: "Inner Rage", c: 1, v: [15, 25], t: 'heal', e: "Self Heal" }, { n: "DECIMATE", c: 9, d: [95, 120], t: 'berserk_ult', fx: "shake", e: "Leech + FULL EN" }
             ]},
             Archer: { icon: "🏹", hp: 110, def: 0.15, desc: ["Passive: Rapid Double Hit.", "Evasion: 100% Dodge (2 Acts).", "ULT: 4x DMG + Mark."], skills: [
-                { n: "Aim Shot", c: 0, d: [11, 15], fx: "arrow", e: "Pierce dmg" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Quick Shot", c: 1, d: [10, 14], t: 'double', fx: "arrow", e: "Double Hit" }, { n: "Mark Target", c: 2, t: 'mark', e: "Ignore Defense" }, { n: "Evasion", c: 1, t: 'dodge', e: "100% Dodge (2 Acts)" }, { n: "Volley", c: 3, d: [15, 22], t: 'triple', fx: "arrow", e: "Triple Strike" }, { n: "ARROW RAIN", c: 9, d: [25, 35], t: 'archer_ult', fx: "arrow", e: "4x DMG + MARKED" }
+                { n: "Aim Shot", c: 0, d: [11, 15], fx: "arrow", e: "Pierce dmg" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Quick Shot", c: 1, d: [10, 14], t: 'double', fx: "arrow", e: "Double Hit" }, { n: "Mark Target", c: 2, t: 'mark', e: "Ignore Defense" }, { n: "Evasion", c: 1, t: 'dodge', v: 1.0, e: "100% Dodge (2 Acts)" }, { n: "Volley", c: 3, d: [15, 22], t: 'triple', fx: "arrow", e: "Triple Strike" }, { n: "ARROW RAIN", c: 9, d: [25, 35], t: 'archer_ult', fx: "arrow", e: "4x DMG + MARKED" }
             ]},
             Gunner: { icon: "🔫", hp: 105, def: 0.05, desc: ["Passive: High EN Recovery.", "Lock-On: High Crit Rate.", "ULT: Massive DMG + EN Wipe."], skills: [
-                { n: "Pistol Shot", c: 0, d: [6, 9], t: 'double', fx: "arrow", e: "2x Fast Shots" }, { n: "Reload", c: 0, v: 4, t: 'en', e: "+4 Energy" }, { n: "Headshot", c: 2, d: [20, 28], fx: "arrow", e: "High base dmg" }, { n: "Lock On", c: 1, t: 'focus', e: "Next 100% Crit" }, { n: "Grenade", c: 3, d: [22, 30], t: 'burn', fx: "bolt", e: "DMG + Drain 2 EN" }, { n: "Cover Fire", c: 1, t: 'dodge', e: "100% Dodge (1 Act)" }, { n: "SATELLITE BEAM", c: 9, d: [110, 140], t: 'gunner_ult', fx: "bolt", e: "AOE + TARGET EN=0" }
+                { n: "Pistol Shot", c: 0, d: [6, 9], t: 'double', fx: "arrow", e: "2x Fast Shots" }, 
+                { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, 
+                { n: "Headshot", c: 2, d: [20, 28], fx: "arrow", e: "High base dmg" }, { n: "Lock On", c: 1, t: 'focus', e: "Next 100% Crit" }, { n: "Grenade", c: 3, d: [22, 30], t: 'burn', fx: "bolt", e: "DMG + Drain 2 EN" }, 
+                { n: "Cover Fire", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, 
+                { n: "SATELLITE BEAM", c: 9, d: [110, 140], t: 'gunner_ult', fx: "bolt", e: "AOE + TARGET EN=0" }
             ]},
-            Boxer: { icon: "🥊", hp: 140, def: 0.12, desc: ["Passive: Dodge gains 2 EN.", "Counter: 20 DMG Rebound.", "ULT: Execute HP < 30%."], skills: [
-                { n: "Jab", c: 0, d: [9, 13], fx: "slash", e: "Quick punch" }, { n: "Deep Breath", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Counter Stance", c: 2, t: 'counter', e: "Rebound 20 Dmg" }, { n: "Sway", c: 1, t: 'dodge', e: "100% Dodge (2 Acts)" }, { n: "Uppercut", c: 2, d: [12, 18], t: 'stun', v: 0.3, fx: "slash", e: "30% Stun Chance" }, { n: "Body Blow", c: 2, d: [15, 22], t: 'weak', e: "DMG + Weaken" }, { n: "K.O. PUNCH", c: 9, d: [85, 110], t: 'boxer_ult', fx: "shake", e: "Pierce + Kill < 30%HP" }
+            Boxer: { icon: "🥊", hp: 140, def: 0.12, desc: ["Passive: Dodge gains 2 EN.", "Counter: 20 DMG Rebound.", "ULT: Ignore Def/Dodge + <30% Kill."], skills: [
+                { n: "Jab", c: 0, d: [9, 13], fx: "slash", e: "Quick punch" }, { n: "Deep Breath", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Counter Stance", c: 2, t: 'counter', e: "Rebound 20 Dmg" }, 
+                { n: "Sway", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts)" }, 
+                { n: "Uppercut", c: 2, d: [12, 18], t: 'stun', v: 0.3, fx: "slash", e: "30% Stun Chance" }, { n: "Body Blow", c: 2, d: [15, 22], t: 'weak', e: "DMG + Weaken" }, { n: "K.O. PUNCH", c: 9, d: [85, 110], t: 'boxer_ult', fx: "shake", e: "Sure Hit + Ignore Def" }
             ]}
         };
+
+        function saveGame(slot) {
+            const data = {
+                state: state,
+                selecting: selecting,
+                isOver: isOver,
+                displayArena: document.getElementById('arena').style.display,
+                displaySelection: document.getElementById('selection-screen').style.display,
+                turnTitle: document.getElementById('turn-title').innerText,
+                turnColor: document.getElementById('turn-title').style.color
+            };
+            localStorage.setItem(`chrono_arena_save_${slot}`, JSON.stringify(data));
+            alert(`Slot ${slot} 儲存成功！`);
+        }
+
+        function loadGame(slot) {
+            const raw = localStorage.getItem(`chrono_arena_save_${slot}`);
+            if(!raw) return alert("該存檔位置為空！");
+            const data = JSON.parse(raw);
+            state = data.state;
+            selecting = data.selecting;
+            isOver = data.isOver;
+            document.getElementById('arena').style.display = data.displayArena;
+            document.getElementById('selection-screen').style.display = data.displaySelection;
+            document.getElementById('turn-title').innerText = data.turnTitle;
+            document.getElementById('turn-title').style.color = data.turnColor;
+            update();
+            alert(`Slot ${slot} 讀取成功！`);
+        }
 
         function triggerFX(type, attacker, target) {
             playSfx(type);
@@ -206,7 +260,7 @@
                 playSfx('bolt'); 
                 if(s.t==='def') state[p].guard=true; 
                 if(s.t==='reflect') state[p].reflect=true; 
-                if(s.t==='dodge') state[p].dodge=2; 
+                if(s.t==='dodge') state[p].dodge = (state[p].job === 'Gunner') ? 1 : 2; 
                 if(s.t==='weak') state[opp].weakened=true; 
                 if(s.t==='focus') state[p].focused=true; 
                 if(s.t==='mark') state[opp].marked=true; 
@@ -226,11 +280,19 @@
                         if(s.t==='boxer_ult' && state[opp].hp < (state[opp].max*0.3)) baseD = 999;
                         if(state[p].focused || Math.random() < (state[p].job==='Berserker'?0.3:0.12)) { baseD *= 2; state[p].focused = false; }
                         
-                        if(state[opp].dodge > 0) { 
-                            pop(opp, "MISS", "#3498db", h); 
+                        // --- 修改重點 1：判定迴避 (如果是 boxer_ult 則必中) ---
+                        let dodgeSkill = jobs[state[opp].job].skills.find(sk => sk.t === 'dodge');
+                        let dodgeChance = dodgeSkill ? (dodgeSkill.v || 1.0) : 1.0;
+
+                        // 判斷是否迴避：對手有次數、機率中、且不是 Boxer 大招
+                        if(s.t !== 'boxer_ult' && state[opp].dodge > 0 && Math.random() < dodgeChance) { 
+                            pop(opp, "EVADE", "#3498db", h); 
                             if(state[opp].job === 'Boxer') state[opp].en = Math.min(10, state[opp].en + 2);
                         } else {
+                            // --- 修改重點 2：計算減傷 (如果是 boxer_ult 則無視防禦) ---
+                            // red = 減傷比例。如果被標記或發動 Boxer 大招，減傷為 0。
                             let red = (state[opp].marked || s.t === 'boxer_ult') ? 0 : (state[opp].guard ? 0.8 : state[opp].def);
+                            
                             if(state[opp].reflect) { state[p].hp -= baseD; pop(p, `-${Math.floor(baseD)}`, "var(--dmg)", h); red = 0.5; state[opp].reflect = false; }
                             
                             if(state[opp].counter) { state[p].hp -= 20; pop(p, "-20", "var(--dmg)", h); state[opp].counter = false; }
@@ -256,6 +318,7 @@
                             if(s.t === 'berserk_ult') { state[p].en = 10; playSfx('en'); }
                             if(s.t === 'archer_ult') state[opp].marked = true;
                             if(s.t === 'gunner_ult') { state[opp].en = 0; playSfx('bolt'); }
+                            // 如果發生了攻擊（無論中沒中），扣除對手的閃避次數（大招消耗掉對手閃避也是合理的平衡）
                             if(state[opp].dodge > 0) state[opp].dodge--;
                         }
                         
