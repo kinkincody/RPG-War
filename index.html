@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Chrono Arena RPG - Rock Queen Update</title>
+    <title>Chrono Arena RPG - Assassin Expansion</title>
     <style>
         :root { 
             --boy: #00d2ff; --girl: #ff007f; --accent: #f1c40f; 
@@ -183,6 +183,9 @@
             ]},
             RockQueen: { icon: "👑", hp: 180, def: 0.30, desc: ["Passive: IMMUNE to EN loss.", "Hardened: Damage stacks DEF.", "ULT: Sure Hit + Stun 2 Turns."], skills: [
                 { n: "Rock Throw", c: 0, d: [7, 10], fx: "slash", e: "Heavy toss" }, { n: "Rooting", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Granite Armor", c: 1, t: 'harden', v: 0.05, e: "Perm +5% DEF (Max 50%)" }, { n: "Stone Wall", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Earth Smash", c: 2, d: [15, 20], t: 'stun', v: 0.25, fx: "shake", e: "25% Stun Chance" }, { n: "Reconstruction", c: 3, v: [30, 50], t: 'heal', e: "Restores massive HP" }, { n: "GIGA MONOLITH", c: 9, d: [75, 100], t: 'rock_ult', fx: "shake", e: "SURE HIT + STUN 2T" }
+            ]},
+            Assassin: { icon: "🗡️", hp: 85, def: 0, desc: ["Passive: 40% Crit Rate.", "Stealth: Next hit x2.5 DMG.", "ULT: Instant Kill if HP < 25%."], skills: [
+                { n: "Backstab", c: 0, d: [12, 18], fx: "slash", e: "High base crit" }, { n: "Preparation", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Venom Strike", c: 2, d: [10, 14], t: 'weak', fx: "slash", e: "Dmg + Weaken Target" }, { n: "Shadow Cloak", c: 2, t: 'dodge', v: 1.0, e: "100% Dodge + Focus" }, { n: "Phantom Strike", c: 1, d: [8, 12], t: 'double', fx: "slash", e: "Double Hit" }, { n: "Smoke Bomb", c: 2, t: 'dodge', v: 0.8, e: "80% Dodge (2 Acts)" }, { n: "DEATH MARK", c: 9, d: [120, 150], t: 'exec', fx: "slash", e: "MASSIVE DMG + KILL LOW HP" }
             ]}
         };
 
@@ -252,7 +255,10 @@
                 playSfx('bolt'); 
                 if(s.t==='def') state[p].guard=true; 
                 if(s.t==='reflect') state[p].reflect=true; 
-                if(s.t==='dodge') state[p].dodge = (state[p].job === 'Gunner') ? 1 : 2; 
+                if(s.t==='dodge') {
+                    state[p].dodge = (state[p].job === 'Gunner') ? 1 : 2;
+                    if(state[p].job === 'Assassin') state[p].focused = true;
+                }
                 if(s.t==='weak') state[opp].weakened=true; 
                 if(s.t==='focus') state[p].focused=true; 
                 if(s.t==='mark') state[opp].marked=true; 
@@ -268,14 +274,24 @@
                         if(s.fx) triggerFX(s.fx, p, opp);
                         
                         let baseD = r(s.d[0], s.d[1]);
-                        if(s.t==='exec' && state[opp].hp < (state[opp].max*0.5)) baseD *= 1.5;
+                        
+                        // Exec Logic
+                        if(s.t==='exec') {
+                            if(state[p].job === 'Assassin' && state[opp].hp < (state[opp].max*0.25)) baseD = 999;
+                            else if(state[opp].hp < (state[opp].max*0.5)) baseD *= 1.5;
+                        }
                         if(s.t==='boxer_ult' && state[opp].hp < (state[opp].max*0.3)) baseD = 999;
-                        if(state[p].focused || Math.random() < (state[p].job==='Berserker'?0.3:0.12)) { baseD *= 2; state[p].focused = false; }
+
+                        // Focus (Stealth/Prep) Logic
+                        if(state[p].focused) {
+                            baseD *= (state[p].job === 'Assassin' ? 2.5 : 2);
+                            state[p].focused = false;
+                        } else if(Math.random() < (state[p].job==='Berserker'?0.3:(state[p].job==='Assassin'?0.4:0.12))) { 
+                            baseD *= 2; 
+                        }
                         
                         let dodgeSkill = jobs[state[opp].job].skills.find(sk => sk.t === 'dodge');
                         let dodgeChance = dodgeSkill ? (dodgeSkill.v || 1.0) : 1.0;
-
-                        // Rock Queen ULT and Boxer ULT are SURE HIT
                         let isSureHit = (s.t === 'boxer_ult' || s.t === 'rock_ult');
 
                         if(!isSureHit && state[opp].dodge > 0 && Math.random() < dodgeChance) { 
@@ -298,7 +314,7 @@
                             }
 
                             if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
-                            if(s.t === 'rock_ult') state[opp].stunned = 2; // 2 Turns Stun
+                            if(s.t === 'rock_ult') state[opp].stunned = 2;
                             if(s.t === 'frost') state[opp].frost = s.v;
 
                             // Passive Checks
@@ -324,7 +340,7 @@
                 const s = state[p]; s.hp = Math.max(0, Math.min(s.max, s.hp)); 
                 document.getElementById(`txt-${p}`).innerText = `${Math.floor(s.hp)}/${s.max}`;
                 document.getElementById(`bar-${p}`).style.width = (s.hp/s.max*100) + "%";
-                let stStr = (s.guard?"🛡️G ":"")+(s.reflect?"✨R ":"")+(s.dodge>0?`💨E(${s.dodge}) `:"")+(s.frost>0? (s.frost===2?"❄️❄️DF ":"❄️F ") :"")+(s.stunned?"💫S ":"")+(s.marked?"🎯M ":"")+(s.counter?"🥊C ":"")+(s.def > jobs[s.job].def ? "💎H ":"");
+                let stStr = (s.guard?"🛡️G ":"")+(s.reflect?"✨R ":"")+(s.dodge>0?`💨E(${s.dodge}) `:"")+(s.frost>0? (s.frost===2?"❄️❄️DF ":"❄️F ") :"")+(s.stunned?"💫S ":"")+(s.marked?"🎯M ":"")+(s.counter?"🥊C ":"")+(s.def > jobs[s.job].def ? "💎H ":"")+(s.focused?"🔥F ":"");
                 document.getElementById(`status-${p}`).innerText = stStr;
                 
                 const enBox = document.getElementById(`en-${p}`); enBox.innerHTML = '';
