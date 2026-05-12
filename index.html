@@ -185,7 +185,7 @@
                 { n: "Rock Throw", c: 0, d: [7, 10], fx: "slash", e: "Heavy toss" }, { n: "Rooting", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Granite Armor", c: 1, t: 'harden', v: 0.05, e: "Perm +5% DEF (Max 50%)" }, { n: "Stone Wall", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Earth Smash", c: 2, d: [15, 20], t: 'stun', v: 0.25, fx: "shake", e: "25% Stun Chance" }, { n: "Reconstruction", c: 3, v: [30, 50], t: 'heal', e: "Restores massive HP" }, { n: "GIGA MONOLITH", c: 9, d: [75, 100], t: 'rock_ult', fx: "shake", e: "SURE HIT + STUN 2T" }
             ]},
             Assassin: { icon: "🗡️", hp: 85, def: 0, desc: ["Passive: 40% Crit Rate.", "Stealth: Next hit x2.5 DMG.", "ULT: Instant Kill if HP < 25%."], skills: [
-                { n: "Backstab", c: 0, d: [12, 18], fx: "slash", e: "High base crit" }, { n: "Preparation", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Venom Strike", c: 2, d: [10, 14], t: 'weak', fx: "slash", e: "Dmg + Weaken Target" }, { n: "Shadow Cloak", c: 2, t: 'dodge', v: 1.0, e: "100% Dodge + Focus" }, { n: "Slayer's Feast", c: 3, d: [20, 28], t: 'leech', v: 1.0, fx: "slash", e: "100% Lifesteal" }, { n: "Smoke Bomb", c: 2, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "DEATH MARK", c: 9, d: [120, 150], t: 'exec', fx: "slash", e: "MASSIVE DMG + KILL LOW HP" }
+                { n: "Backstab", c: 0, d: [12, 18], fx: "slash", e: "High base crit" }, { n: "Preparation", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Venom Strike", c: 2, d: [10, 14], t: 'weak', fx: "slash", e: "Dmg + Weaken Target" }, { n: "Shadow Cloak", c: 2, t: 'assassin_sh', e: "Lose 50% HP + 200% DMG" }, { n: "Slayer's Feast", c: 3, d: [20, 28], t: 'leech', v: 1.0, fx: "slash", e: "100% Lifesteal" }, { n: "Smoke Bomb", c: 2, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "DEATH MARK", c: 9, d: [120, 150], t: 'exec', fx: "slash", e: "MASSIVE DMG + KILL LOW HP" }
             ]}
         };
 
@@ -251,13 +251,19 @@
             if(s.t === 'en') { playSfx('en'); state[p].en = Math.min(10, state[p].en + s.v); }
             else if(s.t === 'heal') { playSfx('heal'); let h = r(s.v[0], s.v[1]); state[p].hp = Math.min(state[p].max, state[p].hp + h); pop(p, `+${h}`, 'var(--heal)'); }
             else if(s.t === 'harden') { playSfx('en'); state[p].def = Math.min(0.5, state[p].def + s.v); pop(p, "DEF UP", "var(--info)"); }
+            else if(s.t === 'assassin_sh') {
+                playSfx('shake');
+                let selfDmg = Math.floor(state[p].hp * 0.5);
+                state[p].hp -= selfDmg;
+                state[p].focused = true; // Use focused as the 200% flag
+                pop(p, `-${selfDmg}`, "var(--dmg)");
+            }
             else if(['def','reflect','dodge','weak','focus','mark','counter'].includes(s.t)) { 
                 playSfx('bolt'); 
                 if(s.t==='def') state[p].guard=true; 
                 if(s.t==='reflect') state[p].reflect=true; 
                 if(s.t==='dodge') {
                     state[p].dodge = (state[p].job === 'Gunner' || (state[p].job === 'Assassin' && s.n === 'Smoke Bomb')) ? 1 : 2;
-                    if(state[p].job === 'Assassin' && s.n === 'Shadow Cloak') state[p].focused = true;
                 }
                 if(s.t==='weak') state[opp].weakened=true; 
                 if(s.t==='focus') state[p].focused=true; 
@@ -282,7 +288,7 @@
                         if(s.t==='boxer_ult' && state[opp].hp < (state[opp].max*0.3)) baseD = 999;
 
                         if(state[p].focused) {
-                            baseD *= (state[p].job === 'Assassin' ? 2.5 : 2);
+                            baseD *= 2; // Shadow Cloak or Adrenaline effect
                             state[p].focused = false;
                         } else if(Math.random() < (state[p].job==='Berserker'?0.3:(state[p].job==='Assassin'?0.4:0.12))) { 
                             baseD *= 2; 
