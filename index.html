@@ -319,6 +319,12 @@
             ]},
             Assassin: { icon: "🗡️", hp: 85, def: 0, desc: ["Passive: 40% Crit Rate.", "Stealth: Next hit x2.5 DMG.", "ULT: Instant Kill if HP < 25%."], skills: [
                 { n: "Backstab", c: 0, d: [12, 18], fx: "slash", e: "High base crit" }, { n: "Preparation", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Venom Strike", c: 2, d: [10, 14], t: 'weak', fx: "slash", e: "Dmg + Weaken Target" }, { n: "Shadow Cloak", c: 2, t: 'assassin_sh', e: "Lose 50% HP + 200% DMG" }, { n: "Slayer's Feast", c: 3, d: [20, 28], t: 'leech', v: 1.0, fx: "slash", e: "100% Lifesteal" }, { n: "Smoke Bomb", c: 2, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "DEATH MARK", c: 9, d: [120, 150], t: 'exec', fx: "slash", e: "MASSIVE DMG + KILL LOW HP" }
+            ]},
+            Paladin: { icon: "⚖️", hp: 160, def: 0.25, desc: ["Passive: 50% EN gain when hit.", "Holy Light: Heal + Cleanse.", "ULT: Dmg + Heal + Guard."], skills: [
+                { n: "Smite", c: 0, d: [10, 14], fx: "slash", e: "Holy damage" }, { n: "Blessing", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Holy Light", c: 2, v: [20, 35], t: 'heal', e: "Heal + Cleanse Weak" }, { n: "Thorns", c: 2, t: 'counter', e: "Reflect 20 Dmg" }, { n: "Iron Will", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Judgment", c: 3, d: [20, 30], t: 'exec', fx: "bolt", e: "Bonus Dmg to low HP" }, { n: "HEAVEN GATE", c: 9, d: [80, 110], t: 'paladin_ult', fx: "bolt", e: "DMG + HEAL + GUARD" }
+            ]},
+            Alchemist: { icon: "🧪", hp: 115, def: 0.10, desc: ["Passive: 20% chance to refund AP.", "Control: Frost & Energy drain.", "ULT: Chaos reaction."], skills: [
+                { n: "Acid Pot", c: 0, d: [8, 12], t: 'mark', fx: "bolt", e: "Dmg + Mark target" }, { n: "Energy Pot", c: 0, v: 3, t: 'en', e: "+3 Energy" }, { n: "Frost Flask", c: 2, d: [10, 16], t: 'frost', v: 1, fx: "bolt", e: "Dmg + Frost effect" }, { n: "Toxic Gas", c: 2, t: 'weak', e: "Weaken Target 50%" }, { n: "Heal Vials", c: 2, v: [15, 25], t: 'heal', e: "Restore HP" }, { n: "Mana Thief", c: 2, d: [12, 18], t: 'burn', fx: "bolt", e: "Dmg + Drain 2 EN" }, { n: "PHILO STONE", c: 9, d: [90, 120], t: 'alchemist_ult', fx: "shake", e: "DMG + EN WIPE + FOCUS" }
             ]}
         };
 
@@ -379,8 +385,20 @@
             if(state[p].en < cost) return;
             state[p].en -= cost; state[p].ap--; if(cost > 0) state[p].frost = 0; state[p].reflect = false;
 
+            // Alchemist Passive
+            if(state[p].job === 'Alchemist' && Math.random() < 0.2) {
+                state[p].ap++;
+                pop(p, "AP REFUND!", "var(--info)");
+            }
+
             if(s.t === 'en') { playSfx('en'); state[p].en = Math.min(10, state[p].en + s.v); }
-            else if(s.t === 'heal') { playSfx('heal'); let h = r(s.v[0], s.v[1]); state[p].hp = Math.min(state[p].max, state[p].hp + h); pop(p, `+${h}`, 'var(--heal)'); }
+            else if(s.t === 'heal') { 
+                playSfx('heal'); 
+                let h = r(s.v[0], s.v[1]); 
+                state[p].hp = Math.min(state[p].max, state[p].hp + h); 
+                pop(p, `+${h}`, 'var(--heal)'); 
+                if(state[p].job === 'Paladin') state[p].weakened = false; 
+            }
             else if(s.t === 'harden') { playSfx('en'); state[p].def = Math.min(0.5, state[p].def + s.v); pop(p, "DEF UP", "var(--info)"); }
             else if(s.t === 'assassin_sh') { playSfx('shake'); let selfDmg = Math.floor(state[p].hp * 0.5); state[p].hp -= selfDmg; state[p].focused = true; pop(p, `-${selfDmg}`, "var(--dmg)"); }
             else if(['def','reflect','dodge','focus','mark','counter'].includes(s.t)) { 
@@ -409,8 +427,8 @@
                         // 暴擊系統判定
                         let isCrit = false;
                         let critChance = (state[p].job === 'Berserker' ? 0.3 : (state[p].job === 'Assassin' ? 0.4 : 0.10));
-                        if(state[p].focused) { isCrit = true; baseD *= 2; state[p].focused = false; } // 技能Focus 100% 暴擊 (2倍)
-                        else if(Math.random() < critChance) { isCrit = true; baseD *= 1.5; } // 基礎暴擊 (1.5倍)
+                        if(state[p].focused) { isCrit = true; baseD *= 2; state[p].focused = false; } 
+                        else if(Math.random() < critChance) { isCrit = true; baseD *= 1.5; } 
 
                         if(state[p].weakened) { baseD *= (state[p].job === 'Warrior' || state[p].job === 'Assassin') ? 0.5 : 0.7; state[p].weakened = false; }
                         if(s.t==='exec') { if(state[p].job === 'Assassin' && state[opp].hp < (state[opp].max*0.25)) baseD = 999; else if(state[opp].hp < (state[opp].max*0.5)) baseD *= 1.5; }
@@ -433,11 +451,28 @@
                                 pop(opp, (isCrit ? `CRIT! -${f}` : `-${f}`), (isCrit ? "var(--accent)" : "var(--dmg)"), h); 
                             }
                             if(state[opp].guard) state[opp].guard = false;
+                            
+                            // Passive Trigger
+                            if(state[opp].job === 'Paladin' && Math.random() < 0.5) { state[opp].en = Math.min(10, state[opp].en + 1); }
+
                             if(s.t === 'leech' || s.t === 'berserk_ult') { let ratio = s.t === 'berserk_ult' ? 1.0 : (s.v || 0.5); let healVal = Math.floor(f * ratio); state[p].hp = Math.min(state[p].max, state[p].hp + healVal); if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', h); }
                             if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
                             if(s.t === 'rock_ult') state[opp].stunned = 1; 
                             if(s.t === 'frost') state[opp].frost = s.v;
                             if(s.t === 'weak' && s.d) state[opp].weakened = true;
+                            
+                            if(s.t === 'paladin_ult') {
+                                let heal = Math.floor(state[p].max * 0.3);
+                                state[p].hp = Math.min(state[p].max, state[p].hp + heal);
+                                state[p].guard = true;
+                                pop(p, `+${heal}`, 'var(--heal)');
+                            }
+                            if(s.t === 'alchemist_ult') {
+                                state[opp].en = 0;
+                                state[p].focused = true;
+                                pop(opp, "EN WIPE", "var(--info)");
+                            }
+
                             if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
                             if(state[opp].job === 'Berserker' && state[opp].job !== 'RockQueen') state[opp].en = Math.max(0, state[opp].en - 1);
                         }
@@ -474,7 +509,7 @@
         }
 
         function pop(t, m, c, hI = 0) { const el = document.createElement('div'); el.className = 'dmg-float'; el.innerText = m; el.style.color = c; el.style.left = (40 + (hI * 5)) + "%"; el.style.top = (25 - (hI * 2)) + "%"; document.getElementById(`card-${t}`).appendChild(el); setTimeout(() => el.remove(), 800); }
-        function initSelection() { const list = document.getElementById('job-list'); for(let j in jobs) { const card = document.createElement('div'); card.className = 'job-card'; card.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); pick(j); }; card.innerHTML = `<h3>${jobs[j].icon} ${j.toUpperCase()}</h3><div class=\"job-stats\">HP: ${jobs[j].hp} | DEF: ${jobs[j].def*100}%</div><ul class=\"job-desc\">${jobs[j].desc.map(d => `<li>${d}</li>`).join('')}</ul>`; list.appendChild(card); } }
+        function initSelection() { const list = document.getElementById('job-list'); for(let j in jobs) { const card = document.createElement('div'); card.className = 'job-card'; card.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); pick(j); }; card.innerHTML = `<h3>${jobs[j].icon} ${j.toUpperCase()}</h3><div class="job-stats">HP: ${jobs[j].hp} | DEF: ${jobs[j].def*100}%</div><ul class="job-desc">${jobs[j].desc.map(d => `<li>${d}</li>`).join('')}</ul>`; list.appendChild(card); } }
         function pick(j) { state[selecting].job = j; state[selecting].max = jobs[j].hp; state[selecting].hp = jobs[j].hp; state[selecting].def = jobs[j].def; if(selecting === 'boy') { selecting = 'girl'; document.getElementById('turn-title').innerText = "GIRL: SELECT YOUR CLASS"; document.getElementById('turn-title').style.color = "var(--girl)"; } else { document.getElementById('selection-screen').style.display = 'none'; document.getElementById('arena').style.display = 'flex'; update(); } }
         function checkWin() { let w = state.boy.hp <= 0 ? 'GIRL' : (state.girl.hp <= 0 ? 'BOY' : null); if(w && !isOver) { isOver = true; document.getElementById('win-title').innerText = `${w} WINS!`; document.getElementById('win-overlay').style.display = 'flex'; playSfx('shake'); return true; } return false; }
         function r(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
