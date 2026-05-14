@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Chrono Arena RPG - Assassin Updated</title>
+    <title>Chrono Arena RPG - Balanced Edition</title>
     <style>
         :root { 
             --boy: #00d2ff; --girl: #ff007f; --accent: #f1c40f; 
@@ -25,7 +25,7 @@
             position: absolute; top: 10px; right: 10px; z-index: 2000;
             display: flex; gap: 5px; flex-direction: column; align-items: flex-end;
         }
-        .save-row { display: flex; gap: 4px; }
+        .save-row { display: flex; gap: 4px; align-items: center; font-size: 0.7rem; }
         .save-btn { 
             font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; border: 1px solid #555;
             background: #1a1c2c; color: #fff; cursor: pointer; transition: 0.2s;
@@ -57,33 +57,50 @@
 
         .arena { display: none; width: 100%; height: 100%; padding: 10px; gap: 10px; padding-top: 50px; }
         .card { flex: 1; background: var(--card-bg); border-radius: 20px; padding: 10px; display: flex; flex-direction: column; position: relative; border: 1px solid #333; overflow: hidden; }
-        .hp-container { width: 100%; height: 22px; background: #000; border-radius: 10px; overflow: hidden; position: relative; margin: 3px 0; border: 1px solid #444; }
-        .hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4d4d, #f9ca24); transition: 0.3s; }
-        .hp-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; text-shadow: 1px 1px 2px #000; }
         
-        .en-row { display: flex; gap: 3px; justify-content: center; margin-bottom: 8px; }
-        .en-dot { width: 10px; height: 10px; border-radius: 50%; background: #222; border: 1px solid #444; }
-        .en-dot.active { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+        .hp-container { width: 100%; height: 45px; background: #000; border-radius: 12px; overflow: hidden; position: relative; margin: 8px 0; border: 2px solid #555; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4d4d, #f9ca24); transition: 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        .hp-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 2.2rem; text-shadow: 2px 2px 4px #000; letter-spacing: 1px; color: #fff; }
+        
+        .en-row { display: flex; gap: 4px; justify-content: center; margin-bottom: 10px; }
+        .en-dot { width: 12px; height: 12px; border-radius: 50%; background: #222; border: 1px solid #444; }
+        .en-dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
 
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex-grow: 1; }
-        button { 
-            background: #2a2d3e; color: white; border: 1px solid #444; border-radius: 10px; 
-            padding: 4px; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; min-height: 60px; transition: filter 0.2s, opacity 0.2s;
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-grow: 1; overflow-y: auto; padding-right: 4px; }
+        
+        .card button { 
+            background: #2a2d3e; color: white; border: 1px solid #555; border-radius: 12px; 
+            padding: 10px 4px; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; min-height: 160px; transition: filter 0.2s, background 0.2s;
+            cursor: pointer;
         }
-        button:disabled { filter: brightness(0.3) grayscale(0.8); opacity: 0.6; cursor: not-allowed; }
+        .card button:active { background: #3d415e; }
+        .card button:disabled { filter: brightness(0.3) grayscale(0.8); opacity: 0.6; cursor: not-allowed; }
 
-        .btn-ult { grid-column: span 2; background: linear-gradient(45deg, #4834d4, #686de0); border: 1px solid #a29bfe; }
-        .sk-name { font-size: 0.75rem; font-weight: 800; color: #fff; }
-        .sk-cost { font-size: 0.65rem; color: var(--info); font-weight: bold; }
-        .sk-val { font-size: 0.65rem; color: var(--dmg); font-weight: bold; }
-        .sk-effect { font-size: 0.55rem; color: #aaa; text-align: center; line-height: 1; margin-top: 2px; }
+        .btn-ult { grid-column: span 2; background: linear-gradient(45deg, #4834d4, #686de0); border: 1px solid #a29bfe; min-height: 180px; }
+        
+        .sk-name { font-size: 2.1rem; font-weight: 900; color: #fff; margin-bottom: 6px; text-shadow: 2px 2px 0px #000; line-height: 1; text-align: center; }
+        .sk-cost { font-size: 1.5rem; color: var(--info); font-weight: 800; margin-bottom: 4px; }
+        .sk-val { font-size: 1.65rem; color: var(--dmg); font-weight: 900; margin-bottom: 6px; }
+        .sk-effect { font-size: 1.25rem; color: #fff; text-align: center; line-height: 1.2; font-weight: 600; padding: 0 5px; }
 
-        .dmg-float { position: absolute; font-weight: 900; pointer-events: none; animation: pop 0.8s ease-out forwards; z-index: 900; font-size: 2.2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .dmg-float { position: absolute; font-weight: 900; pointer-events: none; animation: pop 0.8s ease-out forwards; z-index: 900; font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
         @keyframes pop { 0% { opacity: 0; transform: translateY(0) scale(0.5); } 20% { opacity: 1; transform: translateY(-20px) scale(1.1); } 100% { opacity: 0; transform: translateY(-100px) scale(1); } }
         
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        @media (max-width: 768px) { .arena { flex-direction: column; } .card { height: 49.5%; } .job-grid { grid-template-columns: 1fr; } }
+        
+        @media (max-width: 768px) { 
+            .arena { flex-direction: column; } 
+            .card { height: 49.5%; } 
+            .job-grid { grid-template-columns: 1fr; }
+            .hp-text { font-size: 1.8rem; }
+            .hp-container { height: 38px; }
+            .sk-name { font-size: 1.6rem; }
+            .sk-cost { font-size: 1.1rem; }
+            .sk-val { font-size: 1.2rem; }
+            .sk-effect { font-size: 0.9rem; }
+            .card button { min-height: 120px; }
+        }
     </style>
 </head>
 <body>
@@ -105,14 +122,14 @@
     <div class="arena" id="arena">
         <div id="card-boy" class="card">
             <h2 id="name-boy" style="color:var(--boy); text-align:center; margin:0; font-size: 1.1rem;">BOY</h2>
-            <div id="status-boy" style="font-size:0.65rem; color:var(--accent); height:14px; text-align:center;"></div>
+            <div id="status-boy" style="font-size:0.75rem; color:var(--accent); height:16px; text-align:center; font-weight:bold;"></div>
             <div class="hp-container"><div id="bar-boy" class="hp-fill"></div><div class="hp-text" id="txt-boy"></div></div>
             <div id="en-boy" class="en-row"></div>
             <div class="btn-grid" id="btns-boy"></div>
         </div>
         <div id="card-girl" class="card">
             <h2 id="name-girl" style="color:var(--girl); text-align:center; margin:0; font-size: 1.1rem;">GIRL</h2>
-            <div id="status-girl" style="font-size:0.65rem; color:var(--accent); height:14px; text-align:center;"></div>
+            <div id="status-girl" style="font-size:0.75rem; color:var(--accent); height:16px; text-align:center; font-weight:bold;"></div>
             <div class="hp-container"><div id="bar-girl" class="hp-fill"></div><div class="hp-text" id="txt-girl"></div></div>
             <div id="en-girl" class="en-row"></div>
             <div class="btn-grid" id="btns-girl"></div>
@@ -173,7 +190,13 @@
                 { n: "Heavy Slash", c: 0, d: [13, 19], fx: "slash", e: "Brutal swing" }, { n: "Blood Lust", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Adrenaline", c: 2, t: 'focus', e: "Next hit 100% Crit" }, { n: "Frenzy", c: 3, d: [25, 38], t: 'leech', v: 0.5, fx: "slash", e: "50% Lifesteal" }, { n: "Execute", c: 4, d: [30, 45], t: 'exec', fx: "slash", e: "+50% dmg if <50%HP" }, { n: "Inner Rage", c: 1, v: [15, 25], t: 'heal', e: "Self Heal" }, { n: "DECIMATE", c: 9, d: [95, 120], t: 'berserk_ult', fx: "shake", e: "Leech + FULL EN" }
             ]},
             Archer: { icon: "🏹", hp: 110, def: 0.15, desc: ["Passive: Rapid Double Hit.", "Evasion: 100% Dodge (2 Acts).", "ULT: 4x DMG + Mark."], skills: [
-                { n: "Aim Shot", c: 0, d: [11, 15], fx: "arrow", e: "Pierce dmg" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Quick Shot", c: 1, d: [10, 14], t: 'double', fx: "arrow", e: "Double Hit" }, { n: "Mark Target", c: 2, t: 'mark', e: "Ignore Defense" }, { n: "Evasion", c: 1, t: 'dodge', v: 1.0, e: "100% Dodge (2 Acts)" }, { n: "Volley", c: 3, d: [15, 22], t: 'triple', fx: "arrow", e: "Triple Strike" }, { n: "ARROW RAIN", c: 9, d: [25, 35], t: 'archer_ult', fx: "arrow", e: "4x DMG + MARKED" }
+                { n: "Aim Shot", c: 0, d: [11, 15], fx: "arrow", e: "Pierce dmg" }, 
+                { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, 
+                { n: "First Aid", c: 1, v: [15, 25], t: 'heal', e: "Self Heal" }, 
+                { n: "Mark Target", c: 2, t: 'mark', e: "Ignore Defense" }, 
+                { n: "Evasion", c: 1, t: 'dodge', v: 1.0, e: "100% Dodge (2 Acts)" }, 
+                { n: "Volley", c: 3, d: [15, 22], t: 'triple', fx: "arrow", e: "Triple Strike" }, 
+                { n: "ARROW RAIN", c: 9, d: [25, 35], t: 'archer_ult', fx: "arrow", e: "4x DMG + MARKED" }
             ]},
             Gunner: { icon: "🔫", hp: 105, def: 0.05, desc: ["Passive: High EN Recovery.", "Lock-On: High Crit Rate.", "ULT: Massive DMG + EN Wipe."], skills: [
                 { n: "Pistol Shot", c: 0, d: [6, 9], t: 'double', fx: "arrow", e: "2x Fast Shots" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Headshot", c: 2, d: [20, 28], fx: "arrow", e: "High base dmg" }, { n: "Lock On", c: 1, t: 'focus', e: "Next 100% Crit" }, { n: "Grenade", c: 3, d: [22, 30], t: 'burn', fx: "bolt", e: "DMG + Drain 2 EN" }, { n: "Cover Fire", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "SATELLITE BEAM", c: 9, d: [110, 140], t: 'gunner_ult', fx: "bolt", e: "AOE + TARGET EN=0" }
@@ -181,8 +204,8 @@
             Boxer: { icon: "🥊", hp: 140, def: 0.12, desc: ["Passive: Dodge gains 2 EN.", "Counter: 20 DMG Rebound.", "ULT: Ignore Def/Dodge + <30% Kill."], skills: [
                 { n: "Jab", c: 0, d: [9, 13], fx: "slash", e: "Quick punch" }, { n: "Deep Breath", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Counter Stance", c: 2, t: 'counter', e: "Rebound 20 Dmg" }, { n: "Sway", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts)" }, { n: "Uppercut", c: 2, d: [12, 18], t: 'stun', v: 0.3, fx: "slash", e: "30% Stun Chance" }, { n: "Body Blow", c: 2, d: [15, 22], t: 'weak', e: "DMG + Weaken" }, { n: "K.O. PUNCH", c: 9, d: [85, 110], t: 'boxer_ult', fx: "shake", e: "Sure Hit + Ignore Def" }
             ]},
-            RockQueen: { icon: "👑", hp: 180, def: 0.30, desc: ["Passive: IMMUNE to EN loss.", "Hardened: Damage stacks DEF.", "ULT: Sure Hit + Stun 2 Turns."], skills: [
-                { n: "Rock Throw", c: 0, d: [7, 10], fx: "slash", e: "Heavy toss" }, { n: "Rooting", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Granite Armor", c: 1, t: 'harden', v: 0.05, e: "Perm +5% DEF (Max 50%)" }, { n: "Stone Wall", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Earth Smash", c: 2, d: [15, 20], t: 'stun', v: 0.25, fx: "shake", e: "25% Stun Chance" }, { n: "Reconstruction", c: 3, v: [30, 50], t: 'heal', e: "Restores massive HP" }, { n: "GIGA MONOLITH", c: 9, d: [75, 100], t: 'rock_ult', fx: "shake", e: "SURE HIT + STUN 2T" }
+            RockQueen: { icon: "👑", hp: 180, def: 0.30, desc: ["Passive: IMMUNE to EN loss.", "Hardened: Damage stacks DEF.", "ULT: Sure Hit + Stun 1 Turn."], skills: [
+                { n: "Rock Throw", c: 0, d: [7, 10], fx: "slash", e: "Heavy toss" }, { n: "Rooting", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Granite Armor", c: 1, t: 'harden', v: 0.05, e: "Perm +5% DEF (Max 50%)" }, { n: "Stone Wall", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Earth Smash", c: 2, d: [15, 20], t: 'stun', v: 0.25, fx: "shake", e: "25% Stun Chance" }, { n: "Reconstruction", c: 3, v: [30, 50], t: 'heal', e: "Restores massive HP" }, { n: "GIGA MONOLITH", c: 9, d: [75, 100], t: 'rock_ult', fx: "shake", e: "SURE HIT + STUN 1T" }
             ]},
             Assassin: { icon: "🗡️", hp: 85, def: 0, desc: ["Passive: 40% Crit Rate.", "Stealth: Next hit x2.5 DMG.", "ULT: Instant Kill if HP < 25%."], skills: [
                 { n: "Backstab", c: 0, d: [12, 18], fx: "slash", e: "High base crit" }, { n: "Preparation", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Venom Strike", c: 2, d: [10, 14], t: 'weak', fx: "slash", e: "Dmg + Weaken Target" }, { n: "Shadow Cloak", c: 2, t: 'assassin_sh', e: "Lose 50% HP + 200% DMG" }, { n: "Slayer's Feast", c: 3, d: [20, 28], t: 'leech', v: 1.0, fx: "slash", e: "100% Lifesteal" }, { n: "Smoke Bomb", c: 2, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "DEATH MARK", c: 9, d: [120, 150], t: 'exec', fx: "slash", e: "MASSIVE DMG + KILL LOW HP" }
@@ -237,7 +260,7 @@
         function act(p, i) {
             if(isOver) return;
             if(state[p].stunned) { 
-                if(typeof state[p].stunned === 'number') state[p].stunned--;
+                if(typeof state[p].stunned === 'number' && state[p].stunned > 1) state[p].stunned--;
                 else state[p].stunned = false;
                 pop(p, "STUNNED!", "var(--dmg)"); update(); return; 
             }
@@ -255,7 +278,7 @@
                 playSfx('shake');
                 let selfDmg = Math.floor(state[p].hp * 0.5);
                 state[p].hp -= selfDmg;
-                state[p].focused = true; // Use focused as the 200% flag
+                state[p].focused = true; 
                 pop(p, `-${selfDmg}`, "var(--dmg)");
             }
             else if(['def','reflect','dodge','weak','focus','mark','counter'].includes(s.t)) { 
@@ -288,7 +311,7 @@
                         if(s.t==='boxer_ult' && state[opp].hp < (state[opp].max*0.3)) baseD = 999;
 
                         if(state[p].focused) {
-                            baseD *= 2; // Shadow Cloak or Adrenaline effect
+                            baseD *= 2; 
                             state[p].focused = false;
                         } else if(Math.random() < (state[p].job==='Berserker'?0.3:(state[p].job==='Assassin'?0.4:0.12))) { 
                             baseD *= 2; 
@@ -318,7 +341,7 @@
                             }
 
                             if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
-                            if(s.t === 'rock_ult') state[opp].stunned = 2;
+                            if(s.t === 'rock_ult') state[opp].stunned = 1; // 已改為 1 回合
                             if(s.t === 'frost') state[opp].frost = s.v;
 
                             if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
