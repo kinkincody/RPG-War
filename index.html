@@ -321,7 +321,7 @@
                 { n: "Backstab", c: 0, d: [12, 18], fx: "slash", e: "High base crit" }, { n: "Preparation", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Venom Strike", c: 2, d: [10, 14], t: 'weak', fx: "slash", e: "Dmg + Weaken Target" }, { n: "Shadow Cloak", c: 2, t: 'assassin_sh', e: "Lose 50% HP + 200% DMG" }, { n: "Slayer's Feast", c: 3, d: [20, 28], t: 'leech', v: 1.0, fx: "slash", e: "100% Lifesteal" }, { n: "Smoke Bomb", c: 2, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "DEATH MARK", c: 9, d: [120, 150], t: 'exec', fx: "slash", e: "MASSIVE DMG + KILL LOW HP" }
             ]},
             Paladin: { icon: "⚖️", hp: 160, def: 0.25, desc: ["Passive: 50% EN gain when hit.", "Holy Light: Heal + Cleanse.", "ULT: Dmg + Heal + Guard."], skills: [
-                { n: "Smite", c: 0, d: [10, 14], fx: "slash", e: "Holy damage" }, { n: "Blessing", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Holy Light", c: 2, v: [20, 35], t: 'heal', e: "Heal + Cleanse Weak" }, { n: "Thorns", c: 2, t: 'counter', e: "Reflect 20 Dmg" }, { n: "Iron Will", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Judgment", c: 3, d: [20, 30], t: 'exec', fx: "bolt", e: "Bonus Dmg to low HP" }, { n: "HEAVEN GATE", c: 9, d: [80, 110], t: 'paladin_ult', fx: "bolt", e: "DMG + HEAL + GUARD" }
+                { n: "Smite", c: 0, d: [10, 14], fx: "slash", e: "Holy damage" }, { n: "Blessing", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Holy Light", c: 2, v: [20, 35], t: 'heal', e: "Heal + Cleanse" }, { n: "Thorns", c: 2, t: 'counter', e: "Reflect 20 Dmg" }, { n: "Iron Will", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Judgment", c: 3, d: [20, 30], t: 'exec', fx: "bolt", e: "Bonus Dmg to low HP" }, { n: "HEAVEN GATE", c: 9, d: [80, 110], t: 'paladin_ult', fx: "bolt", e: "DMG + HEAL + GUARD" }
             ]},
             Alchemist: { icon: "🧪", hp: 115, def: 0.10, desc: ["Passive: 20% chance to refund AP.", "Control: Frost & Energy drain.", "ULT: Chaos reaction."], skills: [
                 { n: "Acid Pot", c: 0, d: [8, 12], t: 'mark', fx: "bolt", e: "Dmg + Mark target" }, { n: "Energy Pot", c: 0, v: 3, t: 'en', e: "+3 Energy" }, { n: "Frost Flask", c: 2, d: [10, 16], t: 'frost', v: 1, fx: "bolt", e: "Dmg + Frost effect" }, { n: "Toxic Gas", c: 2, t: 'weak', e: "Weaken Target 50%" }, { n: "Heal Vials", c: 2, v: [15, 25], t: 'heal', e: "Restore HP" }, { n: "Mana Thief", c: 2, d: [12, 18], t: 'burn', fx: "bolt", e: "Dmg + Drain 2 EN" }, { n: "PHILO STONE", c: 9, d: [90, 120], t: 'alchemist_ult', fx: "shake", e: "DMG + EN WIPE + FOCUS" }
@@ -375,12 +375,24 @@
 
         function act(p, i) {
             if(isOver || state[p].ap <= 0) return; 
-            if(state[p].stunned) { 
-                if(typeof state[p].stunned === 'number' && state[p].stunned > 1) state[p].stunned--;
-                else state[p].stunned = false;
-                state[p].ap--; pop(p, "STUNNED!", "var(--dmg)"); update(); return; 
-            }
             const s = jobs[state[p].job].skills[i], opp = p === 'boy' ? 'girl' : 'boy';
+            
+            // 優先檢查解除暈眩權限
+            const canIgnoreStun = (state[p].job === 'Paladin' && s.n === 'Holy Light');
+            const isBasicOrEn = (i === 0 || i === 1);
+            
+            if(state[p].stunned && !canIgnoreStun) { 
+                if (isBasicOrEn) {
+                    // 只消耗 AP 解除暈眩，不執行效果
+                    if(typeof state[p].stunned === 'number' && state[p].stunned > 1) state[p].stunned--;
+                    else state[p].stunned = false;
+                    state[p].ap--; 
+                    pop(p, "CLEANSED!", "var(--info)"); 
+                    update(); 
+                }
+                return; 
+            }
+            
             let cost = (state[p].frost > 0 && s.c > 0) ? s.c * (state[p].frost === 2 ? 3 : 2) : s.c;
             if(state[p].en < cost) return;
             state[p].en -= cost; state[p].ap--; if(cost > 0) state[p].frost = 0; state[p].reflect = false;
@@ -397,7 +409,13 @@
                 let h = r(s.v[0], s.v[1]); 
                 state[p].hp = Math.min(state[p].max, state[p].hp + h); 
                 pop(p, `+${h}`, 'var(--heal)'); 
-                if(state[p].job === 'Paladin') state[p].weakened = false; 
+                
+                // 聖騎士 Holy Light 解除所有狀態
+                if(state[p].job === 'Paladin') {
+                    state[p].weakened = false; 
+                    state[p].stunned = false; 
+                    state[p].frost = 0;
+                }
             }
             else if(s.t === 'harden') { playSfx('en'); state[p].def = Math.min(0.5, state[p].def + s.v); pop(p, "DEF UP", "var(--info)"); }
             else if(s.t === 'assassin_sh') { playSfx('shake'); let selfDmg = Math.floor(state[p].hp * 0.5); state[p].hp -= selfDmg; state[p].focused = true; pop(p, `-${selfDmg}`, "var(--dmg)"); }
@@ -424,7 +442,6 @@
                         let baseD = s.d ? r(s.d[0], s.d[1]) : 0;
                         baseD *= 1 + (state[p].godAtk * 0.1);
                         
-                        // 暴擊系統判定
                         let isCrit = false;
                         let critChance = (state[p].job === 'Berserker' ? 0.3 : (state[p].job === 'Assassin' ? 0.4 : 0.10));
                         if(state[p].focused) { isCrit = true; baseD *= 2; state[p].focused = false; } 
@@ -452,7 +469,6 @@
                             }
                             if(state[opp].guard) state[opp].guard = false;
                             
-                            // Passive Trigger
                             if(state[opp].job === 'Paladin' && Math.random() < 0.5) { state[opp].en = Math.min(10, state[opp].en + 1); }
 
                             if(s.t === 'leech' || s.t === 'berserk_ult') { let ratio = s.t === 'berserk_ult' ? 1.0 : (s.v || 0.5); let healVal = Math.floor(f * ratio); state[p].hp = Math.min(state[p].max, state[p].hp + healVal); if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', h); }
@@ -500,7 +516,15 @@
                     jobs[s.job].skills.forEach((sk, idx) => {
                         const b = document.createElement('button'); if(idx === 6) b.className = 'btn-ult';
                         let cost = (s.frost > 0 && sk.c > 0) ? sk.c * (s.frost === 2 ? 3 : 2) : sk.c;
-                        b.disabled = s.en < cost || isOver || s.ap <= 0;
+                        
+                        // 修改 UI 顯示與按鍵權限
+                        const canIgnoreStun = (state[p].job === 'Paladin' && sk.n === 'Holy Light');
+                        const isStunned = state[p].stunned;
+                        const isBasicOrEn = (idx === 0 || idx === 1);
+                        
+                        // 當暈眩時，若 AP > 0 則普通攻擊與回 EN 技可以點擊用來解除暈眩
+                        b.disabled = s.en < cost || isOver || s.ap <= 0 || (isStunned && !isBasicOrEn && !canIgnoreStun);
+                        
                         b.innerHTML = `<span class="sk-name">${sk.n}</span><span class="sk-cost">EN: ${cost}</span><span class="sk-val">${sk.d?sk.d[0]+'-'+sk.d[1]:(sk.v && Array.isArray(sk.v) ? sk.v[0]+'-'+sk.v[1] : (sk.v||''))}</span><span class="sk-effect">${sk.e}</span>`;
                         b.onclick = () => act(p, idx); box.appendChild(b);
                     });
