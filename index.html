@@ -516,4 +516,522 @@
         initSelection();
     </script>
 </body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Chrono Arena RPG - God System</title>
+    <style>
+        :root { 
+            --boy: #00d2ff; --girl: #ff007f; --accent: #f1c40f; 
+            --bg: #0a0b16; --card-bg: rgba(25, 28, 45, 0.95);
+            --event: #ff9f43; --heal: #2ecc71; --info: #00ffcc; --dmg: #ff4d4d;
+            --rock: #95a5a6;
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg); color: white; margin: 0; padding: 0;
+            height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* God System Layout */
+        #god-system {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 20px; z-index: 1500; width: 95%; justify-content: center;
+        }
+        .god-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+        .god-btn {
+            padding: 4px 2px; font-size: 0.6rem; font-weight: bold; border-radius: 4px;
+            border: 1px solid #777; background: #1a1c2c; color: #fff; cursor: pointer;
+            min-width: 70px; text-align: center;
+        }
+        .god-btn:active { transform: scale(0.95); }
+        .btn-fire { border-color: #ff4d4d; color: #ff4d4d; }
+        .btn-mercy { border-color: #2ecc71; color: #2ecc71; }
+        .btn-rage { border-color: #f1c40f; color: #f1c40f; }
+        .btn-hate { border-color: #9b59b6; color: #9b59b6; }
+
+        #save-system {
+            position: absolute; top: 10px; right: 10px; z-index: 2000;
+            display: flex; gap: 5px; flex-direction: column; align-items: flex-end;
+        }
+        .save-row { display: flex; gap: 4px; align-items: center; font-size: 0.7rem; }
+        .save-btn { 
+            font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; border: 1px solid #555;
+            background: #1a1c2c; color: #fff; cursor: pointer; transition: 0.2s;
+        }
+        .save-btn:active { transform: scale(0.9); }
+        .btn-s { border-color: var(--heal); color: var(--heal); }
+        .btn-l { border-color: var(--info); color: var(--info); }
+
+        /* Action Counter UI */
+        .ap-container { 
+            display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px;
+        }
+        .ap-display { font-size: 1.8rem; font-weight: 900; color: var(--accent); min-width: 45px; text-align: center; }
+        .name-row { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
+        
+        .ap-btn {
+            width: 42px !important; 
+            height: 12px !important; 
+            min-height: 12px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: 1px solid #666 !important;
+            background: #2a2d3e;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .ap-btn:active { background: var(--accent); transform: scale(0.95); }
+        .ap-btn span { 
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1;
+            margin-top: -2px; 
+            pointer-events: none;
+            display: inline-block;
+        }
+
+        #fx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 800; overflow: hidden; }
+        .fx-slash { position: absolute; width: 150px; height: 6px; background: white; box-shadow: 0 0 15px white; animation: slash 0.3s ease-out forwards; }
+        @keyframes slash { 0% { transform: scaleX(0) rotate(-45deg); opacity: 1; } 100% { transform: scaleX(1.5) rotate(-45deg); opacity: 0; } }
+        
+        .fx-bolt { position: absolute; width: 30px; height: 30px; background: #a29bfe; border-radius: 50%; box-shadow: 0 0 25px #6c5ce7; animation: bolt 0.4s ease-out forwards; }
+        @keyframes bolt { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(3.5); opacity: 0; } }
+
+        .fx-arrow { position: absolute; font-size: 2rem; z-index: 850; animation: arrowFly 0.3s linear forwards; }
+        @keyframes arrowFly { 0% { transform: translate(var(--sx), var(--sy)) rotate(var(--rot)); opacity: 1; } 100% { transform: translate(var(--ex), var(--ey)) rotate(var(--rot)); opacity: 0; } }
+
+        .shake { animation: shake 0.2s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(6px, 6px); } 50% { transform: translate(-6px, -6px); } 75% { transform: translate(6px, -6px); } }
+
+        #selection-screen { position: absolute; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
+        .job-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; padding-bottom: 40px; }
+        .job-card { background: var(--card-bg); border: 2px solid #444; padding: 18px; border-radius: 20px; text-align: left; }
+        .job-card h3 { color: var(--accent); margin: 0 0 10px 0; font-size: 1.4rem; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        .job-stats { font-size: 0.85rem; color: var(--info); margin-bottom: 12px; font-weight: bold; text-align: center; }
+        .job-desc { font-size: 0.75rem; color: #bbb; line-height: 1.5; margin: 0; padding-left: 10px; list-style: none; position: relative; }
+        .job-desc li::before { content: "▸"; position: absolute; left: -10px; color: var(--accent); }
+
+        .arena { display: none; width: 100%; height: 100%; padding: 10px; gap: 10px; padding-top: 60px; }
+        .card { flex: 1; background: var(--card-bg); border-radius: 20px; padding: 10px; display: flex; flex-direction: column; position: relative; border: 1px solid #333; overflow: hidden; }
+        
+        .hp-container { width: 100%; height: 45px; background: #000; border-radius: 12px; overflow: hidden; position: relative; margin: 8px 0; border: 2px solid #555; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4d4d, #f9ca24); transition: 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        .hp-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 2.2rem; text-shadow: 2px 2px 4px #000; letter-spacing: 1px; color: #fff; }
+        
+        .en-row { display: flex; gap: 4px; justify-content: center; margin-bottom: 10px; }
+        .en-dot { width: 12px; height: 12px; border-radius: 50%; background: #222; border: 1px solid #444; }
+        .en-dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-grow: 1; overflow-y: auto; padding-right: 4px; }
+        
+        .card button { 
+            background: #2a2d3e; color: white; border: 1px solid #555; border-radius: 12px; 
+            padding: 10px 4px; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; min-height: 160px; transition: filter 0.2s, background 0.2s;
+            cursor: pointer;
+        }
+        .card button:active { background: #3d415e; }
+        .card button:disabled { filter: brightness(0.3) grayscale(0.8); opacity: 0.6; cursor: not-allowed; }
+
+        .btn-ult { grid-column: span 2; background: linear-gradient(45deg, #4834d4, #686de0); border: 1px solid #a29bfe; min-height: 180px; }
+        
+        .sk-name { font-size: 2.1rem; font-weight: 900; color: #fff; margin-bottom: 6px; text-shadow: 2px 2px 0px #000; line-height: 1; text-align: center; }
+        .sk-cost { font-size: 1.5rem; color: var(--info); font-weight: 800; margin-bottom: 4px; }
+        .sk-val { font-size: 1.65rem; color: var(--dmg); font-weight: 900; margin-bottom: 6px; }
+        .sk-effect { font-size: 1.25rem; color: #fff; text-align: center; line-height: 1.2; font-weight: 600; padding: 0 5px; }
+
+        .dmg-float { position: absolute; font-weight: 900; pointer-events: none; animation: pop 0.8s ease-out forwards; z-index: 900; font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        @keyframes pop { 0% { opacity: 0; transform: translateY(0) scale(0.5); } 20% { opacity: 1; transform: translateY(-20px) scale(1.1); } 100% { opacity: 0; transform: translateY(-100px) scale(1); } }
+        
+        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        
+        @media (max-width: 768px) { 
+            .arena { flex-direction: column; padding-top: 100px;} 
+            .card { height: 49.5%; } 
+            .job-grid { grid-template-columns: 1fr; }
+            .hp-text { font-size: 1.8rem; }
+            .hp-container { height: 38px; }
+            .sk-name { font-size: 1.6rem; }
+            .sk-cost { font-size: 1.1rem; }
+            .sk-val { font-size: 1.2rem; }
+            .sk-effect { font-size: 0.9rem; }
+            .card button { min-height: 120px; }
+            #god-system { flex-direction: row; gap: 5px; width: 100%; top: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="god-system">
+        <div class="god-group" id="god-boy">
+            <button class="god-btn btn-fire" onclick="godIntervention('boy', 'fire')">Fire 10%</button>
+            <button class="god-btn btn-mercy" onclick="godIntervention('boy', 'mercy')">God Mercy</button>
+            <button class="god-btn btn-rage" onclick="godIntervention('boy', 'rage')">God Rage</button>
+            <button class="god-btn btn-hate" onclick="godIntervention('boy', 'hate')">God Hate</button>
+        </div>
+        <div class="god-group" id="god-girl">
+            <button class="god-btn btn-fire" onclick="godIntervention('girl', 'fire')">Fire 10%</button>
+            <button class="god-btn btn-mercy" onclick="godIntervention('girl', 'mercy')">God Mercy</button>
+            <button class="god-btn btn-rage" onclick="godIntervention('girl', 'rage')">God Rage</button>
+            <button class="god-btn btn-hate" onclick="godIntervention('girl', 'hate')">God Hate</button>
+        </div>
+    </div>
+
+    <div id="save-system">
+        <div class="save-row"><span>S1</span><button class="save-btn btn-s" onclick="saveGame(1)">SAVE</button><button class="save-btn btn-l" onclick="loadGame(1)">LOAD</button></div>
+        <div class="save-row"><span>S2</span><button class="save-btn btn-s" onclick="saveGame(2)">SAVE</button><button class="save-btn btn-l" onclick="loadGame(2)">LOAD</button></div>
+        <div class="save-row"><span>S3</span><button class="save-btn btn-s" onclick="saveGame(3)">SAVE</button><button class="save-btn btn-l" onclick="loadGame(3)">LOAD</button></div>
+    </div>
+
+    <div id="fx-layer"></div>
+
+    <div id="selection-screen">
+        <h1 style="color: var(--accent); margin-top: 20px;">CHRONO ARENA</h1>
+        <p id="turn-title" style="color: var(--boy); font-weight: bold; margin-bottom: 20px;">BOY: SELECT YOUR CLASS</p>
+        <div class="job-grid" id="job-list"></div>
+    </div>
+
+    <div class="arena" id="arena">
+        <div id="card-boy" class="card">
+            <div class="ap-container">
+                <button class="ap-btn" onclick="changeAP('boy', -1)"><span>-</span></button>
+                <div id="ap-boy" class="ap-display">0</div>
+                <button class="ap-btn" onclick="changeAP('boy', 1)"><span>+</span></button>
+            </div>
+            <div class="name-row">
+                <h2 id="name-boy" style="color:var(--boy); text-align:center; margin:0; font-size: 1.1rem;">BOY</h2>
+            </div>
+            <div id="status-boy" style="font-size:0.75rem; color:var(--accent); height:16px; text-align:center; font-weight:bold;"></div>
+            <div class="hp-container"><div id="bar-boy" class="hp-fill"></div><div class="hp-text" id="txt-boy"></div></div>
+            <div id="en-boy" class="en-row"></div>
+            <div class="btn-grid" id="btns-boy"></div>
+        </div>
+        <div id="card-girl" class="card">
+            <div class="ap-container">
+                <button class="ap-btn" onclick="changeAP('girl', -1)"><span>-</span></button>
+                <div id="ap-girl" class="ap-display">0</div>
+                <button class="ap-btn" onclick="changeAP('girl', 1)"><span>+</span></button>
+            </div>
+            <div class="name-row">
+                <h2 id="name-girl" style="color:var(--girl); text-align:center; margin:0; font-size: 1.1rem;">GIRL</h2>
+            </div>
+            <div id="status-girl" style="font-size:0.75rem; color:var(--accent); height:16px; text-align:center; font-weight:bold;"></div>
+            <div class="hp-container"><div id="bar-girl" class="hp-fill"></div><div class="hp-text" id="txt-girl"></div></div>
+            <div id="en-girl" class="en-row"></div>
+            <div class="btn-grid" id="btns-girl"></div>
+        </div>
+    </div>
+
+    <div id="win-overlay" class="overlay"><h1 id="win-title" style="font-size:4rem; color:var(--accent);"></h1><button onclick="location.reload()" style="padding:15px 50px; border-radius:50px; background:white; color:black; font-weight:bold; border:none;">REMATCH</button></div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSfx(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            if(type === 'slash') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(1000, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if(type === 'bolt') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(); osc.stop(now + 0.2);
+            } else if(type === 'arrow') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(800, now);
+                osc.frequency.linearRampToValueAtTime(1200, now + 0.05);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.start(); osc.stop(now + 0.05);
+            } else if(type === 'heal' || type === 'en') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.linearRampToValueAtTime(1046.5, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            } else if(type === 'shake') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(60, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
+                gain.gain.setValueAtTime(0.4, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                osc.start(); osc.stop(now + 0.4);
+            }
+        }
+
+        let selecting = 'boy', isOver = false;
+        let state = {
+            boy: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0 },
+            girl: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0 }
+        };
+
+        const fireSequence = [0.1, 0.2, 0.5, 1.0];
+
+        function changeAP(p, val) {
+            state[p].ap = Math.max(-3, state[p].ap + val);
+            update();
+        }
+
+        function godIntervention(p, type) {
+            if(isOver || !state[p].job) return;
+            if(type === 'fire') {
+                let ratio = fireSequence[state[p].fireStep];
+                let dmg = Math.floor(state[p].hp * ratio);
+                state[p].hp -= dmg;
+                triggerFX('bolt', p === 'boy' ? 'girl' : 'boy', p);
+                pop(p, `GOD FIRE -${dmg}`, "var(--dmg)");
+                state[p].fireStep = (state[p].fireStep + 1) % fireSequence.length;
+                let nextRatio = fireSequence[state[p].fireStep] * 100;
+                document.querySelector(`#god-${p} .btn-fire`).innerText = `Fire ${nextRatio}%`;
+            } else if(type === 'mercy') {
+                let heal = Math.floor(state[p].max * 0.3);
+                state[p].hp = Math.min(state[p].max, state[p].hp + heal);
+                playSfx('heal');
+                pop(p, `GOD MERCY +${heal}`, "var(--heal)");
+            } else if(type === 'rage') {
+                state[p].godAtk = Math.min(10, state[p].godAtk + 1);
+                playSfx('en');
+                pop(p, `GOD RAGE`, "var(--accent)");
+            } else if(type === 'hate') {
+                state[p].godAtk = Math.max(-10, state[p].godAtk - 1);
+                playSfx('shake');
+                pop(p, `GOD HATE`, "#9b59b6");
+            }
+            update();
+            checkWin();
+        }
+
+        const jobs = {
+            Warrior: { icon: "🛡️", hp: 150, def: 0.20, desc: ["Passive: EN gains when hit.", "Guard: 80% Block (Once).", "ULT: 100% Stun Target."], skills: [
+                { n: "Strike", c: 0, d: [8, 12], fx: "slash", e: "Physical dmg" }, { n: "Charge", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Shield Bash", c: 1, d: [10, 14], t: 'stun', v: 0.2, fx: "slash", e: "20% Stun Chance" }, { n: "War Cry", c: 2, t: 'weak', e: "Target hit -50%" }, { n: "Iron Guard", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Recover", c: 2, v: [25, 40], t: 'heal', e: "Heal HP" }, { n: "EARTHQUAKE", c: 9, d: [70, 95], t: 'stun', v: 1.0, fx: "shake", e: "DMG + 100% STUN" }
+            ]},
+            Mage: { icon: "🔮", hp: 95, def: 0, desc: ["Passive: EN efficiency.", "Mirror: 100% Reflect (Once).", "ULT: DMG + 3x EN Cost."], skills: [
+                { n: "Magic Bolt", c: 0, d: [10, 15], fx: "bolt", e: "Arcane dmg" }, { n: "Meditate", c: 0, v: 3, t: 'en', e: "+3 Energy" }, { n: "Life Siphon", c: 2, d: [18, 28], t: 'leech', fx: "bolt", e: "100% Lifesteal" }, { n: "Frostbite", c: 2, d: [14, 22], t: 'frost', v: 1, fx: "bolt", e: "Dmg + Frost (x2)" }, { n: "Mirror Feedback", c: 2, t: 'reflect', e: "100% Reflect (Once)" }, { n: "Mana Burn", c: 2, d: [12, 18], t: 'burn', fx: "bolt", e: "DMG + Drain 2 EN" }, { n: "METEOR", c: 9, d: [105, 130], t: 'frost', v: 2, fx: "shake", e: "DMG + DEEP FREEZE" }
+            ]},
+            Berserker: { icon: "🪓", hp: 130, def: 0.1, desc: ["Passive: Crit 30% / Hit: Loss 1 EN.", "Execute: +50% dmg if <50%HP.", "ULT: Leech + Full EN."], skills: [
+                { n: "Heavy Slash", c: 0, d: [13, 19], fx: "slash", e: "Brutal swing" }, { n: "Blood Lust", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Adrenaline", c: 2, t: 'focus', e: "Next hit 100% Crit" }, { n: "Frenzy", c: 3, d: [25, 38], t: 'leech', v: 0.5, fx: "slash", e: "50% Lifesteal" }, { n: "Execute", c: 4, d: [30, 45], t: 'exec', fx: "slash", e: "+50% dmg if <50%HP" }, { n: "Inner Rage", c: 1, v: [15, 25], t: 'heal', e: "Self Heal" }, { n: "DECIMATE", c: 9, d: [95, 120], t: 'berserk_ult', fx: "shake", e: "Leech + FULL EN" }
+            ]},
+            Archer: { icon: "🏹", hp: 110, def: 0.15, desc: ["Passive: Rapid Double Hit.", "Evasion: 100% Dodge (2 Acts).", "ULT: 4x DMG + Mark."], skills: [
+                { n: "Aim Shot", c: 0, d: [11, 15], fx: "arrow", e: "Pierce dmg" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "First Aid", c: 1, v: [15, 25], t: 'heal', e: "Self Heal" }, { n: "Mark Target", c: 2, t: 'mark', e: "Ignore Defense" }, { n: "Evasion", c: 1, t: 'dodge', v: 1.0, e: "100% Dodge (2 Acts)" }, { n: "Volley", c: 3, d: [15, 22], t: 'triple', fx: "arrow", e: "Triple Strike" }, { n: "ARROW RAIN", c: 9, d: [25, 35], t: 'archer_ult', fx: "arrow", e: "4x DMG + MARKED" }
+            ]},
+            Gunner: { icon: "🔫", hp: 105, def: 0.05, desc: ["Passive: High EN Recovery.", "Lock-On: High Crit Rate.", "ULT: Massive DMG + EN Wipe."], skills: [
+                { n: "Pistol Shot", c: 0, d: [6, 9], t: 'double', fx: "arrow", e: "2x Fast Shots" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Headshot", c: 2, d: [20, 28], fx: "arrow", e: "High base dmg" }, { n: "Lock On", c: 1, t: 'focus', e: "Next 100% Crit" }, { n: "Grenade", c: 3, d: [22, 30], t: 'burn', fx: "bolt", e: "DMG + Drain 2 EN" }, { n: "Cover Fire", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "SATELLITE BEAM", c: 9, d: [110, 140], t: 'gunner_ult', fx: "bolt", e: "AOE + TARGET EN=0" }
+            ]},
+            Boxer: { icon: "🥊", hp: 140, def: 0.12, desc: ["Passive: Dodge gains 2 EN.", "Counter: 20 DMG Rebound.", "ULT: Ignore Def/Dodge + <30% Kill."], skills: [
+                { n: "Jab", c: 0, d: [9, 13], fx: "slash", e: "Quick punch" }, { n: "Deep Breath", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Counter Stance", c: 2, t: 'counter', e: "Rebound 20 Dmg" }, { n: "Sway", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts)" }, { n: "Uppercut", c: 2, d: [12, 18], t: 'stun', v: 0.3, fx: "slash", e: "30% Stun Chance" }, { n: "Body Blow", c: 2, d: [15, 22], t: 'weak', fx: "slash", e: "DMG + Target ATK -30%" }, { n: "K.O. PUNCH", c: 9, d: [85, 110], t: 'boxer_ult', fx: "shake", e: "Sure Hit + Ignore Def" }
+            ]},
+            RockQueen: { icon: "👑", hp: 180, def: 0.30, desc: ["Passive: IMMUNE to EN loss.", "Hardened: Damage stacks DEF.", "ULT: Sure Hit + Stun 1 Turn."], skills: [
+                { n: "Rock Throw", c: 0, d: [7, 10], fx: "slash", e: "Heavy toss" }, { n: "Rooting", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Granite Armor", c: 1, t: 'harden', v: 0.05, e: "Perm +5% DEF (Max 50%)" }, { n: "Stone Wall", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Earth Smash", c: 2, d: [15, 20], t: 'stun', v: 0.25, fx: "shake", e: "25% Stun Chance" }, { n: "Reconstruction", c: 3, v: [30, 50], t: 'heal', e: "Restores massive HP" }, { n: "GIGA MONOLITH", c: 9, d: [75, 100], t: 'rock_ult', fx: "shake", e: "SURE HIT + STUN 1T" }
+            ]},
+            Assassin: { icon: "🗡️", hp: 85, def: 0, desc: ["Passive: 40% Crit Rate.", "Stealth: Next hit x2.5 DMG.", "ULT: Instant Kill if HP < 25%."], skills: [
+                { n: "Backstab", c: 0, d: [12, 18], fx: "slash", e: "High base crit" }, { n: "Preparation", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Venom Strike", c: 2, d: [10, 14], t: 'weak', fx: "slash", e: "Dmg + Weaken Target" }, { n: "Shadow Cloak", c: 2, t: 'assassin_sh', e: "Lose 50% HP + 200% DMG" }, { n: "Slayer's Feast", c: 3, d: [20, 28], t: 'leech', v: 1.0, fx: "slash", e: "100% Lifesteal" }, { n: "Smoke Bomb", c: 2, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "DEATH MARK", c: 9, d: [120, 150], t: 'exec', fx: "slash", e: "MASSIVE DMG + KILL LOW HP" }
+            ]},
+            Paladin: { icon: "⚖️", hp: 160, def: 0.25, desc: ["Passive: 50% EN gain when hit.", "Holy Light: Heal + Cleanse.", "ULT: Dmg + Heal + Guard."], skills: [
+                { n: "Smite", c: 0, d: [10, 14], fx: "slash", e: "Holy damage" }, { n: "Blessing", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Holy Light", c: 2, v: [20, 35], t: 'heal', e: "Heal + Cleanse Weak" }, { n: "Thorns", c: 2, t: 'counter', e: "Reflect 20 Dmg" }, { n: "Iron Will", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Judgment", c: 3, d: [20, 30], t: 'exec', fx: "bolt", e: "Bonus Dmg to low HP" }, { n: "HEAVEN GATE", c: 9, d: [80, 110], t: 'paladin_ult', fx: "bolt", e: "DMG + HEAL + GUARD" }
+            ]},
+            Alchemist: { icon: "🧪", hp: 115, def: 0.10, desc: ["Passive: 20% chance to refund AP.", "Control: Frost & Energy drain.", "ULT: Chaos reaction."], skills: [
+                { n: "Acid Pot", c: 0, d: [8, 12], t: 'mark', fx: "bolt", e: "Dmg + Mark target" }, { n: "Energy Pot", c: 0, v: 3, t: 'en', e: "+3 Energy" }, { n: "Frost Flask", c: 2, d: [10, 16], t: 'frost', v: 1, fx: "bolt", e: "Dmg + Frost effect" }, { n: "Toxic Gas", c: 2, t: 'weak', e: "Weaken Target 50%" }, { n: "Heal Vials", c: 2, v: [15, 25], t: 'heal', e: "Restore HP" }, { n: "Mana Thief", c: 2, d: [12, 18], t: 'burn', fx: "bolt", e: "Dmg + Drain 2 EN" }, { n: "PHILO STONE", c: 9, d: [90, 120], t: 'alchemist_ult', fx: "shake", e: "DMG + EN WIPE + FOCUS" }
+            ]}
+        };
+
+        function saveGame(slot) {
+            const data = { state: state, selecting: selecting, isOver: isOver, displayArena: document.getElementById('arena').style.display, displaySelection: document.getElementById('selection-screen').style.display, turnTitle: document.getElementById('turn-title').innerText, turnColor: document.getElementById('turn-title').style.color };
+            localStorage.setItem(`chrono_arena_save_${slot}`, JSON.stringify(data));
+            alert(`Slot ${slot} 儲存成功！`);
+        }
+
+        function loadGame(slot) {
+            const raw = localStorage.getItem(`chrono_arena_save_${slot}`);
+            if(!raw) return alert("該存檔位置為空！");
+            const data = JSON.parse(raw);
+            state = data.state; selecting = data.selecting; isOver = data.isOver;
+            document.getElementById('arena').style.display = data.displayArena;
+            document.getElementById('selection-screen').style.display = data.displaySelection;
+            document.getElementById('turn-title').innerText = data.turnTitle;
+            document.getElementById('turn-title').style.color = data.turnColor;
+            update(); alert(`Slot ${slot} 讀取成功！`);
+        }
+
+        function triggerFX(type, attacker, target) {
+            playSfx(type);
+            const layer = document.getElementById('fx-layer');
+            const targetRect = document.getElementById(`card-${target}`).getBoundingClientRect();
+            const attackerRect = document.getElementById(`card-${attacker}`).getBoundingClientRect();
+            const tx = targetRect.left + targetRect.width/2;
+            const ty = targetRect.top + targetRect.height/2;
+
+            if(type === 'slash') {
+                const fx = document.createElement('div'); fx.className = 'fx-slash';
+                fx.style.left = (tx - 75) + 'px'; fx.style.top = ty + 'px';
+                layer.appendChild(fx); setTimeout(() => fx.remove(), 300);
+            } else if(type === 'bolt') {
+                const fx = document.createElement('div'); fx.className = 'fx-bolt';
+                fx.style.left = (tx - 15) + 'px'; fx.style.top = (ty - 15) + 'px';
+                layer.appendChild(fx); setTimeout(() => fx.remove(), 400);
+            } else if(type === 'arrow') {
+                const fx = document.createElement('div'); fx.className = 'fx-arrow'; fx.innerText = (state[attacker].job === 'Gunner' ? '🔥' : '🏹');
+                fx.style.setProperty('--sx', (attackerRect.left + 50) + 'px'); fx.style.setProperty('--sy', (attackerRect.top + 50) + 'px');
+                fx.style.setProperty('--ex', tx + 'px'); fx.style.setProperty('--ey', ty + 'px');
+                fx.style.setProperty('--rot', attacker === 'boy' ? '45deg' : '-135deg');
+                layer.appendChild(fx); setTimeout(() => fx.remove(), 300);
+            } else if(type === 'shake') {
+                document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 200);
+            }
+        }
+
+        function act(p, i) {
+            if(isOver || state[p].ap <= 0) return; 
+            if(state[p].stunned) { 
+                if(typeof state[p].stunned === 'number' && state[p].stunned > 1) state[p].stunned--;
+                else state[p].stunned = false;
+                state[p].ap--; pop(p, "STUNNED!", "var(--dmg)"); update(); return; 
+            }
+            const s = jobs[state[p].job].skills[i], opp = p === 'boy' ? 'girl' : 'boy';
+            let cost = (state[p].frost > 0 && s.c > 0) ? s.c * (state[p].frost === 2 ? 3 : 2) : s.c;
+            if(state[p].en < cost) return;
+            state[p].en -= cost; state[p].ap--; if(cost > 0) state[p].frost = 0; state[p].reflect = false;
+
+            // Alchemist Passive
+            if(state[p].job === 'Alchemist' && Math.random() < 0.2) {
+                state[p].ap++;
+                pop(p, "AP REFUND!", "var(--info)");
+            }
+
+            if(s.t === 'en') { playSfx('en'); state[p].en = Math.min(10, state[p].en + s.v); }
+            else if(s.t === 'heal') { 
+                playSfx('heal'); 
+                let h = r(s.v[0], s.v[1]); 
+                state[p].hp = Math.min(state[p].max, state[p].hp + h); 
+                pop(p, `+${h}`, 'var(--heal)'); 
+                if(state[p].job === 'Paladin') state[p].weakened = false; 
+            }
+            else if(s.t === 'harden') { playSfx('en'); state[p].def = Math.min(0.5, state[p].def + s.v); pop(p, "DEF UP", "var(--info)"); }
+            else if(s.t === 'assassin_sh') { playSfx('shake'); let selfDmg = Math.floor(state[p].hp * 0.5); state[p].hp -= selfDmg; state[p].focused = true; pop(p, `-${selfDmg}`, "var(--dmg)"); }
+            else if(['def','reflect','dodge','focus','mark','counter'].includes(s.t)) { 
+                playSfx('bolt'); if(s.t==='def') state[p].guard=true; if(s.t==='reflect') state[p].reflect=true; 
+                if(s.t==='dodge') state[p].dodge = (state[p].job === 'Gunner' || (state[p].job === 'Assassin' && s.n === 'Smoke Bomb')) ? 1 : 2;
+                if(s.t==='focus') state[p].focused=true; if(s.t==='mark') state[opp].marked=true; if(s.t==='counter') state[p].counter=true;
+            }
+            else {
+                let hits = s.t==='double'?2:(s.t==='triple'?3:(s.t==='archer_ult'?4:1));
+                if(s.t === 'weak' && !s.d) state[opp].weakened = true;
+
+                if(s.t === 'burn' && state[opp].job !== 'RockQueen') {
+                    let targetEn = Math.max(0, state[opp].en - 2);
+                    state[opp].en = targetEn;
+                    pop(opp, "-2 EN", "var(--info)");
+                    update(); 
+                }
+
+                for(let h=0; h<hits; h++){
+                    setTimeout(() => {
+                        if(state.boy.hp <= 0 || state.girl.hp <= 0) return;
+                        if(s.fx) triggerFX(s.fx, p, opp);
+                        let baseD = s.d ? r(s.d[0], s.d[1]) : 0;
+                        baseD *= 1 + (state[p].godAtk * 0.1);
+                        
+                        // 暴擊系統判定
+                        let isCrit = false;
+                        let critChance = (state[p].job === 'Berserker' ? 0.3 : (state[p].job === 'Assassin' ? 0.4 : 0.10));
+                        if(state[p].focused) { isCrit = true; baseD *= 2; state[p].focused = false; } 
+                        else if(Math.random() < critChance) { isCrit = true; baseD *= 1.5; } 
+
+                        if(state[p].weakened) { baseD *= (state[p].job === 'Warrior' || state[p].job === 'Assassin') ? 0.5 : 0.7; state[p].weakened = false; }
+                        if(s.t==='exec') { if(state[p].job === 'Assassin' && state[opp].hp < (state[opp].max*0.25)) baseD = 999; else if(state[opp].hp < (state[opp].max*0.5)) baseD *= 1.5; }
+                        if(s.t==='boxer_ult' && state[opp].hp < (state[opp].max*0.3)) baseD = 999;
+                        
+                        let dodgeSkill = jobs[state[opp].job].skills.find(sk => sk.n === (state[opp].job === 'Assassin' ? (state[opp].dodge === 2 ? 'Shadow Cloak' : 'Smoke Bomb') : (state[opp].job === 'Archer' ? 'Evasion' : (state[opp].job === 'Gunner' ? 'Cover Fire' : 'Sway'))));
+                        let dodgeChance = (state[opp].job === 'Assassin' && state[opp].dodge === 1) ? 0.7 : (dodgeSkill ? (dodgeSkill.v || 1.0) : 1.0);
+                        
+                        if(!['boxer_ult', 'rock_ult'].includes(s.t) && state[opp].dodge > 0 && Math.random() < dodgeChance) { 
+                            pop(opp, "EVADE", "#3498db", h); 
+                            if(state[opp].job === 'Boxer') state[opp].en = Math.min(10, state[opp].en + 2); 
+                        } 
+                        else {
+                            let red = (state[opp].marked || s.t === 'boxer_ult') ? 0 : (state[opp].guard ? 0.8 : state[opp].def);
+                            if(state[opp].reflect) { state[p].hp -= baseD; pop(p, `-${Math.floor(baseD)}`, "var(--dmg)", h); red = 0.5; state[opp].reflect = false; }
+                            if(state[opp].counter) { state[p].hp -= 20; pop(p, "-20", "var(--dmg)", h); state[opp].counter = false; }
+                            let f = Math.max(1, Math.floor(baseD * (1 - red)));
+                            if(baseD > 0) { 
+                                state[opp].hp -= f; 
+                                pop(opp, (isCrit ? `CRIT! -${f}` : `-${f}`), (isCrit ? "var(--accent)" : "var(--dmg)"), h); 
+                            }
+                            if(state[opp].guard) state[opp].guard = false;
+                            
+                            // Passive Trigger
+                            if(state[opp].job === 'Paladin' && Math.random() < 0.5) { state[opp].en = Math.min(10, state[opp].en + 1); }
+
+                            if(s.t === 'leech' || s.t === 'berserk_ult') { let ratio = s.t === 'berserk_ult' ? 1.0 : (s.v || 0.5); let healVal = Math.floor(f * ratio); state[p].hp = Math.min(state[p].max, state[p].hp + healVal); if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', h); }
+                            if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
+                            if(s.t === 'rock_ult') state[opp].stunned = 1; 
+                            if(s.t === 'frost') state[opp].frost = s.v;
+                            if(s.t === 'weak' && s.d) state[opp].weakened = true;
+                            
+                            if(s.t === 'paladin_ult') {
+                                let heal = Math.floor(state[p].max * 0.3);
+                                state[p].hp = Math.min(state[p].max, state[p].hp + heal);
+                                state[p].guard = true;
+                                pop(p, `+${heal}`, 'var(--heal)');
+                            }
+                            if(s.t === 'alchemist_ult') {
+                                state[opp].en = 0;
+                                state[p].focused = true;
+                                pop(opp, "EN WIPE", "var(--info)");
+                            }
+
+                            if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
+                            if(state[opp].job === 'Berserker' && state[opp].job !== 'RockQueen') state[opp].en = Math.max(0, state[opp].en - 1);
+                        }
+                        if(h === hits - 1) { if(s.t === 'berserk_ult') { state[p].en = 10; playSfx('en'); } if(s.t === 'archer_ult') state[opp].marked = true; if(s.t === 'gunner_ult' && state[opp].job !== 'RockQueen') { state[opp].en = 0; playSfx('bolt'); } if(state[opp].dodge > 0) state[opp].dodge--; }
+                        update(); checkWin();
+                    }, h * 200);
+                }
+            }
+            update();
+        }
+
+        function update() {
+            ['boy','girl'].forEach(p => {
+                const s = state[p]; s.hp = Math.max(0, Math.min(s.max, s.hp)); 
+                document.getElementById(`ap-${p}`).innerText = s.ap;
+                document.getElementById(`txt-${p}`).innerText = `${Math.floor(s.hp)}/${s.max}`;
+                document.getElementById(`bar-${p}`).style.width = (s.hp/s.max*100) + "%";
+                let godStr = s.godAtk > 0 ? `GR(${s.godAtk*10}%) ` : (s.godAtk < 0 ? `GH(${Math.abs(s.godAtk*10)}%) ` : "");
+                document.getElementById(`status-${p}`).innerText = godStr + (s.guard?"🛡️G ":"")+(s.reflect?"✨R ":"")+(s.dodge>0?`💨E(${s.dodge}) `:"")+(s.frost>0? (s.frost===2?"❄️❄️DF ":"❄️F ") :"")+(s.stunned?"💫S ":"")+(s.marked?"🎯M ":"")+(s.counter?"🥊C ":"")+(s.def > jobs[s.job].def ? "💎H ":"")+(s.focused?"🔥F ":"")+(s.weakened?"💢W ":"");
+                const enBox = document.getElementById(`en-${p}`); enBox.innerHTML = '';
+                for(let i=0; i<10; i++) { const d = document.createElement('div'); d.className = `en-dot ${i < s.en ? 'active' : ''}`; enBox.appendChild(d); }
+                if(s.job) {
+                    document.getElementById(`name-${p}`).innerText = `${p.toUpperCase()} (${jobs[s.job].icon})`;
+                    const box = document.getElementById(`btns-${p}`); box.innerHTML = '';
+                    jobs[s.job].skills.forEach((sk, idx) => {
+                        const b = document.createElement('button'); if(idx === 6) b.className = 'btn-ult';
+                        let cost = (s.frost > 0 && sk.c > 0) ? sk.c * (s.frost === 2 ? 3 : 2) : sk.c;
+                        b.disabled = s.en < cost || isOver || s.ap <= 0;
+                        b.innerHTML = `<span class="sk-name">${sk.n}</span><span class="sk-cost">EN: ${cost}</span><span class="sk-val">${sk.d?sk.d[0]+'-'+sk.d[1]:(sk.v && Array.isArray(sk.v) ? sk.v[0]+'-'+sk.v[1] : (sk.v||''))}</span><span class="sk-effect">${sk.e}</span>`;
+                        b.onclick = () => act(p, idx); box.appendChild(b);
+                    });
+                }
+            });
+        }
+
+        function pop(t, m, c, hI = 0) { const el = document.createElement('div'); el.className = 'dmg-float'; el.innerText = m; el.style.color = c; el.style.left = (40 + (hI * 5)) + "%"; el.style.top = (25 - (hI * 2)) + "%"; document.getElementById(`card-${t}`).appendChild(el); setTimeout(() => el.remove(), 800); }
+        function initSelection() { const list = document.getElementById('job-list'); for(let j in jobs) { const card = document.createElement('div'); card.className = 'job-card'; card.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); pick(j); }; card.innerHTML = `<h3>${jobs[j].icon} ${j.toUpperCase()}</h3><div class="job-stats">HP: ${jobs[j].hp} | DEF: ${jobs[j].def*100}%</div><ul class="job-desc">${jobs[j].desc.map(d => `<li>${d}</li>`).join('')}</ul>`; list.appendChild(card); } }
+        function pick(j) { state[selecting].job = j; state[selecting].max = jobs[j].hp; state[selecting].hp = jobs[j].hp; state[selecting].def = jobs[j].def; if(selecting === 'boy') { selecting = 'girl'; document.getElementById('turn-title').innerText = "GIRL: SELECT YOUR CLASS"; document.getElementById('turn-title').style.color = "var(--girl)"; } else { document.getElementById('selection-screen').style.display = 'none'; document.getElementById('arena').style.display = 'flex'; update(); } }
+        function checkWin() { let w = state.boy.hp <= 0 ? 'GIRL' : (state.girl.hp <= 0 ? 'BOY' : null); if(w && !isOver) { isOver = true; document.getElementById('win-title').innerText = `${w} WINS!`; document.getElementById('win-overlay').style.display = 'flex'; playSfx('shake'); return true; } return false; }
+        function r(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
+        initSelection();
+    </script>
+</body>
 </html>
