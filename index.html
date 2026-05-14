@@ -58,7 +58,6 @@
         .ap-display { font-size: 1.8rem; font-weight: 900; color: var(--accent); min-width: 45px; text-align: center; }
         .name-row { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
         
-        /* 調整後的按鈕大小：增大3倍 (約12px高度) */
         .ap-btn {
             width: 42px !important; 
             height: 12px !important; 
@@ -80,7 +79,6 @@
             font-size: 14px;
             font-weight: bold;
             line-height: 1;
-            /* 修正微小的垂直偏差 */
             margin-top: -2px; 
             pointer-events: none;
             display: inline-block;
@@ -391,30 +389,49 @@
                 if(s.t==='focus') state[p].focused=true; if(s.t==='mark') state[opp].marked=true; if(s.t==='counter') state[p].counter=true;
             }
             else {
-                if(s.t === 'burn' && state[opp].job !== 'RockQueen') state[opp].en = Math.max(0, state[opp].en - 2);
                 let hits = s.t==='double'?2:(s.t==='triple'?3:(s.t==='archer_ult'?4:1));
                 if(s.t === 'weak' && !s.d) state[opp].weakened = true;
+
+                if(s.t === 'burn' && state[opp].job !== 'RockQueen') {
+                    let targetEn = Math.max(0, state[opp].en - 2);
+                    state[opp].en = targetEn;
+                    pop(opp, "-2 EN", "var(--info)");
+                    update(); 
+                }
+
                 for(let h=0; h<hits; h++){
                     setTimeout(() => {
                         if(state.boy.hp <= 0 || state.girl.hp <= 0) return;
                         if(s.fx) triggerFX(s.fx, p, opp);
                         let baseD = s.d ? r(s.d[0], s.d[1]) : 0;
                         baseD *= 1 + (state[p].godAtk * 0.1);
+                        
+                        // 暴擊系統判定
+                        let isCrit = false;
+                        let critChance = (state[p].job === 'Berserker' ? 0.3 : (state[p].job === 'Assassin' ? 0.4 : 0.10));
+                        if(state[p].focused) { isCrit = true; baseD *= 2; state[p].focused = false; } // 技能Focus 100% 暴擊 (2倍)
+                        else if(Math.random() < critChance) { isCrit = true; baseD *= 1.5; } // 基礎暴擊 (1.5倍)
+
                         if(state[p].weakened) { baseD *= (state[p].job === 'Warrior' || state[p].job === 'Assassin') ? 0.5 : 0.7; state[p].weakened = false; }
                         if(s.t==='exec') { if(state[p].job === 'Assassin' && state[opp].hp < (state[opp].max*0.25)) baseD = 999; else if(state[opp].hp < (state[opp].max*0.5)) baseD *= 1.5; }
                         if(s.t==='boxer_ult' && state[opp].hp < (state[opp].max*0.3)) baseD = 999;
-                        if(state[p].focused) { baseD *= 2; state[p].focused = false; } 
-                        else if(Math.random() < (state[p].job==='Berserker'?0.3:(state[p].job==='Assassin'?0.4:0.12))) baseD *= 2;
                         
                         let dodgeSkill = jobs[state[opp].job].skills.find(sk => sk.n === (state[opp].job === 'Assassin' ? (state[opp].dodge === 2 ? 'Shadow Cloak' : 'Smoke Bomb') : (state[opp].job === 'Archer' ? 'Evasion' : (state[opp].job === 'Gunner' ? 'Cover Fire' : 'Sway'))));
                         let dodgeChance = (state[opp].job === 'Assassin' && state[opp].dodge === 1) ? 0.7 : (dodgeSkill ? (dodgeSkill.v || 1.0) : 1.0);
-                        if(!['boxer_ult', 'rock_ult'].includes(s.t) && state[opp].dodge > 0 && Math.random() < dodgeChance) { pop(opp, "EVADE", "#3498db", h); if(state[opp].job === 'Boxer') state[opp].en = Math.min(10, state[opp].en + 2); } 
+                        
+                        if(!['boxer_ult', 'rock_ult'].includes(s.t) && state[opp].dodge > 0 && Math.random() < dodgeChance) { 
+                            pop(opp, "EVADE", "#3498db", h); 
+                            if(state[opp].job === 'Boxer') state[opp].en = Math.min(10, state[opp].en + 2); 
+                        } 
                         else {
                             let red = (state[opp].marked || s.t === 'boxer_ult') ? 0 : (state[opp].guard ? 0.8 : state[opp].def);
                             if(state[opp].reflect) { state[p].hp -= baseD; pop(p, `-${Math.floor(baseD)}`, "var(--dmg)", h); red = 0.5; state[opp].reflect = false; }
                             if(state[opp].counter) { state[p].hp -= 20; pop(p, "-20", "var(--dmg)", h); state[opp].counter = false; }
                             let f = Math.max(1, Math.floor(baseD * (1 - red)));
-                            if(baseD > 0) { state[opp].hp -= f; pop(opp, `-${f}`, "var(--dmg)", h); }
+                            if(baseD > 0) { 
+                                state[opp].hp -= f; 
+                                pop(opp, (isCrit ? `CRIT! -${f}` : `-${f}`), (isCrit ? "var(--accent)" : "var(--dmg)"), h); 
+                            }
                             if(state[opp].guard) state[opp].guard = false;
                             if(s.t === 'leech' || s.t === 'berserk_ult') { let ratio = s.t === 'berserk_ult' ? 1.0 : (s.v || 0.5); let healVal = Math.floor(f * ratio); state[p].hp = Math.min(state[p].max, state[p].hp + healVal); if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', h); }
                             if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
@@ -457,7 +474,7 @@
         }
 
         function pop(t, m, c, hI = 0) { const el = document.createElement('div'); el.className = 'dmg-float'; el.innerText = m; el.style.color = c; el.style.left = (40 + (hI * 5)) + "%"; el.style.top = (25 - (hI * 2)) + "%"; document.getElementById(`card-${t}`).appendChild(el); setTimeout(() => el.remove(), 800); }
-        function initSelection() { const list = document.getElementById('job-list'); for(let j in jobs) { const card = document.createElement('div'); card.className = 'job-card'; card.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); pick(j); }; card.innerHTML = `<h3>${jobs[j].icon} ${j.toUpperCase()}</h3><div class="job-stats">HP: ${jobs[j].hp} | DEF: ${jobs[j].def*100}%</div><ul class="job-desc">${jobs[j].desc.map(d => `<li>${d}</li>`).join('')}</ul>`; list.appendChild(card); } }
+        function initSelection() { const list = document.getElementById('job-list'); for(let j in jobs) { const card = document.createElement('div'); card.className = 'job-card'; card.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); pick(j); }; card.innerHTML = `<h3>${jobs[j].icon} ${j.toUpperCase()}</h3><div class=\"job-stats\">HP: ${jobs[j].hp} | DEF: ${jobs[j].def*100}%</div><ul class=\"job-desc\">${jobs[j].desc.map(d => `<li>${d}</li>`).join('')}</ul>`; list.appendChild(card); } }
         function pick(j) { state[selecting].job = j; state[selecting].max = jobs[j].hp; state[selecting].hp = jobs[j].hp; state[selecting].def = jobs[j].def; if(selecting === 'boy') { selecting = 'girl'; document.getElementById('turn-title').innerText = "GIRL: SELECT YOUR CLASS"; document.getElementById('turn-title').style.color = "var(--girl)"; } else { document.getElementById('selection-screen').style.display = 'none'; document.getElementById('arena').style.display = 'flex'; update(); } }
         function checkWin() { let w = state.boy.hp <= 0 ? 'GIRL' : (state.girl.hp <= 0 ? 'BOY' : null); if(w && !isOver) { isOver = true; document.getElementById('win-title').innerText = `${w} WINS!`; document.getElementById('win-overlay').style.display = 'flex'; playSfx('shake'); return true; } return false; }
         function r(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
