@@ -120,13 +120,51 @@
         .shake { animation: shake 0.2s ease-in-out; }
         @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(6px, 6px); } 50% { transform: translate(-6px, -6px); } 75% { transform: translate(6px, -6px); } }
 
-        #selection-screen { position: absolute; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
-        .job-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 850px; padding-bottom: 40px; }
-        .job-card { background: var(--card-bg); border: 2px solid #444; padding: 18px; border-radius: 20px; text-align: left; }
-        .job-card h3 { color: var(--accent); margin: 0 0 10px 0; font-size: 1.4rem; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
-        .job-stats { font-size: 0.85rem; color: var(--info); margin-bottom: 12px; font-weight: bold; text-align: center; }
-        .job-desc { font-size: 0.75rem; color: #bbb; line-height: 1.5; margin: 0; padding-left: 10px; list-style: none; position: relative; }
-        .job-desc li::before { content: "▸"; position: absolute; left: -10px; color: var(--accent); }
+        /* Interactive Split-Panel Selection Screen */
+        #selection-screen { 
+            position: absolute; inset: 0; background: var(--bg); z-index: 3000; 
+            display: flex; flex-direction: column; align-items: center; padding: 10px; padding-top: 50px;
+        }
+        .select-layout {
+            display: flex; width: 100%; max-width: 950px; height: calc(100vh - 130px); 
+            gap: 15px; background: rgba(15, 17, 28, 0.9); border-radius: 15px; padding: 10px; border: 1px solid #333;
+        }
+        /* Left list column */
+        .job-list-sidebar {
+            width: 35%; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; 
+            padding-right: 5px; border-right: 1px solid #222;
+        }
+        .job-list-item {
+            background: #16192b; border: 1px solid #444; padding: 10px; border-radius: 8px;
+            text-align: left; cursor: pointer; transition: 0.2s; font-size: 0.9rem; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; color: #fff;
+        }
+        .job-list-item:hover, .job-list-item.selected {
+            background: #232742; border-color: var(--accent); box-shadow: 0 0 5px rgba(241, 196, 15, 0.4);
+        }
+        /* Right detail column */
+        .job-detail-panel {
+            width: 65%; display: flex; flex-direction: column; overflow-y: auto; padding: 10px;
+            background: #0f111c; border-radius: 10px; border: 1px solid #222; position: relative;
+        }
+        .detail-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 12px; }
+        .detail-title { font-size: 1.5rem; color: var(--accent); margin: 0; font-weight: 900; }
+        .detail-stats { font-size: 0.9rem; color: var(--info); font-weight: bold; margin-top: 4px; }
+        .detail-section-title { font-size: 0.95rem; color: var(--event); font-weight: bold; margin: 8px 0 4px 0; border-left: 3px solid var(--event); padding-left: 6px; }
+        
+        .detail-passive { background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; font-size: 0.8rem; color: #ddd; line-height: 1.4; border: 1px dashed #444; }
+        .detail-skills-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+        .detail-skill-item { background: rgba(255,255,255,0.01); border: 1px solid #2a2d3e; padding: 6px 10px; border-radius: 6px; font-size: 0.78rem; }
+        .detail-skill-item strong { color: #fff; font-size: 0.85rem; }
+        .detail-skill-cost { color: var(--info); font-weight: bold; float: right; }
+        .detail-skill-desc { color: #b1b5c4; margin-top: 2px; line-height: 1.3; }
+        
+        .btn-confirm-selection {
+            width: 100%; margin-top: auto; padding: 12px; background: linear-gradient(90deg, #2ecc71, #27ae60);
+            color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); transition: 0.2s;
+        }
+        .btn-confirm-selection:active { transform: scale(0.98); filter: brightness(0.9); }
 
         .arena { display: none; width: 100%; height: 100%; padding: 10px; gap: 10px; padding-top: 60px; }
         .card { flex: 1; background: var(--card-bg); border-radius: 20px; padding: 10px; display: flex; flex-direction: column; position: relative; border: 1px solid #333; overflow: hidden; }
@@ -165,7 +203,6 @@
         @media (max-width: 768px) { 
             .arena { flex-direction: column; padding-top: 100px;} 
             .card { height: 49.5%; } 
-            .job-grid { grid-template-columns: 1fr; }
             .hp-text { font-size: 1.8rem; }
             .hp-container { height: 38px; }
             .sk-name { font-size: 1.6rem; }
@@ -175,6 +212,14 @@
             .card button { min-height: 120px; }
             #god-system { flex-direction: row; gap: 5px; width: 100%; top: 5px; }
             #event-trigger-panel { top: 38px; left: 5px; flex-direction: row; }
+            
+            /* Responsive Selection Screen for Mobile */
+            #selection-screen { padding-top: 45px; }
+            .select-layout { flex-direction: column; height: calc(100vh - 110px); gap: 10px; }
+            .job-list-sidebar { width: 100%; height: 35%; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid #222; padding-bottom: 5px; }
+            .job-list-item { min-width: 130px; justify-content: center; height: 100%; text-align: center; }
+            .job-detail-panel { width: 100%; height: 65%; }
+            .detail-title { font-size: 1.2rem; }
         }
     </style>
 </head>
@@ -209,9 +254,11 @@
     <div id="fx-layer"></div>
 
     <div id="selection-screen">
-        <h1 style="color: var(--accent); margin-top: 20px;">CHRONO ARENA</h1>
-        <p id="turn-title" style="color: var(--boy); font-weight: bold; margin-bottom: 20px;">BOY: SELECT YOUR CLASS</p>
-        <div class="job-grid" id="job-list"></div>
+        <h2 id="turn-title" style="color: var(--boy); font-weight: bold; margin: 0 0 10px 0; font-size: 1.2rem; text-shadow: 0 0 10px rgba(0,0,0,0.5);">BOY: SELECT YOUR CLASS</h2>
+        <div class="select-layout">
+            <div class="job-list-sidebar" id="job-sidebar-list"></div>
+            <div class="job-detail-panel" id="job-preview-panel"></div>
+        </div>
     </div>
 
     <div class="arena" id="arena">
@@ -341,7 +388,7 @@
             }
         }
 
-        let selecting = 'boy', isOver = false;
+        let selecting = 'boy', isOver = false, currentSelectedJobKey = 'Warrior';
         let state = {
             boy: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0 },
             girl: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0 }
@@ -428,20 +475,32 @@
             Gunner: { icon: "🔫", hp: 105, def: 0.05, desc: ["Passive: High EN Recovery.", "Lock-On: High Crit Rate.", "ULT: Massive DMG + EN Wipe."], skills: [
                 { n: "Pistol Shot", c: 0, d: [6, 9], t: 'double', fx: "arrow", e: "2x Fast Shots" }, { n: "Reload", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Headshot", c: 2, d: [20, 28], fx: "arrow", e: "High base dmg" }, { n: "Lock On", c: 1, t: 'focus', e: "Next 100% Crit" }, { n: "Grenade", c: 3, d: [22, 30], t: 'burn', fx: "bolt", e: "DMG + Drain 2 EN" }, { n: "Cover Fire", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "SATELLITE BEAM", c: 9, d: [110, 140], t: 'gunner_ult', fx: "bolt", e: "AOE + TARGET EN=0" }
             ]},
-            Boxer: { icon: "🥊", hp: 140, def: 0.12, desc: ["Passive: Dodge gains 2 EN.", "Counter: 20 DMG Rebound.", "ULT: Ignore Def/Dodge + <30% Kill."], skills: [
-                { n: "Jab", c: 0, d: [9, 13], fx: "slash", e: "Quick punch" }, { n: "Deep Breath", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Counter Stance", c: 2, t: 'counter', e: "Rebound 20 Dmg" }, { n: "Sway", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts)" }, { n: "Uppercut", c: 2, d: [12, 18], t: 'stun', v: 0.3, fx: "slash", e: "30% Stun Chance" }, { n: "Body Blow", c: 2, d: [15, 22], t: 'weak', fx: "slash", e: "DMG + Target ATK -30%" }, { n: "K.O. PUNCH", c: 9, d: [85, 110], t: 'boxer_ult', fx: "shake", e: "Sure Hit + Ignore Def" }
+            Boxer: { icon: "🥊", hp: 140, def: 0.12, desc: ["Passive: Dodge gains 2 EN.", "Counter: 20 DMG Rebound.", "ULT: Sure Hit + Shield Breaker (Ignore Def/Guard)."], skills: [
+                { n: "Jab", c: 0, d: [9, 13], fx: "slash", e: "Quick punch" }, { n: "Deep Breath", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Counter Stance", c: 2, t: 'counter', e: "Rebound 20 Dmg" }, { n: "Sway", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts)" }, { n: "Uppercut", c: 2, d: [12, 18], t: 'stun', v: 0.3, fx: "slash", e: "30% Stun Chance" }, { n: "Body Blow", c: 2, d: [15, 22], t: 'weak', fx: "slash", e: "DMG + Target ATK -30%" }, { n: "K.O. PUNCH", c: 9, d: [85, 110], t: 'boxer_ult', fx: "shake", e: "Sure Hit + Shield Breaker" }
             ]},
             RockQueen: { icon: "👑", hp: 180, def: 0.30, desc: ["Passive: IMMUNE to EN loss.", "Hardened: Damage stacks DEF.", "ULT: Sure Hit + Stun 1 Turn."], skills: [
                 { n: "Rock Throw", c: 0, d: [7, 10], fx: "slash", e: "Heavy toss" }, { n: "Rooting", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Granite Armor", c: 1, t: 'harden', v: 0.05, e: "Perm +5% DEF (Max 50%)" }, { n: "Stone Wall", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Earth Smash", c: 2, d: [15, 20], t: 'stun', v: 0.25, fx: "shake", e: "25% Stun Chance" }, { n: "Reconstruction", c: 3, v: [30, 50], t: 'heal', e: "Restores massive HP" }, { n: "GIGA MONOLITH", c: 9, d: [75, 100], t: 'rock_ult', fx: "shake", e: "SURE HIT + STUN 1T" }
             ]},
-            Assassin: { icon: "🗡️", hp: 85, def: 0, desc: ["Passive: 40% Crit Rate.", "Stealth: Next hit x2.5 DMG.", "ULT: Instant Kill if HP < 25%."], skills: [
-                { n: "Backstab", c: 0, d: [12, 18], fx: "slash", e: "High base crit" }, { n: "Preparation", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Venom Strike", c: 2, d: [10, 14], t: 'weak', fx: "slash", e: "Dmg + Weaken Target" }, { n: "Shadow Cloak", c: 2, t: 'assassin_sh', e: "Lose 50% HP + 200% DMG" }, { n: "Slayer's Feast", c: 3, d: [20, 28], t: 'leech', v: 1.0, fx: "slash", e: "100% Lifesteal" }, { n: "Smoke Bomb", c: 2, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "DEATH MARK", c: 9, d: [120, 150], t: 'exec', fx: "slash", e: "MASSIVE DMG + KILL LOW HP" }
+            Assassin: { icon: "🗡️", hp: 85, def: 0, desc: ["Passive: 40% Crit Rate.", "Stealth: Next hit x2.5 DMG.", "ULT: Fatal Wound (Dmg + Frost x2 + Perm Weaken)."], skills: [
+                { n: "Backstab", c: 0, d: [12, 18], fx: "slash", e: "High base crit" }, { n: "Preparation", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Venom Strike", c: 2, d: [10, 14], t: 'weak', fx: "slash", e: "Dmg + Weaken Target" }, { n: "Shadow Cloak", c: 2, t: 'assassin_sh', e: "Lose 50% HP + 200% DMG" }, { n: "Slayer's Feast", c: 3, d: [20, 28], t: 'leech', v: 1.0, fx: "slash", e: "100% Lifesteal" }, { n: "Smoke Bomb", c: 2, t: 'dodge', v: 0.7, e: "70% Dodge (1 Act)" }, { n: "DEATH MARK", c: 9, d: [120, 150], t: 'assassin_ult', fx: "slash", e: "MASSIVE DMG + FATAL WOUND" }
             ]},
             Paladin: { icon: "⚖️", hp: 160, def: 0.25, desc: ["Passive: 50% EN gain when hit.", "Holy Light: Heal + Cleanse.", "ULT: Dmg + Heal + Guard."], skills: [
-                { n: "Smite", c: 0, d: [10, 14], fx: "slash", e: "Holy damage" }, { n: "Blessing", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Holy Light", c: 2, v: [20, 35], t: 'heal', e: "Heal + Cleanse" }, { n: "Thorns", c: 2, t: 'counter', e: "Reflect 20 Dmg" }, { n: "Iron Will", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Judgment", c: 3, d: [20, 30], t: 'exec', fx: "bolt", e: "Bonus Dmg to low HP" }, { n: "HEAVEN GATE", c: 9, d: [80, 110], t: 'paladin_ult', fx: "bolt", e: "DMG + HEAL + GUARD" }
+                { n: "Smite", c: 0, d: [10, 14], fx: "slash", e: "Holy damage" }, { n: "Blessing", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Holy Light", c: 2, v: [20, 35], t: 'heal', e: "Heal + Cleanse" }, { n: "Thorns", c: 2, t: 'counter', e: "Reflect 20 Dmg" }, { n: "Iron Will", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Judgment", c: 3, d: [25, 40], fx: "bolt", e: "High Holy Execution Strike" }, { n: "HEAVEN GATE", c: 9, d: [80, 110], t: 'paladin_ult', fx: "bolt", e: "DMG + HEAL + GUARD" }
             ]},
             Alchemist: { icon: "🧪", hp: 115, def: 0.10, desc: ["Passive: 20% chance to refund AP.", "Control: Frost & Energy drain.", "ULT: Chaos reaction."], skills: [
                 { n: "Acid Pot", c: 0, d: [8, 12], t: 'mark', fx: "bolt", e: "Dmg + Mark target" }, { n: "Energy Pot", c: 0, v: 3, t: 'en', e: "+3 Energy" }, { n: "Frost Flask", c: 2, d: [10, 16], t: 'frost', v: 1, fx: "bolt", e: "Dmg + Frost effect" }, { n: "Toxic Gas", c: 2, t: 'weak', e: "Weaken Target 50%" }, { n: "Heal Vials", c: 2, v: [15, 25], t: 'heal', e: "Restore HP" }, { n: "Mana Thief", c: 2, d: [12, 18], t: 'burn', fx: "bolt", e: "Dmg + Drain 2 EN" }, { n: "PHILO STONE", c: 9, d: [90, 120], t: 'alchemist_ult', fx: "shake", e: "DMG + EN WIPE + FOCUS" }
+            ]},
+            Butcher: { icon: "🥩", hp: 170, def: 0.15, desc: ["Passive: Meat Shield - Hardened stacks when healing.", "Fresh Meat: Hook target to weaken defense.", "ULT: Heavy Lifesteal + Weaken."], skills: [
+                { n: "Cleaver Toss", c: 0, d: [9, 13], fx: "slash", e: "Basic physical damage" }, { n: "Sharpen Blade", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Meat Hook", c: 2, d: [12, 16], t: 'mark', fx: "slash", e: "Hook & Mark target (No Def)" }, { n: "Cannibalize", c: 2, v: [20, 35], t: 'heal', e: "Devour meat to restore HP" }, { n: "Flesh Shield", c: 1, t: 'harden', v: 0.05, e: "+5% Permanent DEF" }, { n: "Tenderize", c: 2, d: [14, 22], t: 'weak', fx: "slash", e: "Slam target to Weaken" }, { n: "FRESH MEAT", c: 9, d: [85, 115], t: 'butcher_ult', fx: "shake", e: "Massive DMG + 100% Leech" }
+            ]},
+            Joker: { icon: "🤡", hp: 100, def: 0.05, desc: ["Passive: Trickster - High chance to Dodge or Focus.", "Surprise: Randomly Stun or Burn target.", "ULT: Infinite RNG reaction."], skills: [
+                { n: "Card Throw", c: 0, d: [8, 14], fx: "arrow", e: "Sharp jester cards" }, { n: "Juggling", c: 0, v: 3, t: 'en', e: "+3 Energy" }, { n: "Jack In Box", c: 2, d: [10, 18], t: 'stun', v: 0.4, fx: "bolt", e: "40% Stun Chance" }, { n: "Laughing Gas", c: 2, t: 'weak', e: "Weaken Target 50%" }, { n: "Magic Trick", c: 1, t: 'dodge', v: 0.8, e: "80% Dodge (2 Acts)" }, { n: "Prank Shot", c: 2, d: [15, 25], t: 'burn', fx: "bolt", e: "DMG + Drain 2 EN" }, { n: "GRAND FINALE", c: 9, d: [111, 111], t: 'joker_ult', fx: "shake", e: "Fixed 111 DMG + 100% Stun" }
+            ]},
+            KungFuPanda: { icon: "🐼", hp: 155, def: 0.18, desc: ["Passive: Inner Peace - 30% chance to counter 20 dmg when hit.", "Tai Chi: High guard & stun efficiency.", "ULT: Sure hit Shield Breaker crush."], skills: [
+                { n: "Panda Punch", c: 0, d: [10, 14], fx: "slash", e: "Heavy martial paw" }, { n: "Chi Focus", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Tai Chi Shield", c: 1, t: 'def', e: "80% Block (Once)" }, { n: "Poison Chop", c: 2, d: [12, 18], t: 'weak', fx: "slash", e: "Strike pressure points" }, { n: "Iron Belly", c: 2, t: 'counter', e: "Rebound 20 damage" }, { n: "Dumpling Feast", c: 2, v: [15, 30], t: 'heal', e: "Eat to restore health" }, { n: "WUXI FINGER", c: 9, d: [90, 120], t: 'boxer_ult', fx: "shake", e: "Sure Hit + Shield Breaker" }
+            ]},
+            DemonHunter: { icon: "😈", hp: 112, def: 0.08, desc: ["Passive: Vengeance - Marks target easily.", "Metamorphosis: Massive critical lifesteal strike.", "ULT: Full Focus Chaos Beam."], skills: [
+                { n: "Demon Slash", c: 0, d: [11, 16], fx: "slash", e: "Dual wielder cut" }, { n: "Soul Feast", c: 0, v: 2, t: 'en', e: "+2 Energy" }, { n: "Twin Glaives", c: 2, d: [8, 12], t: 'double', fx: "slash", e: "Double fast slash" }, { n: "Vengeance Mark", c: 1, t: 'mark', e: "Mark target to ignore defense" }, { n: "Chaos Dodge", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts)" }, { n: "Soul Rip", c: 3, d: [20, 30], t: 'leech', v: 0.8, fx: "bolt", e: "80% Lifesteal" }, { n: "METAMORPHOSIS", c: 9, d: [100, 130], t: 'demon_ult', fx: "bolt", e: "Massive DMG + Focus Buff" }
             ]}
         };
 
@@ -498,13 +557,11 @@
             if(isOver || state[p].ap <= 0) return; 
             const s = jobs[state[p].job].skills[i], opp = p === 'boy' ? 'girl' : 'boy';
             
-            // 優先檢查解除暈眩權限
             const canIgnoreStun = (state[p].job === 'Paladin' && s.n === 'Holy Light');
             const isBasicOrEn = (i === 0 || i === 1);
             
             if(state[p].stunned && !canIgnoreStun) { 
                 if (isBasicOrEn) {
-                    // 只消耗 AP 解除暈眩，不執行效果
                     if(typeof state[p].stunned === 'number' && state[p].stunned > 1) state[p].stunned--;
                     else state[p].stunned = false;
                     state[p].ap--; 
@@ -518,7 +575,6 @@
             if(state[p].en < cost) return;
             state[p].en -= cost; state[p].ap--; if(cost > 0) state[p].frost = 0; state[p].reflect = false;
 
-            // Alchemist Passive
             if(state[p].job === 'Alchemist' && Math.random() < 0.2) {
                 state[p].ap++;
                 pop(p, "AP REFUND!", "var(--info)", 0);
@@ -531,18 +587,15 @@
                 state[p].hp = Math.min(state[p].max, state[p].hp + h); 
                 pop(p, `+${h}`, 'var(--heal)', 0); 
                 
-                // 聖騎士 Holy Light 解除所有狀態
                 if(state[p].job === 'Paladin') {
-                    state[p].weakened = false; 
-                    state[p].stunned = false; 
-                    state[p].frost = 0;
+                    state[p].weakened = false; state[p].stunned = false; state[p].frost = 0;
                 }
             }
             else if(s.t === 'harden') { playSfx('en'); state[p].def = Math.min(0.5, state[p].def + s.v); pop(p, "DEF UP", "var(--info)", 0); }
             else if(s.t === 'assassin_sh') { playSfx('shake'); let selfDmg = Math.floor(state[p].hp * 0.5); state[p].hp -= selfDmg; state[p].focused = true; pop(p, `-${selfDmg}`, "var(--dmg)", 0); }
             else if(['def','reflect','dodge','focus','mark','counter'].includes(s.t)) { 
                 playSfx('bolt'); if(s.t==='def') state[p].guard=true; if(s.t==='reflect') state[p].reflect=true; 
-                if(s.t==='dodge') state[p].dodge = (state[p].job === 'Gunner' || (state[p].job === 'Assassin' && s.n === 'Smoke Bomb')) ? 1 : 2;
+                if(s.t==='dodge') state[p].dodge = (state[p].job === 'Gunner' || (state[p].job === 'Assassin' && s.n === 'Smoke Bomb') || (state[p].job === 'Joker' && s.n === 'Magic Trick') || (state[p].job === 'Demon Hunter' && s.n === 'Chaos Dodge')) ? 1 : 2;
                 if(s.t==='focus') state[p].focused=true; if(s.t==='mark') state[opp].marked=true; if(s.t==='counter') state[p].counter=true;
             }
             else {
@@ -551,9 +604,7 @@
 
                 if(s.t === 'burn' && state[opp].job !== 'RockQueen') {
                     let targetEn = Math.max(0, state[opp].en - 2);
-                    state[opp].en = targetEn;
-                    pop(opp, "-2 EN", "var(--info)", 0);
-                    update(); 
+                    state[opp].en = targetEn; pop(opp, "-2 EN", "var(--info)", 0); update(); 
                 }
 
                 for(let h=0; h<hits; h++){
@@ -568,11 +619,11 @@
                         if(state[p].focused) { isCrit = true; baseD *= 2; state[p].focused = false; } 
                         else if(Math.random() < critChance) { isCrit = true; baseD *= 1.5; } 
 
-                        if(state[p].weakened) { baseD *= (state[p].job === 'Warrior' || state[p].job === 'Assassin') ? 0.5 : 0.7; state[p].weakened = false; }
-                        if(s.t==='exec') { if(state[p].job === 'Assassin' && state[opp].hp < (state[opp].max*0.25)) baseD = 999; else if(state[opp].hp < (state[opp].max*0.5)) baseD *= 1.5; }
-                        if(s.t==='boxer_ult' && state[opp].hp < (state[opp].max*0.3)) baseD = 999;
+                        if(state[p].weakened) { baseD *= (state[p].job === 'Warrior' || state[p].job === 'Assassin' || state[p].job === 'Butcher') ? 0.5 : 0.7; state[p].weakened = false; }
+                        if(s.t==='exec' && state[opp].hp < (state[opp].max*0.5)) { baseD *= 1.5; }
                         
-                        let dodgeSkill = jobs[state[opp].job].skills.find(sk => sk.n === (state[opp].job === 'Assassin' ? (state[opp].dodge === 2 ? 'Shadow Cloak' : 'Smoke Bomb') : (state[opp].job === 'Archer' ? 'Evasion' : (state[opp].job === 'Gunner' ? 'Cover Fire' : 'Sway'))));
+                        // Dodge verification
+                        let dodgeSkill = jobs[state[opp].job].skills.find(sk => sk.n === (state[opp].job === 'Assassin' ? (state[opp].dodge === 2 ? 'Shadow Cloak' : 'Smoke Bomb') : (state[opp].job === 'Archer' ? 'Evasion' : (state[opp].job === 'Gunner' ? 'Cover Fire' : (state[opp].job === 'Joker' ? 'Magic Trick' : (state[opp].job === 'Demon Hunter' ? 'Chaos Dodge' : 'Sway'))))));
                         let dodgeChance = (state[opp].job === 'Assassin' && state[opp].dodge === 1) ? 0.7 : (dodgeSkill ? (dodgeSkill.v || 1.0) : 1.0);
                         
                         if(!['boxer_ult', 'rock_ult'].includes(s.t) && state[opp].dodge > 0 && Math.random() < dodgeChance) { 
@@ -580,34 +631,50 @@
                             if(state[opp].job === 'Boxer') state[opp].en = Math.min(10, state[opp].en + 2); 
                         } 
                         else {
-                            let red = (state[opp].marked || s.t === 'boxer_ult') ? 0 : (state[opp].guard ? 0.8 : state[opp].def);
+                            // NEW Shield Breaker feature (Replaces Kill Low HP)
+                            let isShieldBreaker = (s.t === 'boxer_ult');
+                            let guardBonusDmg = 0;
+                            if(isShieldBreaker && state[opp].guard) {
+                                guardBonusDmg = 25; // Extra impact damage when breaking shield
+                                state[opp].guard = false;
+                            }
+
+                            let red = (state[opp].marked || isShieldBreaker) ? 0 : (state[opp].guard ? 0.8 : state[opp].def);
                             if(state[opp].reflect) { state[p].hp -= baseD; pop(p, `-${Math.floor(baseD)}`, "var(--dmg)", h); red = 0.5; state[opp].reflect = false; }
                             if(state[opp].counter) { state[p].hp -= 20; pop(p, "-20", "var(--dmg)", h); state[opp].counter = false; }
-                            let f = Math.max(1, Math.floor(baseD * (1 - red)));
+                            
+                            let f = Math.max(1, Math.floor(baseD * (1 - red))) + guardBonusDmg;
                             if(baseD > 0) { 
                                 state[opp].hp -= f; 
                                 pop(opp, (isCrit ? `CRIT! -${f}` : `-${f}`), (isCrit ? "var(--accent)" : "var(--dmg)"), h); 
+                                if(guardBonusDmg > 0) pop(opp, "SHIELD SMASH!", "var(--accent)", h + 1);
                             }
-                            if(state[opp].guard) state[opp].guard = false;
+                            if(state[opp].guard && !isShieldBreaker) state[opp].guard = false;
                             
                             if(state[opp].job === 'Paladin' && Math.random() < 0.5) { state[opp].en = Math.min(10, state[opp].en + 1); }
 
-                            if(s.t === 'leech' || s.t === 'berserk_ult') { let ratio = s.t === 'berserk_ult' ? 1.0 : (s.v || 0.5); let healVal = Math.floor(f * ratio); state[p].hp = Math.min(state[p].max, state[p].hp + healVal); if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', h); }
+                            if(s.t === 'leech' || s.t === 'berserk_ult' || s.t === 'butcher_ult') { let ratio = (s.t === 'berserk_ult' || s.t === 'butcher_ult') ? 1.0 : (s.v || 0.5); let healVal = Math.floor(f * ratio); state[p].hp = Math.min(state[p].max, state[p].hp + healVal); if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', h); }
                             if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
-                            if(s.t === 'rock_ult') state[opp].stunned = 1; 
+                            if(s.t === 'rock_ult' || s.t === 'joker_ult') state[opp].stunned = 1; 
                             if(s.t === 'frost') state[opp].frost = s.v;
                             if(s.t === 'weak' && s.d) state[opp].weakened = true;
                             
+                            // NEW Assassin Ultimate Effect (Replaces Kill Low HP)
+                            if(s.t === 'assassin_ult') {
+                                state[opp].frost = 2;       // Apply Deep Freeze
+                                state[opp].weakened = true;  // Apply Serious Wound
+                                pop(opp, "FATAL WOUND!", "var(--purple)", 0);
+                            }
+                            
                             if(s.t === 'paladin_ult') {
                                 let heal = Math.floor(state[p].max * 0.3);
-                                state[p].hp = Math.min(state[p].max, state[p].hp + heal);
-                                state[p].guard = true;
-                                pop(p, `+${heal}`, 'var(--heal)', 0);
+                                state[p].hp = Math.min(state[p].max, state[p].hp + heal); state[p].guard = true; pop(p, `+${heal}`, 'var(--heal)', 0);
                             }
                             if(s.t === 'alchemist_ult') {
-                                state[opp].en = 0;
+                                state[opp].en = 0; state[p].focused = true; pop(opp, "EN WIPE", "var(--info)", 0);
+                            }
+                            if(s.t === 'demon_ult') {
                                 state[p].focused = true;
-                                pop(opp, "EN WIPE", "var(--info)", 0);
                             }
 
                             if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
@@ -628,7 +695,7 @@
                 document.getElementById(`txt-${p}`).innerText = `${Math.floor(s.hp)}/${s.max}`;
                 document.getElementById(`bar-${p}`).style.width = (s.hp/s.max*100) + "%";
                 let godStr = s.godAtk > 0 ? `GR(${s.godAtk*10}%) ` : (s.godAtk < 0 ? `GH(${Math.abs(s.godAtk*10)}%) ` : "");
-                document.getElementById(`status-${p}`).innerText = godStr + (s.guard?"🛡️G ":"")+(s.reflect?"✨R ":"")+(s.dodge>0?`💨E(${s.dodge}) `:"")+(s.frost>0? (s.frost===2?"❄️❄️DF ":"❄️F ") :"")+(s.stunned?"💫S ":"")+(s.marked?"🎯M ":"")+(s.counter?"🥊C ":"")+(s.def > jobs[s.job].def ? "💎H ":"")+(s.focused?"🔥F ":"")+(s.weakened?"💢W ":"");
+                document.getElementById(`status-${p}`).innerText = godStr + (s.guard?"🛡️G ":"")+(s.reflect?"✨R ":"")+(s.dodge>0?`💨E(${s.dodge}) `:"")+(s.frost>0? (s.frost===2?"❄️❄️DF ":"❄️F ") :"")+(s.stunned?"💫S ":"")+(s.marked?"🎯M ":"")+(s.counter?"🥊C ":"")+(s.def > (jobs[s.job]?jobs[s.job].def:0) ? "💎H ":"")+(s.focused?"🔥F ":"")+(s.weakened?"💢W ":"");
                 const enBox = document.getElementById(`en-${p}`); enBox.innerHTML = '';
                 for(let i=0; i<10; i++) { const d = document.createElement('div'); d.className = `en-dot ${i < s.en ? 'active' : ''}`; enBox.appendChild(d); }
                 if(s.job) {
@@ -638,14 +705,11 @@
                         const b = document.createElement('button'); if(idx === 6) b.className = 'btn-ult';
                         let cost = (s.frost > 0 && sk.c > 0) ? sk.c * (s.frost === 2 ? 3 : 2) : sk.c;
                         
-                        // 修改 UI 顯示與按鍵權限
                         const canIgnoreStun = (state[p].job === 'Paladin' && sk.n === 'Holy Light');
                         const isStunned = state[p].stunned;
                         const isBasicOrEn = (idx === 0 || idx === 1);
                         
-                        // 當暈眩時，若 AP > 0 則普通攻擊與回 EN 技可以點擊用來解除暈眩
                         b.disabled = s.en < cost || isOver || s.ap <= 0 || (isStunned && !isBasicOrEn && !canIgnoreStun);
-                        
                         b.innerHTML = `<span class="sk-name">${sk.n}</span><span class="sk-cost">EN: ${cost}</span><span class="sk-val">${sk.d?sk.d[0]+'-'+sk.d[1]:(sk.v && Array.isArray(sk.v) ? sk.v[0]+'-'+sk.v[1] : (sk.v||''))}</span><span class="sk-effect">${sk.e}</span>`;
                         b.onclick = () => act(p, idx); box.appendChild(b);
                     });
@@ -654,8 +718,78 @@
         }
 
         function pop(t, m, c, hI = 0) { const el = document.createElement('div'); el.className = 'dmg-float'; el.innerText = m; el.style.color = c; el.style.left = (40 + (hI * 5)) + "%"; el.style.top = (25 - (hI * 2)) + "%"; document.getElementById(`card-${t}`).appendChild(el); setTimeout(() => el.remove(), 800); }
-        function initSelection() { const list = document.getElementById('job-list'); for(let j in jobs) { const card = document.createElement('div'); card.className = 'job-card'; card.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); pick(j); }; card.innerHTML = `<h3>${jobs[j].icon} ${j.toUpperCase()}</h3><div class="job-stats">HP: ${jobs[j].hp} | DEF: ${jobs[j].def*100}%</div><ul class="job-desc">${jobs[j].desc.map(d => `<li>${d}</li>`).join('')}</ul>`; list.appendChild(card); } }
-        function pick(j) { state[selecting].job = j; state[selecting].max = jobs[j].hp; state[selecting].hp = jobs[j].hp; state[selecting].def = jobs[j].def; if(selecting === 'boy') { selecting = 'girl'; document.getElementById('turn-title').innerText = "GIRL: SELECT YOUR CLASS"; document.getElementById('turn-title').style.color = "var(--girl)"; } else { document.getElementById('selection-screen').style.display = 'none'; document.getElementById('arena').style.display = 'flex'; document.getElementById('btn-draw-event').style.display = 'block'; update(); } }
+        
+        function initSelection() {
+            const sidebar = document.getElementById('job-sidebar-list');
+            sidebar.innerHTML = '';
+            
+            for(let j in jobs) {
+                const item = document.createElement('div');
+                item.className = `job-list-item ${j === currentSelectedJobKey ? 'selected' : ''}`;
+                item.innerHTML = `<span>${jobs[j].icon}</span> <span>${j}</span>`;
+                item.onclick = () => {
+                    currentSelectedJobKey = j;
+                    initSelection();
+                };
+                sidebar.appendChild(item);
+            }
+            renderJobPreview(currentSelectedJobKey);
+        }
+
+        function renderJobPreview(j) {
+            const panel = document.getElementById('job-preview-panel');
+            const jobData = jobs[j];
+            
+            panel.innerHTML = `
+                <div class="detail-header">
+                    <h3 class="detail-title">${jobData.icon} ${j.toUpperCase()}</h3>
+                    <div class="detail-stats">HP: ${jobData.hp}  |  DEF: ${jobData.def*100}%</div>
+                </div>
+                
+                <div class="detail-section-title">職業天賦 / Passive Ability</div>
+                <div class="detail-passive">
+                    ${jobData.desc.map(d => `<div>• ${d}</div>`).join('')}
+                </div>
+                
+                <div class="detail-section-title">技能招式一覽 / Skill Sets</div>
+                <ul class="detail-skills-list">
+                    ${jobData.skills.map((sk, idx) => `
+                        <li class="detail-skill-item" style="${idx === 6 ? 'border-color:var(--accent); background:rgba(241,196,15,0.03);' : ''}">
+                            <strong>${idx === 6 ? '👑 [ULT] ' : ''}${sk.n}</strong>
+                            <span class="detail-skill-cost">EN: ${sk.c}</span>
+                            <div class="detail-skill-desc">
+                                效果: <span style="color:#fff;">${sk.e}</span> 
+                                ${sk.d ? `| 威力: <span style="color:var(--dmg); font-weight:bold;">${sk.d[0]}-${sk.d[1]}</span>` : ''}
+                            </div>
+                        </li>
+                    `).join('')}
+                </ul>
+                
+                <button class="btn-confirm-selection" onclick="confirmJobSelection('${j}')">確認選擇 / LOCK IN ${j.toUpperCase()}</button>
+            `;
+        }
+
+        function confirmJobSelection(j) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            state[selecting].job = j; 
+            state[selecting].max = jobs[j].hp; 
+            state[selecting].hp = jobs[j].hp; 
+            state[selecting].def = jobs[j].def; 
+            
+            if(selecting === 'boy') { 
+                selecting = 'girl'; 
+                document.getElementById('turn-title').innerText = "GIRL: SELECT YOUR CLASS"; 
+                document.getElementById('turn-title').style.color = "var(--girl)";
+                currentSelectedJobKey = 'Mage';
+                initSelection();
+            } else { 
+                document.getElementById('selection-screen').style.display = 'none'; 
+                document.getElementById('arena').style.display = 'flex'; 
+                document.getElementById('btn-draw-event').style.display = 'block'; 
+                update(); 
+            }
+        }
+
         function checkWin() { let w = state.boy.hp <= 0 ? 'GIRL' : (state.girl.hp <= 0 ? 'BOY' : null); if(w && !isOver) { isOver = true; document.getElementById('win-title').innerText = `${w} WINS!`; document.getElementById('win-overlay').style.display = 'flex'; playSfx('shake'); return true; } return false; }
         function r(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
         initSelection();
