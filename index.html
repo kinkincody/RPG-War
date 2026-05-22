@@ -10,6 +10,7 @@
             --bg: #0a0b16; --card-bg: rgba(25, 28, 45, 0.95);
             --event: #ff9f43; --heal: #2ecc71; --info: #00ffcc; --dmg: #ff4d4d;
             --rock: #95a5a6;
+            --purple: #9b59b6;
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
@@ -37,6 +38,28 @@
         .btn-mercy { border-color: #2ecc71; color: #2ecc71; }
         .btn-rage { border-color: #f1c40f; color: #f1c40f; }
         .btn-hate { border-color: #9b59b6; color: #9b59b6; }
+
+        /* New Moon Event UI System */
+        #event-trigger-panel {
+            position: absolute; top: 10px; left: 15px; z-index: 2000; display: flex; flex-direction: column; gap: 4px;
+        }
+        .event-btn {
+            font-size: 0.65rem; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--event);
+            background: #1a1c2c; color: var(--event); font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .event-btn:active { transform: scale(0.9); }
+        
+        .info-panel-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+        }
+        .info-content {
+            background: var(--card-bg); border: 2px solid var(--event); border-radius: 15px; width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; padding: 20px; box-shadow: 0 0 20px rgba(255, 159, 67, 0.3);
+        }
+        .info-content h2 { color: var(--event); margin-top: 0; text-align: center; font-size: 1.4rem; border-bottom: 2px solid var(--event); padding-bottom: 8px;}
+        .event-list-desc { list-style: none; padding: 0; margin: 0; font-size: 0.8rem; line-height: 1.5; }
+        .event-list-desc li { margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .event-list-desc strong { color: var(--accent); display: block; font-size: 0.9rem; margin-bottom: 2px; }
+        .event-en-desc { color: #aaa; font-style: italic; font-size: 0.75rem; margin-top: 2px; display: block; }
 
         #save-system {
             position: absolute; top: 10px; right: 10px; z-index: 2000;
@@ -151,6 +174,7 @@
             .sk-effect { font-size: 0.9rem; }
             .card button { min-height: 120px; }
             #god-system { flex-direction: row; gap: 5px; width: 100%; top: 5px; }
+            #event-trigger-panel { top: 38px; left: 5px; flex-direction: row; }
         }
     </style>
 </head>
@@ -169,6 +193,11 @@
             <button class="god-btn btn-rage" onclick="godIntervention('girl', 'rage')">God Rage</button>
             <button class="god-btn btn-hate" onclick="godIntervention('girl', 'hate')">God Hate</button>
         </div>
+    </div>
+
+    <div id="event-trigger-panel">
+        <button id="btn-draw-event" class="event-btn" style="display:none;" onclick="triggerRandomNewMoonEvent()">抽取新月事件</button>
+        <button class="event-btn" onclick="toggleEventInfo(true)">新月事件介紹 / Info</button>
     </div>
 
     <div id="save-system">
@@ -213,6 +242,65 @@
             <div class="hp-container"><div id="bar-girl" class="hp-fill"></div><div class="hp-text" id="txt-girl"></div></div>
             <div id="en-girl" class="en-row"></div>
             <div class="btn-grid" id="btns-girl"></div>
+        </div>
+    </div>
+
+    <div id="event-info-panel" class="info-panel-overlay">
+        <div class="info-content">
+            <h2>🌙 新月事件詳細介紹 / New Moon Events Info</h2>
+            <ul class="event-list-desc">
+                <li>
+                    <strong>1. 時之沙漏 / Hourglass of Time</strong>
+                    <span>時間倒流！雙方體力產生震盪，當前血量直接恢復/調整至各自最大生命值的 50%。</span>
+                    <span class="event-en-desc">Time flows backward! Directly sets both players' current HP to 50% of their maximum HP.</span>
+                </li>
+                <li>
+                    <strong>2. 破滅之咒 / Curse of Ruin</strong>
+                    <span>夜空中降下毀滅詛咒，使雙方同時失去當前生命值的 20%（無視防禦）。</span>
+                    <span class="event-en-desc">A destructive curse descends, causing both players to simultaneously lose 20% of their current HP (ignores defense).</span>
+                </li>
+                <li>
+                    <strong>3. 神聖新星 / Holy Nova</strong>
+                    <span>新月綻放溫暖的光芒，雙方同時恢復各自最大生命值的 30%。</span>
+                    <span class="event-en-desc">The new moon emits a warm glow, allowing both players to restore 30% of their maximum HP.</span>
+                </li>
+                <li>
+                    <strong>4. 狂暴之月 / Frenzied Moon</strong>
+                    <span>激發骨子裡的嗜血狂暴，雙方的能量（EN）直接全部補滿（直達10點）。</span>
+                    <span class="event-en-desc">Ignites the bloodlust within, immediately filling both players' energy (EN) back to full (10 dots).</span>
+                </li>
+                <li>
+                    <strong>5. 枯竭風暴 / Depletion Storm</strong>
+                    <span>元素寂滅的風暴席捲戰場，使雙方當前的能量（EN）全部歸零。</span>
+                    <span class="event-en-desc">A storm of element annihilation sweeps the arena, draining both players' current energy (EN) to 0.</span>
+                </li>
+                <li>
+                    <strong>6. 命運天秤 / Scales of Fate</strong>
+                    <span>命運交織！當前生命值百分比「較低」者，將會與對手的生命值百分比直接對調。</span>
+                    <span class="event-en-desc">Destiny intertwined! The player with the lower HP percentage swaps their HP percentage with their opponent.</span>
+                </li>
+                <li>
+                    <strong>7. 極寒永夜 / Eternal Frost Night</strong>
+                    <span>絕對零度的永夜降臨，雙方同時獲得 2 層「深層凍結（Deep Frost）」狀態。</span>
+                    <span class="event-en-desc">An absolute-zero polar night falls, granting both players 2 stacks of Deep Frost status simultaneously.</span>
+                </li>
+                <li>
+                    <strong>8. 神明沉默 / Divine Silence</strong>
+                    <span>任何凡人不可稱聖，雙方身上所有的增益與減益狀態（護盾、反傷、標記、凍結、暈眩等）全部清除。</span>
+                    <span class="event-en-desc">No mortal shall be blessed. Clears all buffs and debuffs (Guard, Reflect, Dodge, Frost, Stun, Focus, Mark, Counter, Weaken) from both players.</span>
+                </li>
+                <li>
+                    <strong>9. 烈焰風暴 / Blaze Storm</strong>
+                    <span>混亂的烈焰席捲戰場，對雙方同時造成 25 點真實傷害（無視防禦）。</span>
+                    <span class="event-en-desc">Chaotic embers sweep the arena, dealing 25 pure damage to both players simultaneously (ignores defense).</span>
+                </li>
+                <li>
+                    <strong>10. 能量共鳴 / Energy Resonance</strong>
+                    <span>時空結構發生共振，雙方同時獲得 4 點能量（EN）。</span>
+                    <span class="event-en-desc">Resonance in space-time structures grants both players 4 points of Energy (EN) simultaneously.</span>
+                </li>
+            </ul>
+            <button onclick="toggleEventInfo(false)" style="margin-top:15px; width:100%; padding:10px; border-radius:8px; background:var(--event); color:white; font-weight:bold; border:none; cursor:pointer;">關閉說明 / Close Info</button>
         </div>
     </div>
 
@@ -261,6 +349,35 @@
 
         const fireSequence = [0.1, 0.2, 0.5, 1.0];
 
+        function toggleEventInfo(show) {
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            document.getElementById('event-info-panel').style.display = show ? 'flex' : 'none';
+        }
+
+        const newMoonEvents = [
+            { name: "時之沙漏", run: () => { state.boy.hp = Math.floor(state.boy.max * 0.5); state.girl.hp = Math.floor(state.girl.max * 0.5); pop('boy','時間倒流 50%HP!', 'var(--event)', 0); pop('girl','時間倒流 50%HP!', 'var(--event)', 0); playSfx('heal'); } },
+            { name: "破滅之咒", run: () => { let d1 = Math.floor(state.boy.hp * 0.2); let d2 = Math.floor(state.girl.hp * 0.2); state.boy.hp -= d1; state.girl.hp -= d2; pop('boy',`詛咒 -${d1}`,'var(--dmg)', 0); pop('girl',`詛咒 -${d2}`,'var(--dmg)', 0); triggerFX('shake', 'boy', 'girl'); } },
+            { name: "神聖新星", run: () => { let h1 = Math.floor(state.boy.max * 0.3); let h2 = Math.floor(state.girl.max * 0.3); state.boy.hp = Math.min(state.boy.max, state.boy.hp + h1); state.girl.hp = Math.min(state.girl.max, state.girl.hp + h2); pop('boy',`新星 +${h1}`,'var(--heal)', 0); pop('girl',`新星 +${h2}`,'var(--heal)', 0); playSfx('heal'); } },
+            { name: "狂暴之月", run: () => { state.boy.en = 10; state.girl.en = 10; pop('boy','EN 補滿!','var(--accent)', 0); pop('girl','EN 補滿!','var(--accent)', 0); playSfx('en'); } },
+            { name: "枯竭風暴", run: () => { state.boy.en = 0; state.girl.en = 0; pop('boy','EN 歸零!','var(--purple)', 0); pop('girl','EN 歸零!','var(--purple)', 0); playSfx('shake'); } },
+            { name: "命運天秤", run: () => { let p1 = state.boy.hp / state.boy.max; let p2 = state.girl.hp / state.girl.max; if (p1 !== p2) { let targetP1 = p1 < p2 ? p2 : p1; let targetP2 = p2 < p1 ? p1 : p2; if (p1 < p2) { state.boy.hp = Math.floor(state.boy.max * targetP1); state.girl.hp = Math.floor(state.girl.max * p1); } else { state.boy.hp = Math.floor(state.boy.max * p2); state.girl.hp = Math.floor(state.girl.max * targetP2); } pop('boy','命運對調!','var(--info)', 0); pop('girl','命運對調!','var(--info)', 0); } else { pop('boy','百分比相同','var(--rock)', 0); pop('girl','百分比相同','var(--rock)', 0); } } },
+            { name: "極寒永夜", run: () => { state.boy.frost = 2; state.girl.frost = 2; pop('boy','深層凍結 x2','var(--info)', 0); pop('girl','深層凍結 x2','var(--info)', 0); triggerFX('bolt', 'boy', 'boy'); triggerFX('bolt', 'girl', 'girl'); } },
+            { name: "神明沉默", run: () => { ['boy','girl'].forEach(p => { state[p].stunned = false; state[p].guard = false; state[p].reflect = false; state[p].dodge = 0; state[p].weakened = false; state[p].frost = 0; state[p].focused = false; state[p].marked = false; state[p].counter = false; pop(p,'狀態全清除!','var(--rock)', 0); }); } },
+            { name: "烈焰風暴", run: () => { state.boy.hp -= 25; state.girl.hp -= 25; pop('boy','烈焰 -25','var(--dmg)', 0); pop('girl','烈焰 -25','var(--dmg)', 0); triggerFX('shake', 'boy', 'girl'); } },
+            { name: "能量共鳴", run: () => { state.boy.en = Math.min(10, state.boy.en + 4); state.girl.en = Math.min(10, state.girl.en + 4); pop('boy','能量共鳴 +4 EN','var(--accent)', 0); pop('girl','能量共鳴 +4 EN','var(--accent)', 0); playSfx('en'); } }
+        ];
+
+        function triggerRandomNewMoonEvent() {
+            if (isOver) return;
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            let idx = Math.floor(Math.random() * newMoonEvents.length);
+            let evt = newMoonEvents[idx];
+            alert(`🌙 新月事件觸發：【${evt.name}】！`);
+            evt.run();
+            update();
+            checkWin();
+        }
+
         function changeAP(p, val) {
             state[p].ap = Math.max(-3, state[p].ap + val);
             update();
@@ -273,7 +390,7 @@
                 let dmg = Math.floor(state[p].hp * ratio);
                 state[p].hp -= dmg;
                 triggerFX('bolt', p === 'boy' ? 'girl' : 'boy', p);
-                pop(p, `GOD FIRE -${dmg}`, "var(--dmg)");
+                pop(p, `GOD FIRE -${dmg}`, "var(--dmg)", 0);
                 state[p].fireStep = (state[p].fireStep + 1) % fireSequence.length;
                 let nextRatio = fireSequence[state[p].fireStep] * 100;
                 document.querySelector(`#god-${p} .btn-fire`).innerText = `Fire ${nextRatio}%`;
@@ -281,15 +398,15 @@
                 let heal = Math.floor(state[p].max * 0.3);
                 state[p].hp = Math.min(state[p].max, state[p].hp + heal);
                 playSfx('heal');
-                pop(p, `GOD MERCY +${heal}`, "var(--heal)");
+                pop(p, `GOD MERCY +${heal}`, "var(--heal)", 0);
             } else if(type === 'rage') {
                 state[p].godAtk = Math.min(10, state[p].godAtk + 1);
                 playSfx('en');
-                pop(p, `GOD RAGE`, "var(--accent)");
+                pop(p, `GOD RAGE`, "var(--accent)", 0);
             } else if(type === 'hate') {
                 state[p].godAtk = Math.max(-10, state[p].godAtk - 1);
                 playSfx('shake');
-                pop(p, `GOD HATE`, "#9b59b6");
+                pop(p, `GOD HATE`, "#9b59b6", 0);
             }
             update();
             checkWin();
@@ -343,6 +460,10 @@
             document.getElementById('selection-screen').style.display = data.displaySelection;
             document.getElementById('turn-title').innerText = data.turnTitle;
             document.getElementById('turn-title').style.color = data.turnColor;
+            
+            if (document.getElementById('arena').style.display === 'flex') {
+                document.getElementById('btn-draw-event').style.display = 'block';
+            }
             update(); alert(`Slot ${slot} 讀取成功！`);
         }
 
@@ -387,7 +508,7 @@
                     if(typeof state[p].stunned === 'number' && state[p].stunned > 1) state[p].stunned--;
                     else state[p].stunned = false;
                     state[p].ap--; 
-                    pop(p, "CLEANSED!", "var(--info)"); 
+                    pop(p, "CLEANSED!", "var(--info)", 0); 
                     update(); 
                 }
                 return; 
@@ -400,7 +521,7 @@
             // Alchemist Passive
             if(state[p].job === 'Alchemist' && Math.random() < 0.2) {
                 state[p].ap++;
-                pop(p, "AP REFUND!", "var(--info)");
+                pop(p, "AP REFUND!", "var(--info)", 0);
             }
 
             if(s.t === 'en') { playSfx('en'); state[p].en = Math.min(10, state[p].en + s.v); }
@@ -408,7 +529,7 @@
                 playSfx('heal'); 
                 let h = r(s.v[0], s.v[1]); 
                 state[p].hp = Math.min(state[p].max, state[p].hp + h); 
-                pop(p, `+${h}`, 'var(--heal)'); 
+                pop(p, `+${h}`, 'var(--heal)', 0); 
                 
                 // 聖騎士 Holy Light 解除所有狀態
                 if(state[p].job === 'Paladin') {
@@ -417,8 +538,8 @@
                     state[p].frost = 0;
                 }
             }
-            else if(s.t === 'harden') { playSfx('en'); state[p].def = Math.min(0.5, state[p].def + s.v); pop(p, "DEF UP", "var(--info)"); }
-            else if(s.t === 'assassin_sh') { playSfx('shake'); let selfDmg = Math.floor(state[p].hp * 0.5); state[p].hp -= selfDmg; state[p].focused = true; pop(p, `-${selfDmg}`, "var(--dmg)"); }
+            else if(s.t === 'harden') { playSfx('en'); state[p].def = Math.min(0.5, state[p].def + s.v); pop(p, "DEF UP", "var(--info)", 0); }
+            else if(s.t === 'assassin_sh') { playSfx('shake'); let selfDmg = Math.floor(state[p].hp * 0.5); state[p].hp -= selfDmg; state[p].focused = true; pop(p, `-${selfDmg}`, "var(--dmg)", 0); }
             else if(['def','reflect','dodge','focus','mark','counter'].includes(s.t)) { 
                 playSfx('bolt'); if(s.t==='def') state[p].guard=true; if(s.t==='reflect') state[p].reflect=true; 
                 if(s.t==='dodge') state[p].dodge = (state[p].job === 'Gunner' || (state[p].job === 'Assassin' && s.n === 'Smoke Bomb')) ? 1 : 2;
@@ -431,7 +552,7 @@
                 if(s.t === 'burn' && state[opp].job !== 'RockQueen') {
                     let targetEn = Math.max(0, state[opp].en - 2);
                     state[opp].en = targetEn;
-                    pop(opp, "-2 EN", "var(--info)");
+                    pop(opp, "-2 EN", "var(--info)", 0);
                     update(); 
                 }
 
@@ -481,12 +602,12 @@
                                 let heal = Math.floor(state[p].max * 0.3);
                                 state[p].hp = Math.min(state[p].max, state[p].hp + heal);
                                 state[p].guard = true;
-                                pop(p, `+${heal}`, 'var(--heal)');
+                                pop(p, `+${heal}`, 'var(--heal)', 0);
                             }
                             if(s.t === 'alchemist_ult') {
                                 state[opp].en = 0;
                                 state[p].focused = true;
-                                pop(opp, "EN WIPE", "var(--info)");
+                                pop(opp, "EN WIPE", "var(--info)", 0);
                             }
 
                             if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
@@ -534,7 +655,7 @@
 
         function pop(t, m, c, hI = 0) { const el = document.createElement('div'); el.className = 'dmg-float'; el.innerText = m; el.style.color = c; el.style.left = (40 + (hI * 5)) + "%"; el.style.top = (25 - (hI * 2)) + "%"; document.getElementById(`card-${t}`).appendChild(el); setTimeout(() => el.remove(), 800); }
         function initSelection() { const list = document.getElementById('job-list'); for(let j in jobs) { const card = document.createElement('div'); card.className = 'job-card'; card.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); pick(j); }; card.innerHTML = `<h3>${jobs[j].icon} ${j.toUpperCase()}</h3><div class="job-stats">HP: ${jobs[j].hp} | DEF: ${jobs[j].def*100}%</div><ul class="job-desc">${jobs[j].desc.map(d => `<li>${d}</li>`).join('')}</ul>`; list.appendChild(card); } }
-        function pick(j) { state[selecting].job = j; state[selecting].max = jobs[j].hp; state[selecting].hp = jobs[j].hp; state[selecting].def = jobs[j].def; if(selecting === 'boy') { selecting = 'girl'; document.getElementById('turn-title').innerText = "GIRL: SELECT YOUR CLASS"; document.getElementById('turn-title').style.color = "var(--girl)"; } else { document.getElementById('selection-screen').style.display = 'none'; document.getElementById('arena').style.display = 'flex'; update(); } }
+        function pick(j) { state[selecting].job = j; state[selecting].max = jobs[j].hp; state[selecting].hp = jobs[j].hp; state[selecting].def = jobs[j].def; if(selecting === 'boy') { selecting = 'girl'; document.getElementById('turn-title').innerText = "GIRL: SELECT YOUR CLASS"; document.getElementById('turn-title').style.color = "var(--girl)"; } else { document.getElementById('selection-screen').style.display = 'none'; document.getElementById('arena').style.display = 'flex'; document.getElementById('btn-draw-event').style.display = 'block'; update(); } }
         function checkWin() { let w = state.boy.hp <= 0 ? 'GIRL' : (state.girl.hp <= 0 ? 'BOY' : null); if(w && !isOver) { isOver = true; document.getElementById('win-title').innerText = `${w} WINS!`; document.getElementById('win-overlay').style.display = 'flex'; playSfx('shake'); return true; } return false; }
         function r(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
         initSelection();
