@@ -567,7 +567,7 @@
                 ],
                 skills: [
                     { n: "Wild Swing", c: 0, d: [12, 18], t: 'bleed_self', fx: "slash", e: "Slam strike + Self Gain 10% Crit + Inflict Bleed on Target." },
-                    { n: "Blood Rage", c: 0, v: 2, t: 'blood_rage_act', e: "Sacrifices 5 HP for 2 EN + Gain Focus." },
+                    { n: "Blood Rage", c: 0, v: 2, t: 'en_blood_rage', e: "Sacrifices 5 HP for 2 EN + Gain Focus." },
                     { n: "Reckless Attack", c: 2, d: [22, 32], t: 'bleed_reckless', fx: "slash", e: "Heavy hits + Inflict Bleed on Target + Self Mark." },
                     { n: "Enrage", c: 1, t: 'focus', e: "Roar to force next strike to be Critical." },
                     { n: "Bloodthirst", c: 2, d: [12, 18], t: 'leech', v: 0.6, fx: "slash", e: "Strike with 60% Lifesteal to heal self." },
@@ -887,9 +887,12 @@
                 state[p].ultCount = (state[p].ultCount || 0) + 1;
             }
 
+            // [重要：保存攻擊發動前的 Focus 狀態]
+            let attackIsFocused = state[p].focused;
+
             // --- EXECUTE SKILL INDEPENDENT ACTIONS (Before damage) ---
             if(s.t === 'en_weak') { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); }
-            if(s.t === 'weak_self_focus') { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
+            if(s.t === 'weak_self_focus') { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             if(s.t === 'def_draw_en') { if(state[opp].en > 0) { state[opp].en--; state[p].en = Math.min(10, state[p].en + 1); pop(opp, "-1 EN", "var(--purple)", 0); pop(p, "+1 EN", "var(--info)", 0); } }
             
             if(s.t === 'en_cleanse_frost') { state[p].frost = 0; pop(p, "FROST CLEANSED", "var(--info)", 0); }
@@ -897,14 +900,15 @@
             
             if(s.t === 'en_dodge30') { state[p].dodge = 2; pop(p, "30% DODGE", "var(--info)", 0); }
             if(s.t === 'dodge_weak') { state[p].dodge = 2; state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); }
-            if(s.t === 'dodge_focus') { state[p].dodge = 2; state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
+            if(s.t === 'dodge_focus') { state[p].dodge = 2; state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             
             if(s.t === 'perm_reduce_def') { jobs[state[opp].job].def = Math.max(0, jobs[state[opp].job].def - 0.04); pop(opp, "DEF DECREASED", "var(--purple)", 0); }
             if(s.t === 'en_heal10') { state[p].hp = Math.min(state[p].max, state[p].hp + 10); pop(p, "+10", "var(--heal)", 0); }
             
-            if(s.t === 'blood_rage_act') { state[p].hp = Math.max(1, state[p].hp - 5); pop(p, "-5 HP", "var(--dmg)", 0); state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
+            // Berserker Unique Blood Rage (能確實賦予 Focus)
+            if(s.t === 'en_blood_rage') { state[p].hp = Math.max(1, state[p].hp - 5); pop(p, "-5 HP", "var(--dmg)", 0); state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             
-            if(s.t === 'en_focus') { state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
+            if(s.t === 'en_focus') { state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             if(s.t === 'heal_cleanse_mark') { state[p].marked = false; pop(p, "MARK CLEANSED", "var(--info)", 0); }
             if(s.t === 'mark_weaken_opp') { state[opp].marked = true; state[opp].weakened = true; pop(opp, "MARKED & WEAKENED", "var(--purple)", 0); }
             if(s.t === 'en_dodge100') { state[p].dodge = 2; pop(p, "100% DODGE", "var(--info)", 0); }
@@ -935,7 +939,13 @@
             if(s.t === 'en_panda_peace') { state[p].guard = true; pop(p, "GUARD BUFF READY", "var(--info)", 0); }
             if(s.t === 'weak_opp') { state[opp].weakened = true; pop(opp, "WEAKENED", "var(--purple)", 0); }
 
-            // Global Safe-Check for ALL EN-boosting skill triggers
+            // Berserker 大招判定對齊：獲得滿額 EN
+            if(s.t === 'berserk_ult') {
+                state[p].en = 10;
+                pop(p, "FULL EN (10)", "var(--accent)", 0);
+            }
+
+            // 全局 EN 統一增加框架
             if(s.t && s.t.startsWith('en') && typeof s.v === 'number') {
                 state[p].en = Math.min(10, state[p].en + s.v);
                 playSfx('en');
@@ -949,8 +959,15 @@
 
             let isCrit = false;
             let critChance = (state[p].job === 'Berserker' ? 0.3 : (state[p].job === 'Assassin' ? 0.4 : 0.10));
-            if(state[p].focused) { isCrit = true; baseD *= 2; state[p].focused = false; }
-            else if(Math.random() < critChance) { isCrit = true; baseD *= 1.5; }
+            
+            // 核心：若攻擊發動前是 Focus 蓄力狀態，則必定觸發 200% 加成
+            if(attackIsFocused) { 
+                isCrit = true; 
+                baseD *= 2.0; 
+            } else if(Math.random() < critChance) { 
+                isCrit = true; 
+                baseD *= 1.5; 
+            }
 
             if(state[p].weakened) {
                 baseD *= (state[p].job === 'Warrior' || state[p].job === 'Assassin' || state[p].job === 'Butcher') ? 0.5 : 0.7;
@@ -977,6 +994,7 @@
                 dodgeChance = 0.25; 
             }
 
+            // 熊貓大招不可被閃避
             if(Math.random() < dodgeChance && s.d && s.t !== 'boxer_ult' && s.t !== 'rock_ult' && s.t !== 'panda_ult') {
                 pop(opp, "DODGED!", "var(--info)", 0);
                 playSfx('en');
@@ -992,13 +1010,14 @@
                     if(state[opp].marked) armor = 0;
                     baseD = Math.max(1, Math.floor(baseD * (1 - armor)));
                 } else if(s.t === 'mark_ignore_def' || s.t === 'weak_pierce_guard' || s.t === 'stun_pierce_guard' || s.t === 'panda_ult') {
-                    baseD = Math.max(1, Math.floor(baseD)); 
+                    baseD = Math.max(1, Math.floor(baseD)); // 功夫熊貓大招直接穿透護甲與阻擋
                 } else if(!s.t || (s.t !== 'mark' && s.t !== 'bleed_reckless')) {
                     let armor = jobs[state[opp].job].def;
                     if(state[opp].marked) armor = 0;
                     baseD = Math.max(1, Math.floor(baseD * (1 - armor)));
                 }
 
+                // 完美護盾阻擋 (熊貓大招無視護盾)
                 if(state[opp].guard && s.t !== 'panda_ult') {
                     baseD = Math.floor(baseD * 0.2);
                     state[opp].guard = false;
@@ -1011,11 +1030,13 @@
                     playSfx('hit');
                 } else {
                     state[opp].hp = Math.max(0, state[opp].hp - baseD);
-                    let hI = isCrit ? 1 : 0;
-                    pop(opp, `-${baseD}`, "var(--dmg)", hI);
+                    
+                    let hI = attackIsFocused ? 1 : (isCrit ? 1 : 0);
+                    let floatMsg = attackIsFocused ? `-${baseD} 💥 (FOCUS)` : (isCrit ? `-${baseD} 💥` : `-${baseD}`);
+                    pop(opp, floatMsg, "var(--dmg)", hI);
                     playSfx('hit');
 
-                    // Chi Master Passive / Warrior / Paladin gain resource from getting hit
+                    // 受到傷害後 Chi 轉換機制
                     if(state[opp].job === 'KungFuPanda' && Math.random() < 0.30) {
                         state[opp].en = Math.min(10, state[opp].en + 1);
                         pop(opp, "+1 EN (CHI)", "var(--info)", 0);
@@ -1031,12 +1052,17 @@
                 }
             }
 
+            // 成功造成/結算傷害後，正式解除 Focus 狀態
+            if (attackIsFocused) {
+                state[p].focused = false;
+            }
+
             // --- AFTER EFFECT BUFFS & DEBUFFS ---
-            if(s.t === 'focus') state[p].focused = true;
+            if(s.t === 'focus' || s.t === 'focus_attack') { state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             if(s.t === 'mark') state[opp].marked = true;
             if(s.t === 'harden' && s.v) state[p].hardened = (state[p].hardened || 0) + s.v;
 
-            // Poison triggers
+            // Poison 狀態賦予
             if(s.t === 'leech_poison') {
                 state[opp].poison = (state[opp].poison || 0) + 3;
                 pop(opp, "POISONED!", "var(--green)", 0);
@@ -1047,7 +1073,7 @@
                 if(Math.random() <= s.v) state[opp].stunned = true;
             }
 
-            // Bleed triggers
+            // Bleed 狀態賦予
             if(s.t === 'bleed_self') {
                 state[opp].bleed = (state[opp].bleed || 0) + 3;
                 pop(opp, "BLEEDING!", "var(--dmg)", 0);
@@ -1059,7 +1085,7 @@
                 pop(p, "MARKED!", "var(--purple)", 0);
             }
 
-            // Healing & Leeching Logic
+            // 治癒及吸血邏輯 (對齊狂戰士大招 100% 回血效果)
             if((s.t === 'heal' || s.t === 'leech_poison') && s.v) {
                 let f = Array.isArray(s.v) ? r(s.v[0], s.v[1]) : s.v;
                 let ratio = (state[p].job === 'Alchemist') ? 1.3 : 1.0;
@@ -1067,14 +1093,16 @@
                 state[p].hp = Math.min(state[p].max, state[p].hp + healVal);
                 if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', 0);
             }
-            if(s.t === 'leech' && s.v && baseD > 0) {
+            if(s.t === 'leech' || s.t === 'berserk_ult') {
                 let ratio = (s.t === 'butcher_ult' || s.t === 'berserk_ult') ? 1.0 : (s.v || 0.5);
-                let healVal = Math.floor(baseD * ratio);
-                state[p].hp = Math.min(state[p].max, state[p].hp + healVal);
-                if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', 0);
+                if(baseD > 0) {
+                    let healVal = Math.floor(baseD * ratio);
+                    state[p].hp = Math.min(state[p].max, state[p].hp + healVal);
+                    if(healVal > 0) pop(p, `+${healVal} (吸血恢復)`, 'var(--heal)', 0);
+                }
             }
 
-            // Crowd Control & Special Suffixes
+            // 控場效果
             if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
             if(s.t === 'stun_chance_15' && Math.random() <= s.v) state[opp].stunned = true;
             if(s.t === 'panda_punch' && Math.random() <= 0.15) state[opp].marked = true;
@@ -1124,15 +1152,10 @@
                 pop(opp, "SHIELD BROKEN", "var(--rock)", 0);
             }
 
-            // Mage Passive
+            // 被動機制結算
             if(state[p].job === 'Mage' && Math.random() < 0.4) { state[p].en = Math.min(10, state[p].en + 1); pop(p, "REFUND 1 EN", "var(--info)", 0); }
-            // Butcher Passive
             if(state[p].job === 'Butcher' && baseD > 0) { state[p].hp = Math.min(state[p].max, state[p].hp + 5); pop(p, "+5 (PASSIVE)", "var(--heal)", 0); }
-
-            if(state[p].job === 'Joker' && Math.random() < 0.05) {
-                state[p].dodge = 2;
-                pop(p, "PASSIVE DODGE!", "var(--info)", 0);
-            }
+            if(state[p].job === 'Joker' && Math.random() < 0.05) { state[p].dodge = 2; pop(p, "PASSIVE DODGE!", "var(--info)", 0); }
 
             checkWin();
             update();
@@ -1304,7 +1327,7 @@
             "神聖新星": "【神聖新星 / Holy Nova】\n新月綻放溫暖的光芒，雙方同時恢復各自最大生命值的 30%。\n(The new moon emits a warm glow, allowing both players to restore 30% of their maximum HP.)",
             "狂暴之月": "【狂暴之月 / Frenzied Moon】\n激發骨子裡的嗜血狂暴，雙方的能量（EN）直接全部補滿達 10 點。\n(Ignites the bloodlust within, immediately filling both players' energy back to full.)",
             "枯竭風暴": "【枯竭風暴 / Depletion Storm】\n元素寂滅的風暴席捲戰場，使雙方當前的能量（EN）全部歸零。\n(A storm of element annihilation sweeps the arena, draining both players' current energy to 0.)",
-            "命運天秤": "【命運天秤 / Scales of Fate】\n命運交織！當前生命值生命值百分比較低者，將會與對手的生命值百分比直接對調。\n(The player with the lower HP percentage swaps their HP percentage with their opponent.)",
+            "命運天秤": "【命運天秤 / Scales of Fate】\n命運交織！當前生命值百分比較低者，將會與對手的生命值百分比直接對調。\n(The player with the lower HP percentage swaps their HP percentage with their opponent.)",
             "極寒永夜": "【極寒永夜 / Eternal Frost Night】\n絕對零度永夜降臨，雙方同時獲得 2 層「深層凍結（Deep Frost）」狀態。\n(An absolute-zero polar night falls, granting both players 2 stacks of Deep Frost status.)",
             "神明沉默": "【神明沉默 / Divine Silence】\n任何凡人不可稱聖，雙方身上所有的增益與減益狀態（護盾、反傷、標記、凍結等）全部清除。\n(Clears all buffs and debuffs from both players.)",
             "烈焰風暴": "【烈焰風暴 / Blaze Storm】\n混亂的烈焰席捲戰場，對雙方同時造成 25 點真實傷害（無視防禦）。\n(Chaotic embers sweep the arena, dealing 25 pure damage to both players simultaneously.)"
