@@ -499,11 +499,11 @@
                 ],
                 skills: [
                     { n: "Heavy Strike", c: 0, d: [11, 15], fx: "slash", e: "Basic Cut + 20% Weaken Target." },
-                    { n: "Charge", c: 0, v: 2, t: 'en', e: "Gain 2 EN + Force Target to Weaken." },
+                    { n: "Charge", c: 0, v: 2, t: 'en_weak', e: "Gain 2 EN + Force Target to Weaken." },
                     { n: "Shield Bash", c: 1, d: [12, 16], t: 'stun', v: 0.35, fx: "slash", e: "35% Stun Chance + Pierce Guard." },
-                    { n: "War Cry", c: 2, t: 'weak', e: "Target damage -50% + Self Gain Focus." },
-                    { n: "Iron Guard", c: 1, t: 'def', e: "80% Block (Once) + Draw 1 EN from opponent." },
-                    { n: "Recover", c: 2, v: [30, 45], t: 'heal', e: "Heal HP + Cleanse self Weaken status." },
+                    { n: "War Cry", c: 2, t: 'weak_self_focus', e: "Target damage -50% + Self Gain Focus." },
+                    { n: "Iron Guard", c: 1, t: 'def_draw_en', e: "80% Block (Once) + Draw 1 EN from opponent." },
+                    { n: "Recover", c: 2, v: [30, 45], t: 'heal_cleanse_weak', e: "Heal HP + Cleanse self Weaken status." },
                     { n: "EARTHQUAKE", c: 9, d: [49, 66], t: 'stun', v: 1.0, fx: "shake", e: "ULT: Reduced DMG + 100% STUN 1 turn." }
                 ]
             },
@@ -515,9 +515,9 @@
                     "ULT: Multi-hit massive arcane blast."
                 ],
                 skills: [
-                    { n: "Energy Bolt", c: 0, d: [13, 17], fx: "bolt", e: "Magic attack + 15% Chance to Frost target." },
-                    { n: "Meditate", c: 0, v: 3, t: 'en', e: "Gain 3 EN + Cleanse self Frost status." },
-                    { n: "Barrier", c: 2, t: 'reflect', e: "100% Reflect Next Dmg + Gain 1 EN." },
+                    { n: "Energy Bolt", c: 0, d: [13, 17], t: 'frost_chance', v: 0.15, fx: "bolt", e: "Magic attack + 15% Chance to Frost target." },
+                    { n: "Meditate", c: 0, v: 3, t: 'en_cleanse_frost', e: "Gain 3 EN + Cleanse self Frost status." },
+                    { n: "Barrier", c: 2, t: 'reflect_gain_en', e: "100% Reflect Next Dmg + Gain 1 EN." },
                     { n: "Frostbite", c: 2, d: [10, 15], t: 'frost', v: 1, fx: "bolt", e: "Spell DMG + Apply 1 Frost Layer to target." },
                     { n: "Arcane Focus", c: 1, t: 'focus', e: "Next Action 100% Critical (200% DMG)." },
                     { n: "Drain Life", c: 3, d: [18, 25], t: 'leech', v: 0.8, fx: "bolt", e: "Deals damage + Convert 80% of DMG into self HP." },
@@ -532,10 +532,10 @@
                     "ULT: Apply Fatal Wounds (Frost x2 + Weaken)."
                 ],
                 skills: [
-                    { n: "Stab", c: 0, d: [12, 17], fx: "slash", e: "Vitals Poke + Automatically Ignores 20% Def." },
-                    { n: "Hide", c: 0, v: 2, t: 'en', e: "Gain 2 EN + Get 30% Dodge (2 Acts)." },
-                    { n: "Smoke Bomb", c: 1, t: 'dodge', v: 0.6, e: "Get 60% Dodge (2 Acts) + Target Weaken." },
-                    { n: "Shadow Cloak", c: 2, t: 'dodge', v: 0.9, e: "Get 90% Dodge (2 Acts) + Focus Buff." },
+                    { n: "Stab", c: 0, d: [12, 17], t: 'ignore_def_20', fx: "slash", e: "Vitals Poke + Automatically Ignores 20% Def." },
+                    { n: "Hide", c: 0, v: 2, t: 'en_dodge30', e: "Gain 2 EN + Get 30% Dodge (2 Acts)." },
+                    { n: "Smoke Bomb", c: 1, t: 'dodge_weak', v: 0.6, e: "Get 60% Dodge (2 Acts) + Target Weaken." },
+                    { n: "Shadow Cloak", c: 2, t: 'dodge_focus', v: 0.9, e: "Get 90% Dodge (2 Acts) + Focus Buff." },
                     { n: "Vampiric Blade", c: 2, d: [15, 22], t: 'leech_poison', v: 0.6, fx: "slash", e: "Poison Strike + Convert 60% of DMG into self HP + Inflict Poison (3 stacks)." },
                     { n: "Mark Vitals", c: 1, t: 'mark', e: "Mark target to bypass defense completely next turn." },
                     { n: "CHRONO EXECUTE", c: 9, d: [59, 77], t: 'assassin_ult', fx: "slash", e: "ULT: Lower DMG + Apply Fatal Wound (Frost x2 + Weaken)." }
@@ -549,12 +549,12 @@
                     "ULT: Wipe enemy EN entirely + Self Focus."
                 ],
                 skills: [
-                    { n: "Acid Flask", c: 0, d: [10, 14], fx: "bolt", e: "Corrosive splash + Permanently decrease target DEF." },
-                    { n: "Catalyst", c: 0, v: 2, t: 'en', e: "Gain 2 EN + Heal self 10 HP." },
+                    { n: "Acid Flask", c: 0, d: [10, 14], t: 'perm_reduce_def', fx: "bolt", e: "Corrosive splash + Permanently decrease target DEF." },
+                    { n: "Catalyst", c: 0, v: 2, t: 'en_heal10', e: "Gain 2 EN + Heal self 10 HP." },
                     { n: "Healing Elixir", c: 1, v: [25, 40], t: 'heal', e: "Brew potion to restore large amount of HP." },
                     { n: "Chrono Potion", c: 2, v: [45, 65], t: 'heal', e: "Advanced Brew to massive Restore self HP." },
                     { n: "Toxic Gas", c: 2, d: [8, 12], t: 'stun_poison', v: 0.3, fx: "bolt", e: "Gas cloud + 30% Stun Chance + Inflict Poison (3 stacks)." },
-                    { n: "Midas Touch", c: 2, d: [15, 20], fx: "slash", e: "Deals DMG + Steal 1 EN from enemy into self." },
+                    { n: "Midas Touch", c: 2, d: [15, 20], t: 'steal_en', fx: "slash", e: "Deals DMG + Steal 1 EN from enemy into self." },
                     { n: "TRANSMUTATION", c: 9, d: [45, 59], t: 'alchemist_ult', fx: "shake", e: "ULT: Lower DMG + Erase enemy EN to 0." }
                 ]
             },
@@ -567,7 +567,7 @@
                 ],
                 skills: [
                     { n: "Wild Swing", c: 0, d: [12, 18], t: 'bleed_self', fx: "slash", e: "Slam strike + Self Gain 10% Crit + Inflict Bleed on Target." },
-                    { n: "Blood Rage", c: 0, v: 2, t: 'en', e: "Sacrifices 5 HP for 2 EN + Gain Focus." },
+                    { n: "Blood Rage", c: 0, v: 2, t: 'blood_rage_act', e: "Sacrifices 5 HP for 2 EN + Gain Focus." },
                     { n: "Reckless Attack", c: 2, d: [22, 32], t: 'bleed_reckless', fx: "slash", e: "Heavy hits + Inflict Bleed on Target + Self Mark." },
                     { n: "Enrage", c: 1, t: 'focus', e: "Roar to force next strike to be Critical." },
                     { n: "Bloodthirst", c: 2, d: [12, 18], t: 'leech', v: 0.6, fx: "slash", e: "Strike with 60% Lifesteal to heal self." },
@@ -583,11 +583,11 @@
                     "ULT: Multi-arrow barrage + Mark target."
                 ],
                 skills: [
-                    { n: "Aim Shot", c: 0, d: [11, 15], fx: "arrow", e: "Pierce armor dmg + 15% Focus chance." },
-                    { n: "Reload", c: 0, v: 2, t: 'en', e: "Gain 2 EN + Focus Next Action." },
-                    { n: "First Aid", c: 1, v: [15, 25], t: 'heal', e: "Self Heal + Cleanse self Mark status." },
-                    { n: "Mark Target", c: 2, t: 'mark', e: "Mark target to ignore armor + Apply Weaken." },
-                    { n: "Evasion", c: 1, t: 'dodge', v: 1.0, e: "100% Dodge (2 Acts) + Gain 1 EN." },
+                    { n: "Aim Shot", c: 0, d: [11, 15], t: 'aim_shot_act', fx: "arrow", e: "Pierce armor dmg + 15% Focus chance." },
+                    { n: "Reload", c: 0, v: 2, t: 'en_focus', e: "Gain 2 EN + Focus Next Action." },
+                    { n: "First Aid", c: 1, v: [15, 25], t: 'heal_cleanse_mark', e: "Self Heal + Cleanse self Mark status." },
+                    { n: "Mark Target", c: 2, t: 'mark_weaken_opp', e: "Mark target to ignore armor + Apply Weaken." },
+                    { n: "Evasion", c: 1, t: 'en_dodge100', v: 1, e: "100% Dodge (2 Acts) + Gain 1 EN." },
                     { n: "Crippling Arrow", c: 2, d: [14, 18], t: 'weak', fx: "arrow", e: "Slow arrow to heavily decrease enemy ATK." },
                     { n: "VOLLEY STORM", c: 9, d: [63, 80], t: 'mark', fx: "arrow", e: "ULT: Lower DMG + Force Mark Target." }
                 ]
@@ -600,12 +600,12 @@
                     "ULT: Holy strike + Heal + Auto Guard buff."
                 ],
                 skills: [
-                    { n: "Smite", c: 0, d: [10, 14], fx: "slash", e: "Holy damage + Restore self 5 HP." },
-                    { n: "Blessing", c: 0, v: 2, t: 'en', e: "Gain 2 EN + Clear self Weaken status." },
-                    { n: "Holy Light", c: 2, v: [20, 35], t: 'heal', e: "Heal + Cleanse Stun (Castable when Stunned)." },
-                    { n: "Thorns", c: 2, t: 'counter', e: "Reflect 20 Dmg + Obtain Guard buff." },
-                    { n: "Iron Will", c: 1, t: 'def', e: "80% Block (Once) + Gain 1 EN." },
-                    { n: "Judgment", c: 3, d: [25, 40], fx: "bolt", e: "High Holy Strike + Self Gain Focus." },
+                    { n: "Smite", c: 0, d: [10, 14], t: 'smite_heal', fx: "slash", e: "Holy damage + Restore self 5 HP." },
+                    { n: "Blessing", c: 0, v: 2, t: 'en_cleanse_weak', e: "Gain 2 EN + Clear self Weaken status." },
+                    { n: "Holy Light", c: 2, v: [20, 35], t: 'heal_cleanse_stun', e: "Heal + Cleanse Stun (Castable when Stunned)." },
+                    { n: "Thorns", c: 2, t: 'counter_guard', e: "Reflect 20 Dmg + Obtain Guard buff." },
+                    { n: "Iron Will", c: 1, t: 'en_def', v: 1, e: "80% Block (Once) + Gain 1 EN." },
+                    { n: "Judgment", c: 3, d: [25, 40], t: 'focus_attack', fx: "bolt", e: "High Holy Strike + Self Gain Focus." },
                     { n: "HEAVEN GATE", c: 9, d: [59, 77], t: 'paladin_ult', fx: "bolt", e: "ULT: Lower DMG + Massive Heal + Obtain Guard." }
                 ]
             },
@@ -617,13 +617,13 @@
                     "ULT: Sure Hit Armor Piercer & Shield Breaker."
                 ],
                 skills: [
-                    { n: "Pistol Shot", c: 0, d: [12, 16], fx: "arrow", e: "Quick shot + 15% Stun chance." },
-                    { n: "Lock & Load", c: 0, v: 2, t: 'en', e: "Gain 2 EN + Gain Focus buff." },
-                    { n: "Cover Fire", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts) + Suppress attack." },
-                    { n: "Flashbang", c: 2, t: 'stun', v: 0.45, e: "45% Stun Chance + Clear Target all Buffs." },
+                    { n: "Pistol Shot", c: 0, d: [12, 16], t: 'stun_chance_15', v: 0.15, fx: "arrow", e: "Quick shot + 15% Stun chance." },
+                    { n: "Lock & Load", c: 0, v: 2, t: 'en_focus', e: "Gain 2 EN + Gain Focus buff." },
+                    { n: "Cover Fire", c: 1, t: 'dodge70', v: 0.7, e: "70% Dodge (2 Acts) + Suppress attack." },
+                    { n: "Flashbang", c: 2, t: 'flashbang_act', v: 0.45, e: "45% Stun Chance + Clear Target all Buffs." },
                     { n: "Life Bullet", c: 2, d: [16, 24], t: 'leech', v: 0.5, fx: "arrow", e: "Bullet shot + Convert 50% of DMG to self HP." },
-                    { n: "Headshot", c: 3, d: [25, 35], t: 'mark', fx: "arrow", e: "Heavy sniper shot + Ignore target Defense." },
-                    { n: "HELLFIRE BARRAGE", c: 9, d: [63, 84], fx: "shake", e: "ULT: Lower DMG + Complete Shield Breaker." }
+                    { n: "Headshot", c: 3, d: [25, 35], t: 'mark_ignore_def', fx: "arrow", e: "Heavy sniper shot + Ignore target Defense." },
+                    { n: "HELLFIRE BARRAGE", c: 9, d: [63, 84], t: 'shield_breaker', fx: "shake", e: "ULT: Lower DMG + Complete Shield Breaker." }
                 ]
             },
             Boxer: {
@@ -634,11 +634,11 @@
                     "ULT: Un-dodgeable Shield Breaker Punch."
                 ],
                 skills: [
-                    { n: "Jab", c: 0, d: [11, 14], fx: "slash", e: "Fast punch + Steal 1 EN from enemy." },
-                    { n: "Focus Breath", c: 0, v: 2, t: 'en', e: "Gain 2 EN + Cleanse self Weaken status." },
-                    { n: "Sway", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts) + Next hit 100% Focus." },
-                    { n: "Uppercut", c: 2, d: [12, 18], t: 'stun', v: 0.3, fx: "slash", e: "30% Stun Chance + Pierce target Guard." },
-                    { n: "Body Blow", c: 2, d: [15, 22], t: 'weak', fx: "slash", e: "Deals Damage + Target overall ATK -30%." },
+                    { n: "Jab", c: 0, d: [11, 14], t: 'steal_en_basic', fx: "slash", e: "Fast punch + Steal 1 EN from enemy." },
+                    { n: "Focus Breath", c: 0, v: 2, t: 'en_cleanse_weak', e: "Gain 2 EN + Cleanse self Weaken status." },
+                    { n: "Sway", c: 1, t: 'sway_act', v: 0.7, e: "70% Dodge (2 Acts) + Next hit 100% Focus." },
+                    { n: "Uppercut", c: 2, d: [12, 18], t: 'stun_pierce_guard', v: 0.3, fx: "slash", e: "30% Stun Chance + Pierce target Guard." },
+                    { n: "Body Blow", c: 2, d: [15, 22], t: 'body_blow_act', fx: "slash", e: "Deals Damage + Target overall ATK -30%." },
                     { n: "Drain Punch", c: 2, d: [18, 26], t: 'leech', v: 0.5, fx: "slash", e: "Deals damage + Convert 50% of DMG to self HP." },
                     { n: "K.O. PUNCH", c: 9, d: [59, 77], t: 'boxer_ult', fx: "shake", e: "ULT: Lower DMG + Sure Hit + Complete Shield Break." }
                 ]
@@ -651,10 +651,10 @@
                     "ULT: Sure Hit + 100% Stun 1 Turn."
                 ],
                 skills: [
-                    { n: "Rock Throw", c: 0, d: [8, 12], fx: "slash", e: "Heavy rock toss + 15% Stun Chance." },
-                    { n: "Fortify", c: 0, v: 2, t: 'en', e: "Gain 2 EN + Permanently increase +2% DEF." },
-                    { n: "Earth Shield", c: 1, t: 'def', e: "80% Block (Once) + Self Restore 15 HP." },
-                    { n: "Crystal Spikes", c: 2, d: [12, 18], t: 'counter', e: "Deals DMG + Reflect 20 real Dmg back." },
+                    { n: "Rock Throw", c: 0, d: [8, 12], t: 'stun_chance_15', v: 0.15, fx: "slash", e: "Heavy rock toss + 15% Stun Chance." },
+                    { n: "Fortify", c: 0, v: 2, t: 'en_fortify', e: "Gain 2 EN + Permanently increase +2% DEF." },
+                    { n: "Earth Shield", c: 1, t: 'def_heal15', e: "80% Block (Once) + Self Restore 15 HP." },
+                    { n: "Crystal Spikes", c: 2, d: [12, 18], t: 'counter_thorns', e: "Deals DMG + Reflect 20 real Dmg back." },
                     { n: "Granite Slam", c: 2, d: [14, 20], t: 'weak', fx: "shake", e: "Ground slam to severely Weaken enemy damage." },
                     { n: "Obsidian Core", c: 2, t: 'harden', v: 0.05, e: "Permanently gain +5% base DEF scaling buff." },
                     { n: "CRYSTAL TOMB", c: 9, d: [52, 70], t: 'rock_ult', fx: "shake", e: "ULT: Lower DMG + Sure Hit + 100% Stun." }
@@ -668,11 +668,11 @@
                     "ULT: Massive strike + 100% Lifesteal."
                 ],
                 skills: [
-                    { n: "Meat Hook", c: 0, d: [11, 15], fx: "slash", e: "Pull target + Mark them (Bypass all Defense)." },
-                    { n: "Sharpen", c: 0, v: 2, t: 'en', e: "Gain 2 EN + Focus Next attack for Critical." },
+                    { n: "Meat Hook", c: 0, d: [11, 15], t: 'mark', fx: "slash", e: "Pull target + Mark them (Bypass all Defense)." },
+                    { n: "Sharpen", c: 0, v: 2, t: 'en_focus', e: "Gain 2 EN + Focus Next attack for Critical." },
                     { n: "Cannibalize", c: 2, v: [25, 40], t: 'heal', e: "Devour meat to massive Restore self HP." },
-                    { n: "Flesh Shield", c: 1, t: 'harden', v: 0.05, e: "Permanently +5% DEF + Cleanse self Mark status." },
-                    { n: "Tenderize", c: 2, d: [14, 22], t: 'weak', fx: "slash", e: "Slam target to Weaken + Completely Pierce Guard." },
+                    { n: "Flesh Shield", c: 1, t: 'harden_cleanse_mark', v: 0.05, e: "Permanently +5% DEF + Cleanse self Mark status." },
+                    { n: "Tenderize", c: 2, d: [14, 22], t: 'weak_pierce_guard', fx: "slash", e: "Slam target to Weaken + Completely Pierce Guard." },
                     { n: "Carve", c: 2, d: [16, 22], t: 'leech', v: 0.5, fx: "slash", e: "Slice target + Convert 50% of DMG to self HP." },
                     { n: "FRESH MEAT", c: 9, d: [59, 80], t: 'butcher_ult', fx: "shake", e: "ULT: Lower DMG + 100% Lifesteal to full." }
                 ]
@@ -685,12 +685,12 @@
                     "ULT: Chaos reaction combo with 1 turn stun."
                 ],
                 skills: [
-                    { n: "Card Throw", c: 0, d: [9, 15], fx: "arrow", e: "Sharp cards + 15% chance to Mark target." },
-                    { n: "Juggling", c: 0, v: 3, t: 'en', e: "Gain 3 EN + Obtain 20% Dodge rate." },
-                    { n: "Surprise Box", c: 1, d: [6, 10], fx: "bolt", e: "Surprise box hit + Steal 1 EN from opponent." },
+                    { n: "Card Throw", c: 0, d: [9, 15], t: 'mark_chance_15', fx: "arrow", e: "Sharp cards + 15% chance to Mark target." },
+                    { n: "Juggling", c: 0, v: 3, t: 'en_dodge20', e: "Gain 3 EN + Obtain 20% Dodge rate." },
+                    { n: "Surprise Box", c: 1, d: [6, 10], t: 'steal_en', fx: "bolt", e: "Surprise box hit + Steal 1 EN from opponent." },
                     { n: "Magic Feast", c: 2, v: [15, 30], t: 'heal', e: "Brew illusion magic show to restore self HP." },
-                    { n: "Jack In Box", c: 2, d: [11, 19], t: 'stun', v: 0.45, fx: "bolt", e: "45% Stun Chance + Force Drain 1 EN from target." },
-                    { n: "Laughing Gas", c: 2, t: 'weak', e: "Weaken target ATK + Induce 1 layer of Frost status." },
+                    { n: "Jack In Box", c: 2, d: [11, 19], t: 'stun_drain_en', v: 0.45, fx: "bolt", e: "45% Stun Chance + Force Drain 1 EN from target." },
+                    { n: "Laughing Gas", c: 2, t: 'weaken_frost1', e: "Weaken target ATK + Induce 1 layer of Frost status." },
                     { n: "🃏 JOKER GAME", c: 9, d: [63, 84], t: 'joker_ult', fx: "shake", e: "ULT: Lower DMG + Force Target Stun 1 turn." }
                 ]
             },
@@ -702,13 +702,30 @@
                     "ULT: Critical Chaos Beam + Gain Focus."
                 ],
                 skills: [
-                    { n: "Demon Slash", c: 0, d: [12, 17], fx: "slash", e: "Dual cuts + 15% Chance of Lifesteal trigger." },
-                    { n: "Soul Feast", c: 0, v: 2, t: 'en', e: "Extract soul: Gain 2 EN + Heal self 12 HP." },
-                    { n: "Twin Glaives", c: 2, d: [8, 12], t: 'double', fx: "slash", e: "Double fast slash combo + Weaken target ATK." },
-                    { n: "Vengeance Mark", c: 1, t: 'mark', e: "Mark target to ignore all armor + Gain 1 EN." },
-                    { n: "Chaos Dodge", c: 1, t: 'dodge', v: 0.7, e: "70% Dodge (2 Acts) + Next turn Focus buff." },
+                    { n: "Demon Slash", c: 0, d: [12, 17], t: 'leech_chance_15', v: 0.15, fx: "slash", e: "Dual cuts + 15% Chance of Lifesteal trigger." },
+                    { n: "Soul Feast", c: 0, v: 2, t: 'en_heal12', e: "Extract soul: Gain 2 EN + Heal self 12 HP." },
+                    { n: "Twin Glaives", c: 2, d: [8, 12], t: 'weak', fx: "slash", e: "Double fast slash combo + Weaken target ATK." },
+                    { n: "Vengeance Mark", c: 1, t: 'mark_gain_en', e: "Mark target to ignore all armor + Gain 1 EN." },
+                    { n: "Chaos Dodge", c: 1, t: 'dodge70_focus', v: 0.7, e: "70% Dodge (2 Acts) + Next turn Focus buff." },
                     { n: "Soul Rip", c: 3, d: [20, 30], t: 'leech', v: 0.8, fx: "bolt", e: "Rip target soul + Convert 80% of DMG to self HP." },
                     { n: "METAMORPHOSIS", c: 9, d: [70, 91], t: 'demon_ult', fx: "bolt", e: "ULT: Lower DMG + Gain 100% Focus Buff." }
+                ]
+            },
+            KungFuPanda: {
+                icon: "🐼", hp: 145, def: 0.15,
+                desc: [
+                    "Passive: 30% chance to convert received damage into 1 EN.",
+                    "Tactics: Taichi absorption, pinpoint counters & massive feast.",
+                    "ULT: True damage fatal Wuxi Finger Hold."
+                ],
+                skills: [
+                    { n: "Po Punch", c: 0, d: [10, 14], t: 'panda_punch', fx: "slash", e: "Heavy physical palm strike + 15% chance to Mark target." },
+                    { n: "Inner Peace", c: 0, v: 2, t: 'en_panda_peace', e: "Meditate for Chi: Gain 2 EN + Obtain Guard buff." },
+                    { n: "Taichi Counter", c: 1, t: 'counter_guard', e: "Prepare defensive stance: Obtain Guard + Active Thorns counter." },
+                    { n: "Soul Feast", c: 2, v: [30, 45], t: 'heal', e: "Devour secret dumplings to restore massive HP pool." },
+                    { n: "Pressure Point", c: 2, d: [14, 20], t: 'stun_pierce_guard', v: 0.4, fx: "bolt", e: "Accurate strike: 40% Stun Chance + Completely Pierce Guard." },
+                    { n: "Chi Blast", c: 3, d: [22, 30], t: 'weak_opp', fx: "shake", e: "Release inner energy flow: High DMG + Weaken Target's attack." },
+                    { n: "WUXI FINGER HOLD", c: 9, d: [75, 95], t: 'panda_ult', fx: "shake", e: "ULT: Unleash the legendary move. Bypasses all defense mechanisms." }
                 ]
             }
         };
@@ -870,44 +887,63 @@
                 state[p].ultCount = (state[p].ultCount || 0) + 1;
             }
 
-            if(s.n === "Charge") { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); }
-            if(s.n === "War Cry") { state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
-            if(s.n === "Iron Guard") { state[p].en = Math.min(10, state[p].en + 1); }
-            if(s.n === "Recover") { state[p].weakened = false; }
-            if(s.n === "Meditate") { state[p].frost = 0; }
-            if(s.n === "Barrier") { state[p].en = Math.min(10, state[p].en + 1); }
-            if(s.n === "Hide") { state[p].dodge = 2; pop(p, "30% DODGE", "var(--info)", 0); }
-            if(s.n === "Smoke Bomb") { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); }
-            if(s.n === "Shadow Cloak") { state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
-            if(s.n === "Catalyst") { state[p].hp = Math.min(state[p].max, state[p].hp + 10); pop(p, "+10", "var(--heal)", 0); }
-            if(s.n === "Midas Touch" || s.n === "Surprise Box") { if(state[opp].en > 0){ state[opp].en--; state[p].en = Math.min(10, state[p].en + 1); pop(opp, "-1 EN", "var(--purple)", 0); pop(p, "+1 EN", "var(--info)", 0); } }
-            if(s.n === "Wild Swing") { state[p].godAtk = (state[p].godAtk || 0) + 1; } 
-            if(s.n === "Blood Rage") { state[p].hp = Math.max(1, state[p].hp - 5); pop(p, "-5 HP", "var(--dmg)", 0); state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
-            if(s.n === "Reckless Attack") { state[p].marked = true; pop(p, "MARKED!", "var(--purple)", 0); }
-            if(s.n === "Reload") { state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
-            if(s.n === "First Aid") { state[p].marked = false; }
-            if(s.n === "Mark Target") { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); }
-            if(s.n === "Evasion") { state[p].en = Math.min(10, state[p].en + 1); }
-            if(s.n === "Smite") { state[p].hp = Math.min(state[p].max, state[p].hp + 5); pop(p, "+5", "var(--heal)", 0); }
-            if(s.n === "Blessing") { state[p].weakened = false; }
-            if(s.n === "Thorns") { state[p].guard = true; }
-            if(s.n === "Iron Will") { state[p].en = Math.min(10, state[p].en + 1); }
-            if(s.n === "Judgment") { state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
-            if(s.n === "Lock & Load") { state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
-            if(s.n === "Flashbang") { state[opp].guard = false; state[opp].reflect = false; state[opp].focused = false; pop(opp, "BUFF CLEARED!", "var(--rock)", 0); }
-            if(s.n === "Focus Breath") { state[p].weakened = false; }
-            if(s.n === "Sway") { state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
-            if(s.n === "Fortify") { jobs[state[p].job].def = Math.min(0.75, jobs[state[p].job].def + 0.02); }
-            if(s.n === "Earth Shield") { state[p].hp = Math.min(state[p].max, state[p].hp + 15); pop(p, "+15", "var(--heal)", 0); }
-            if(s.n === "Crystal Spikes") { state[p].guard = true; }
-            if(s.n === "Sharpen") { state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
-            if(s.n === "Flesh Shield") { state[p].marked = false; }
-            if(s.n === "Juggling") { state[p].dodge = 2; pop(p, "20% DODGE", "var(--info)", 0); }
-            if(s.n === "Jack In Box") { state[opp].en = Math.max(0, state[opp].en - 1); pop(opp, "-1 EN", "var(--purple)", 0); }
-            if(s.n === "Laughing Gas") { state[opp].frost = 1; pop(opp, "FROST LAYER!", "var(--info)", 0); }
+            // --- EXECUTE SKILL INDEPENDENT ACTIONS (Before damage) ---
+            if(s.t === 'en_weak') { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); }
+            if(s.t === 'weak_self_focus') { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
+            if(s.t === 'def_draw_en') { if(state[opp].en > 0) { state[opp].en--; state[p].en = Math.min(10, state[p].en + 1); pop(opp, "-1 EN", "var(--purple)", 0); pop(p, "+1 EN", "var(--info)", 0); } }
+            
+            if(s.t === 'en_cleanse_frost') { state[p].frost = 0; pop(p, "FROST CLEANSED", "var(--info)", 0); }
+            if(s.t === 'reflect_gain_en') { state[p].reflect = true; pop(p, "REFLECT ACTION", "var(--info)", 0); }
+            
+            if(s.t === 'en_dodge30') { state[p].dodge = 2; pop(p, "30% DODGE", "var(--info)", 0); }
+            if(s.t === 'dodge_weak') { state[p].dodge = 2; state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); }
+            if(s.t === 'dodge_focus') { state[p].dodge = 2; state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
+            
+            if(s.t === 'perm_reduce_def') { jobs[state[opp].job].def = Math.max(0, jobs[state[opp].job].def - 0.04); pop(opp, "DEF DECREASED", "var(--purple)", 0); }
+            if(s.t === 'en_heal10') { state[p].hp = Math.min(state[p].max, state[p].hp + 10); pop(p, "+10", "var(--heal)", 0); }
+            
+            if(s.t === 'blood_rage_act') { state[p].hp = Math.max(1, state[p].hp - 5); pop(p, "-5 HP", "var(--dmg)", 0); state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
+            
+            if(s.t === 'en_focus') { state[p].focused = true; pop(p, "FOCUS!", "var(--accent)", 0); }
+            if(s.t === 'heal_cleanse_mark') { state[p].marked = false; pop(p, "MARK CLEANSED", "var(--info)", 0); }
+            if(s.t === 'mark_weaken_opp') { state[opp].marked = true; state[opp].weakened = true; pop(opp, "MARKED & WEAKENED", "var(--purple)", 0); }
+            if(s.t === 'en_dodge100') { state[p].dodge = 2; pop(p, "100% DODGE", "var(--info)", 0); }
+            
+            if(s.t === 'en_cleanse_weak') { state[p].weakened = false; pop(p, "WEAK CLEANSED", "var(--info)", 0); }
+            if(s.t === 'heal_cleanse_stun') { if(typeof state[p].stunned !== 'undefined') state[p].stunned = false; }
+            if(s.t === 'counter_guard') { state[p].guard = true; state[p].counter = true; pop(p, "GUARD & THORNS READY", "var(--info)", 0); }
+            
+            if(s.t === 'flashbang_act') { state[opp].guard = false; state[opp].reflect = false; state[opp].focused = false; pop(opp, "BUFF CLEARED!", "var(--rock)", 0); }
+            if(s.t === 'dodge70') { state[p].dodge = 2; pop(p, "70% DODGE", "var(--info)", 0); }
+            
+            if(s.t === 'sway_act') { state[p].dodge = 2; state[p].focused = true; pop(p, "DODGE & FOCUS", "var(--info)", 0); }
+            
+            if(s.t === 'en_fortify') { jobs[state[p].job].def = Math.min(0.75, jobs[state[p].job].def + 0.02); pop(p, "+2% DEF STACK", "var(--info)", 0); }
+            if(s.t === 'def_heal15') { state[p].hp = Math.min(state[p].max, state[p].hp + 15); pop(p, "+15", "var(--heal)", 0); }
+            if(s.t === 'counter_thorns') { state[p].counter = true; pop(p, "THORNS ACTIVE", "var(--info)", 0); }
+            
+            if(s.t === 'harden_cleanse_mark') { state[p].marked = false; pop(p, "MARK CLEANSED", "var(--info)", 0); }
+            
+            if(s.t === 'en_dodge20') { state[p].dodge = 2; pop(p, "20% DODGE", "var(--info)", 0); }
+            if(s.t === 'weaken_frost1') { state[opp].weakened = true; state[opp].frost = 1; pop(opp, "WEAK & FROST LAYER", "var(--purple)", 0); }
+            
+            if(s.t === 'en_heal12') { state[p].hp = Math.min(state[p].max, state[p].hp + 12); pop(p, "+12", "var(--heal)", 0); }
+            if(s.t === 'mark_gain_en') { state[opp].marked = true; state[p].en = Math.min(10, state[p].en + 1); pop(opp, "MARKED!", "var(--purple)", 0); pop(p, "+1 EN", "var(--info)", 0); }
+            if(s.t === 'dodge70_focus') { state[p].dodge = 2; state[p].focused = true; pop(p, "DODGE & FOCUS", "var(--info)", 0); }
+            
+            // Panda specific
+            if(s.t === 'en_panda_peace') { state[p].guard = true; pop(p, "GUARD BUFF READY", "var(--info)", 0); }
+            if(s.t === 'weak_opp') { state[opp].weakened = true; pop(opp, "WEAKENED", "var(--purple)", 0); }
+
+            // Global Safe-Check for ALL EN-boosting skill triggers
+            if(s.t && s.t.startsWith('en') && typeof s.v === 'number') {
+                state[p].en = Math.min(10, state[p].en + s.v);
+                playSfx('en');
+            }
 
             if(s.fx) triggerFX(s.fx, p, opp);
 
+            // --- DAMAGE CALCULATION ---
             let baseD = s.d ? r(s.d[0], s.d[1]) : 0;
             baseD *= 1 + ((state[p].godAtk || 0) * 0.1);
 
@@ -921,8 +957,9 @@
                 state[p].weakened = false;
             }
 
-            if(s.t==='exec' && state[opp].hp < (state[opp].max*0.5)) { baseD *= 1.5; }
+            if(s.t === 'exec' && state[opp].hp < (state[opp].max * 0.5)) { baseD *= 1.5; }
 
+            // --- DODGE framework ---
             let dodgeChance = 0.10; 
             if(state[opp].dodge > 0) {
                 const oppJob = state[opp].job;
@@ -934,12 +971,13 @@
                 else if(oppJob === 'Boxer') { dodgeChance = 0.70; } 
                 else if(oppJob === 'Demon Hunter') { dodgeChance = 0.70; } 
                 else if(oppJob === 'Joker') { dodgeChance = 0.75; }
+                else if(oppJob === 'KungFuPanda') { dodgeChance = 0.10; }
                 state[opp].dodge--;
             } else if(state[opp].job === 'Joker') {
                 dodgeChance = 0.25; 
             }
 
-            if(Math.random() < dodgeChance && s.d && s.t !== 'boxer_ult' && s.t !== 'rock_ult') {
+            if(Math.random() < dodgeChance && s.d && s.t !== 'boxer_ult' && s.t !== 'rock_ult' && s.t !== 'panda_ult') {
                 pop(opp, "DODGED!", "var(--info)", 0);
                 playSfx('en');
                 checkWin();
@@ -947,21 +985,27 @@
                 return;
             }
 
+            // --- APPLY DAMAGE ---
             if(baseD > 0) {
-                if(jobs[state[opp].job].skills[i] && jobs[state[opp].job].skills[i].n === "Aim Shot") {
+                if(s.t === 'ignore_def_20') {
+                    let armor = jobs[state[opp].job].def * 0.8; 
+                    if(state[opp].marked) armor = 0;
+                    baseD = Math.max(1, Math.floor(baseD * (1 - armor)));
+                } else if(s.t === 'mark_ignore_def' || s.t === 'weak_pierce_guard' || s.t === 'stun_pierce_guard' || s.t === 'panda_ult') {
+                    baseD = Math.max(1, Math.floor(baseD)); 
                 } else if(!s.t || (s.t !== 'mark' && s.t !== 'bleed_reckless')) {
                     let armor = jobs[state[opp].job].def;
                     if(state[opp].marked) armor = 0;
                     baseD = Math.max(1, Math.floor(baseD * (1 - armor)));
                 }
 
-                if(state[opp].guard) {
+                if(state[opp].guard && s.t !== 'panda_ult') {
                     baseD = Math.floor(baseD * 0.2);
                     state[opp].guard = false;
                 }
 
                 let isReflect = jobs[state[opp].job].skills.some(sk => sk.n === 'Barrier') && state[opp].reflect;
-                if(isReflect) {
+                if(isReflect && s.t !== 'panda_ult') {
                     state[p].hp = Math.max(0, state[p].hp - baseD);
                     pop(p, `${baseD} (REFLECT)`, "var(--purple)", 0);
                     playSfx('hit');
@@ -971,7 +1015,15 @@
                     pop(opp, `-${baseD}`, "var(--dmg)", hI);
                     playSfx('hit');
 
-                    let hasThorns = jobs[state[opp].job].skills.some(sk => sk.n === 'Thorns' || sk.n === 'Crystal Spikes') && state[opp].counter;
+                    // Chi Master Passive / Warrior / Paladin gain resource from getting hit
+                    if(state[opp].job === 'KungFuPanda' && Math.random() < 0.30) {
+                        state[opp].en = Math.min(10, state[opp].en + 1);
+                        pop(opp, "+1 EN (CHI)", "var(--info)", 0);
+                    }
+                    if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
+                    if(state[opp].job === 'Paladin' && Math.random() < 0.5) state[opp].en = Math.min(10, state[opp].en + 1);
+
+                    let hasThorns = state[opp].counter;
                     if(hasThorns) {
                         state[p].hp = Math.max(0, state[p].hp - 20);
                         pop(p, `-20 (THORNS)`, "var(--purple)", 0);
@@ -979,16 +1031,10 @@
                 }
             }
 
-            if(s.t === 'en' && s.v) {
-                state[p].en = Math.min(10, state[p].en + s.v);
-                playSfx('en');
-            }
+            // --- AFTER EFFECT BUFFS & DEBUFFS ---
             if(s.t === 'focus') state[p].focused = true;
             if(s.t === 'mark') state[opp].marked = true;
-            if(s.t === 'counter') state[p].counter = true;
             if(s.t === 'harden' && s.v) state[p].hardened = (state[p].hardened || 0) + s.v;
-            if(s.t === 'reflect') state[p].reflect = true;
-            if(s.t === 'dodge') state[p].dodge = 2;
 
             // Poison triggers
             if(s.t === 'leech_poison') {
@@ -1013,6 +1059,7 @@
                 pop(p, "MARKED!", "var(--purple)", 0);
             }
 
+            // Healing & Leeching Logic
             if((s.t === 'heal' || s.t === 'leech_poison') && s.v) {
                 let f = Array.isArray(s.v) ? r(s.v[0], s.v[1]) : s.v;
                 let ratio = (state[p].job === 'Alchemist') ? 1.3 : 1.0;
@@ -1027,8 +1074,29 @@
                 if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', 0);
             }
 
+            // Crowd Control & Special Suffixes
             if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
-            if(s.t === 'rock_ult' || s.t === 'joker_ult') state[opp].stunned = 1;
+            if(s.t === 'stun_chance_15' && Math.random() <= s.v) state[opp].stunned = true;
+            if(s.t === 'panda_punch' && Math.random() <= 0.15) state[opp].marked = true;
+            if(s.t === 'stun_pierce_guard' && Math.random() <= s.v) state[opp].stunned = true;
+            if(s.t === 'frost_chance' && Math.random() <= s.v) state[opp].frost = 1;
+            if(s.t === 'mark_chance_15' && Math.random() <= 0.15) state[opp].marked = true;
+            if(s.t === 'leech_chance_15' && Math.random() <= 0.15) {
+                let healVal = Math.floor(baseD * 0.5);
+                state[p].hp = Math.min(state[p].max, state[p].hp + healVal);
+                if(healVal > 0) pop(p, `+${healVal}`, 'var(--heal)', 0);
+            }
+            
+            if(s.t === 'stun_drain_en') {
+                state[opp].en = Math.max(0, state[opp].en - 1);
+                pop(opp, "-1 EN", "var(--purple)", 0);
+                if(Math.random() <= s.v) state[opp].stunned = true;
+            }
+            if(s.t === 'weak_pierce_guard') { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); }
+            if(s.t === 'body_blow_act') { state[opp].weakened = true; pop(opp, "ATK REDUCED!", "var(--purple)", 0); }
+            if(s.t === 'steal_en' || s.t === 'steal_en_basic') { if(state[opp].en > 0){ state[opp].en--; state[p].en = Math.min(10, state[p].en + 1); pop(opp, "-1 EN", "var(--purple)", 0); pop(p, "+1 EN", "var(--info)", 0); } }
+
+            if(s.t === 'rock_ult' || s.t === 'joker_ult') state[opp].stunned = true;
             if(s.t === 'frost') state[opp].frost = s.v;
             if(s.t === 'weak' && s.d) state[opp].weakened = true;
 
@@ -1051,10 +1119,14 @@
             if(s.t === 'demon_ult') {
                 state[p].focused = true;
             }
+            if(s.t === 'shield_breaker') {
+                state[opp].guard = false;
+                pop(opp, "SHIELD BROKEN", "var(--rock)", 0);
+            }
 
-            if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
-            if(state[opp].job === 'Paladin' && Math.random() < 0.5) state[opp].en = Math.min(10, state[opp].en + 1);
+            // Mage Passive
             if(state[p].job === 'Mage' && Math.random() < 0.4) { state[p].en = Math.min(10, state[p].en + 1); pop(p, "REFUND 1 EN", "var(--info)", 0); }
+            // Butcher Passive
             if(state[p].job === 'Butcher' && baseD > 0) { state[p].hp = Math.min(state[p].max, state[p].hp + 5); pop(p, "+5 (PASSIVE)", "var(--heal)", 0); }
 
             if(state[p].job === 'Joker' && Math.random() < 0.05) {
@@ -1232,7 +1304,7 @@
             "神聖新星": "【神聖新星 / Holy Nova】\n新月綻放溫暖的光芒，雙方同時恢復各自最大生命值的 30%。\n(The new moon emits a warm glow, allowing both players to restore 30% of their maximum HP.)",
             "狂暴之月": "【狂暴之月 / Frenzied Moon】\n激發骨子裡的嗜血狂暴，雙方的能量（EN）直接全部補滿達 10 點。\n(Ignites the bloodlust within, immediately filling both players' energy back to full.)",
             "枯竭風暴": "【枯竭風暴 / Depletion Storm】\n元素寂滅的風暴席捲戰場，使雙方當前的能量（EN）全部歸零。\n(A storm of element annihilation sweeps the arena, draining both players' current energy to 0.)",
-            "命運天秤": "【命運天秤 / Scales of Fate】\n命運交織！當前生命值百分比較低者，將會與對手的生命值百分比直接對調。\n(The player with the lower HP percentage swaps their HP percentage with their opponent.)",
+            "命運天秤": "【命運天秤 / Scales of Fate】\n命運交織！當前生命值生命值百分比較低者，將會與對手的生命值百分比直接對調。\n(The player with the lower HP percentage swaps their HP percentage with their opponent.)",
             "極寒永夜": "【極寒永夜 / Eternal Frost Night】\n絕對零度永夜降臨，雙方同時獲得 2 層「深層凍結（Deep Frost）」狀態。\n(An absolute-zero polar night falls, granting both players 2 stacks of Deep Frost status.)",
             "神明沉默": "【神明沉默 / Divine Silence】\n任何凡人不可稱聖，雙方身上所有的增益與減益狀態（護盾、反傷、標記、凍結等）全部清除。\n(Clears all buffs and debuffs from both players.)",
             "烈焰風暴": "【烈焰風暴 / Blaze Storm】\n混亂的烈焰席捲戰場，對雙方同時造成 25 點真實傷害（無視防禦）。\n(Chaotic embers sweep the arena, dealing 25 pure damage to both players simultaneously.)"
