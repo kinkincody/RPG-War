@@ -208,6 +208,57 @@
         @keyframes pop { 0% { opacity: 0; transform: translateY(0) scale(0.5); } 20% { opacity: 1; transform: translateY(-20px) scale(1.1); } 100% { opacity: 0; transform: translateY(-100px) scale(1); } }
         
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
+
+        /* ---------------- 角力系統額外樣式 ---------------- */
+        #wrestling-system-panel {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 2100; display: none;
+        }
+        .wrestle-main-btn {
+            font-size: 0.65rem; padding: 6px 10px; border-radius: 4px; border: 1px solid #e67e22;
+            background: #1a1c2c; color: #e67e22; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .wrestle-main-btn:active { transform: scale(0.9); }
+
+        .wrestle-overlay {
+            position: absolute; inset: 0; background: rgba(10, 11, 22, 0.95); z-index: 8000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+        }
+        .wrestle-box {
+            background: var(--card-bg); border: 2px solid #e67e22; border-radius: 15px; width: 100%; max-width: 650px; padding: 30px; box-shadow: 0 0 20px rgba(230, 126, 34, 0.4); text-align: center;
+        }
+        .wrestle-title { color: #e67e22; font-size: 1.8rem; margin: 0 0 15px 0; font-weight: 900; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .wrestle-timer { font-size: 2.5rem; font-weight: bold; color: #fff; margin-bottom: 20px; min-height: 60px; }
+        
+        /* 角力進度條容器 */
+        .wrestle-bar-container {
+            width: 100%; height: 35px; background: #222; border-radius: 10px; overflow: hidden; display: flex; border: 2px solid #555; margin-bottom: 30px; box-shadow: inset 0 0 5px #000;
+        }
+        .wrestle-bar-boy {
+            width: 50%; height: 100%; background: linear-gradient(90deg, #0077ff, var(--boy)); transition: width 0.1s ease-out;
+        }
+        .wrestle-bar-girl {
+            width: 50%; height: 100%; background: linear-gradient(90deg, var(--accent), #f39c12); transition: width 0.1s ease-out;
+        }
+
+        /* 雙方按鈕佈局 */
+        .wrestle-btn-zone { display: flex; width: 100%; justify-content: space-between; gap: 30px; margin-top: 10px; }
+        .wrestle-press-btn {
+            flex: 1; padding: 20px; font-size: 1.4rem; font-weight: 900; border-radius: 12px; border: 2px solid #fff; cursor: pointer; color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.05s;
+        }
+        .wrestle-press-btn:active { transform: scale(0.92); }
+        .wrestle-btn-boy { background: linear-gradient(135deg, #0055cc, var(--boy)); border-color: var(--boy); }
+        .wrestle-btn-girl { background: linear-gradient(135deg, #d35400, var(--accent)); border-color: var(--accent); }
+        .wrestle-press-btn:disabled { filter: brightness(0.3) grayscale(0.8); opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+        .wrestle-start-btn {
+            padding: 12px 40px; font-size: 1.5rem; font-weight: bold; background: #e67e22; color: #fff; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(230,126,34,0.4); margin-bottom: 10px;
+        }
+        .wrestle-start-btn:active { transform: scale(0.95); }
+
+        /* 角力獨立獲勝彈窗 */
+        .wrestle-win-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 9000; display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+        /* ------------------------------------------------ */
         
         @media (max-width: 768px) { 
             .arena { flex-direction: column; padding-top: 100px;} 
@@ -230,6 +281,11 @@
             .job-list-item { min-width: 130px; justify-content: center; height: 100%; text-align: center; }
             .job-detail-panel { width: 100%; height: 65%; }
             .detail-title { font-size: 1.2rem; }
+
+            /* 角力系統行動端修正 */
+            #wrestling-system-panel { top: 38px; left: 50%; transform: translateX(-50%); }
+            .wrestle-box { padding: 15px; width: 95%; }
+            .wrestle-press-btn { padding: 15px 5px; font-size: 1rem; }
         }
     </style>
 </head>
@@ -241,6 +297,9 @@
             <button class="god-btn btn-mercy" onclick="godIntervention('boy', 'mercy')">God Mercy</button>
             <button class="god-btn btn-rage" onclick="godIntervention('boy', 'rage')">God Rage</button>
             <button class="god-btn btn-hate" onclick="godIntervention('boy', 'hate')">God Hate</button>
+        </div>
+        <div id="wrestling-system-panel">
+            <button class="wrestle-main-btn" onclick="openWrestlingMode()">角力模式 / Wrestle</button>
         </div>
         <div class="god-group" id="god-girl">
             <button id="god-btn-fire-girl" class="god-btn btn-fire" onclick="godIntervention('girl', 'fire')">Fire 10%</button>
@@ -356,6 +415,32 @@
         </div>
     </div>
 
+    <div id="wrestle-overlay" class="wrestle-overlay">
+        <div class="wrestle-box">
+            <h2 class="wrestle-title">⚔️ 力量角力對決 / POWER WRESTLING ⚔|</h2>
+            <div id="wrestle-timer" class="wrestle-timer">準備就緒</div>
+            
+            <div class="wrestle-bar-container">
+                <div id="wrestle-bar-boy" class="wrestle-bar-boy"></div>
+                <div id="wrestle-bar-girl" class="wrestle-bar-girl"></div>
+            </div>
+
+            <button id="wrestle-start-btn" class="wrestle-start-btn" onclick="startWrestlingCountdown()">START</button>
+
+            <div class="wrestle-btn-zone">
+                <button id="wrestle-press-boy" class="wrestle-press-btn wrestle-btn-boy" onclick="wrestleClick('boy')" disabled>BOY<br>PRESS!</button>
+                <button id="wrestle-press-girl" class="wrestle-press-btn wrestle-btn-girl" onclick="wrestleClick('girl')" disabled>GIRL<br>PRESS!</button>
+            </div>
+            
+            <button class="btn-confirm-selection" style="margin-top:20px; background:#7f8c8d; max-width:150px;" onclick="closeWrestlingMode()">退出 / Exit</button>
+        </div>
+    </div>
+
+    <div id="wrestle-win-overlay" class="wrestle-win-overlay">
+        <h1 id="wrestle-win-title" style="font-size: 3rem; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 20px rgba(241,196,15,0.6); font-weight:900; text-align:center;">BOY WINS THE WRESTLING!</h1>
+        <button onclick="closeWrestleWinOverlay()" style="padding: 15px 40px; font-size: 1.3rem; font-weight: bold; background: white; color: black; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,255,255,0.3);">繼續戰鬥 / CONTINUE</button>
+    </div>
+
     <div id="win-overlay" class="overlay">
         <h1 id="win-title" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 20px rgba(241,196,15,0.6); font-weight:900;">BOY WINS!</h1>
         <button onclick="location.reload()" style="padding: 15px 40px; font-size: 1.5rem; font-weight: bold; background: white; color: black; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,255,255,0.3);">PLAY AGAIN</button>
@@ -403,9 +488,10 @@
             girl: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0, ultCount: 0, poison: 0, bleed: 0 }
         };
 
-        // Redesigned dynamic fire indexes
-        let godFireIndex = { boy: 0, girl: 0 };
-        const fireSequence = [0.1, 0.2, 0.5, 1.0];
+        // 角力內部的即時點擊計數變數
+        let wrestleScores = { boy: 0, girl: 0 };
+        let wrestleActive = false;
+        let wrestleTimerInterval = null;
 
         function saveGame(slot) {
             const data = {
@@ -729,6 +815,10 @@
                 ]
             }
         };
+
+        // Redesigned dynamic fire indexes
+        let godFireIndex = { boy: 0, girl: 0 };
+        const fireSequence = [0.1, 0.2, 0.5, 1.0];
 
         const events = [
             { name: "時之沙漏", run: () => { ['boy','girl'].forEach(p => state[p].hp = Math.floor(state[p].max * 0.5)); } },
@@ -1228,6 +1318,7 @@
                 document.getElementById('selection-screen').style.display = 'none'; 
                 document.getElementById('arena').style.display = 'flex'; 
                 document.getElementById('btn-draw-event').style.display = 'block'; 
+                document.getElementById('wrestling-system-panel').style.display = 'block'; // 進入主戰場後才顯示角力按鈕
                 document.getElementById('save-system').style.display = 'none';
                 update(); 
             }
@@ -1332,6 +1423,114 @@
             "神明沉默": "【神明沉默 / Divine Silence】\n任何凡人不可稱聖，雙方身上所有的增益與減益狀態（護盾、反傷、標記、凍結等）全部清除。\n(Clears all buffs and debuffs from both players.)",
             "烈焰風暴": "【烈焰風暴 / Blaze Storm】\n混亂的烈焰席捲戰場，對雙方同時造成 25 點真實傷害（無視防禦）。\n(Chaotic embers sweep the arena, dealing 25 pure damage to both players simultaneously.)"
         };
+
+        // ---------------- 角力系統邏輯程式碼 ----------------
+        function openWrestlingMode() {
+            if(isOver) return;
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            wrestleScores = { boy: 0, girl: 0 };
+            wrestleActive = false;
+            document.getElementById('wrestle-timer').innerText = "準備就緒";
+            document.getElementById('wrestle-start-btn').style.display = 'inline-block';
+            document.getElementById('wrestle-press-boy').disabled = true;
+            document.getElementById('wrestle-press-girl').disabled = true;
+            updateWrestleBar();
+            document.getElementById('wrestle-overlay').style.display = 'flex';
+        }
+
+        function closeWrestlingMode() {
+            clearInterval(wrestleTimerInterval);
+            document.getElementById('wrestle-overlay').style.display = 'none';
+        }
+
+        function startWrestlingCountdown() {
+            document.getElementById('wrestle-start-btn').style.display = 'none';
+            let count = 3;
+            document.getElementById('wrestle-timer').innerText = count;
+            playSfx('en');
+
+            let cdInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    document.getElementById('wrestle-timer').innerText = count;
+                    playSfx('en');
+                } else if (count === 0) {
+                    clearInterval(cdInterval);
+                    document.getElementById('wrestle-timer').innerText = "🔥 PRESS!!! 🔥";
+                    playSfx('shake');
+                    wrestleScores = { boy: 10, girl: 10 }; // 初始權重各佔一半
+                    updateWrestleBar();
+                    startWrestleMatch();
+                }
+            }, 800);
+        }
+
+        function startWrestleMatch() {
+            wrestleActive = true;
+            document.getElementById('wrestle-press-boy').disabled = false;
+            document.getElementById('wrestle-press-girl').disabled = false;
+
+            let timeLeft = 5.0;
+            wrestleTimerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                if (timeLeft <= 0) {
+                    clearInterval(wrestleTimerInterval);
+                    endWrestleMatch();
+                } else {
+                    document.getElementById('wrestle-timer').innerText = timeLeft.toFixed(1) + "s";
+                }
+            }, 100);
+        }
+
+        function wrestleClick(player) {
+            if (!wrestleActive) return;
+            playSfx('hit');
+            if (player === 'boy') {
+                wrestleScores.boy += 1;
+            } else {
+                wrestleScores.girl += 1;
+            }
+            updateWrestleBar();
+        }
+
+        function updateWrestleBar() {
+            let total = wrestleScores.boy + wrestleScores.girl;
+            if (total === 0) {
+                document.getElementById('wrestle-bar-boy').style.width = '50%';
+                document.getElementById('wrestle-bar-girl').style.width = '50%';
+                return;
+            }
+            let boyPct = (wrestleScores.boy / total) * 100;
+            let girlPct = 100 - boyPct;
+            document.getElementById('wrestle-bar-boy').style.width = boyPct + '%';
+            document.getElementById('wrestle-bar-girl').style.width = girlPct + '%';
+        }
+
+        function endWrestleMatch() {
+            wrestleActive = false;
+            document.getElementById('wrestle-press-boy').disabled = true;
+            document.getElementById('wrestle-press-girl').disabled = true;
+            playSfx('shake');
+
+            let winnerText = "";
+            if (wrestleScores.boy > wrestleScores.girl) {
+                winnerText = "🎉 BOY WINS THE WRESTLING! 🎉";
+            } else if (wrestleScores.girl > wrestleScores.boy) {
+                winnerText = "🎉 GIRL WINS THE WRESTLING! 🎉";
+            } else {
+                winnerText = "🤝 IT'S A TIE DRAG! 🤝";
+            }
+
+            document.getElementById('wrestle-timer').innerText = "戰鬥結束!";
+            document.getElementById('wrestle-win-title').innerText = winnerText;
+            document.getElementById('wrestle-win-overlay').style.display = 'flex';
+        }
+
+        function closeWrestleWinOverlay() {
+            document.getElementById('wrestle-win-overlay').style.display = 'none';
+            closeWrestlingMode();
+        }
+        // ---------------------------------------------------
 
         initSelection();
     </script>
