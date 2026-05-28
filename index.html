@@ -243,6 +243,8 @@
         .wrestle-btn-zone { display: flex; width: 100%; justify-content: space-between; gap: 30px; margin-top: 10px; }
         .wrestle-press-btn {
             flex: 1; padding: 20px; font-size: 1.4rem; font-weight: 900; border-radius: 12px; border: 2px solid #fff; cursor: pointer; color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.05s;
+            /* 優化 iPad 上的長按文字與觸控回饋 */
+            -webkit-user-select: none; user-select: none;
         }
         .wrestle-press-btn:active { transform: scale(0.92); }
         .wrestle-btn-boy { background: linear-gradient(135deg, #0055cc, var(--boy)); border-color: var(--boy); }
@@ -428,8 +430,8 @@
             <button id="wrestle-start-btn" class="wrestle-start-btn" onclick="startWrestlingCountdown()">START</button>
 
             <div class="wrestle-btn-zone">
-                <button id="wrestle-press-boy" class="wrestle-press-btn wrestle-btn-boy" onclick="wrestleClick('boy')" disabled>BOY<br>PRESS!</button>
-                <button id="wrestle-press-girl" class="wrestle-press-btn wrestle-btn-girl" onclick="wrestleClick('girl')" disabled>GIRL<br>PRESS!</button>
+                <button id="wrestle-press-boy" class="wrestle-press-btn wrestle-btn-boy" ontouchstart="wrestleTouch(event, 'boy')" onclick="wrestleClick('boy')" disabled>BOY<br>PRESS!</button>
+                <button id="wrestle-press-girl" class="wrestle-press-btn wrestle-btn-girl" ontouchstart="wrestleTouch(event, 'girl')" onclick="wrestleClick('girl')" disabled>GIRL<br>PRESS!</button>
             </div>
             
             <button class="btn-confirm-selection" style="margin-top:20px; background:#7f8c8d; max-width:150px;" onclick="closeWrestlingMode()">退出 / Exit</button>
@@ -867,7 +869,7 @@
             if(pState.weakened) activeBuffs.push("【虛弱 / WEAK】: 自身輸出的攻擊技能傷害降低。\n(The damage dealt by your next attacking skills will be heavily reduced.)");
             if(pState.frost > 0) activeBuffs.push(`【凍結 / FROST x${pState.frost}】: 冰霜覆蓋！下一次施展消耗能量技能時，能量消耗量加倍。\n(Frost cover! Your next EN-consuming skill will cost double/triple EN.)`);
             if(pState.focused) activeBuffs.push("【暴擊蓄力 / FOCUS】: 專注狀態，下一次輸出的傷害技能必定觸發 200% 暴擊。\n(Your next offensive action will guarantee a 100% critical strike.)");
-            if(pState.marked) activeBuffs.push("【破甲標記 / MARK】: 護甲被完全撕裂，防禦歸零，受到傷害時無法享有減傷。\n(Defense armor becomes 0. Automatically takes unmitigated raw damage.)");
+            if(pState.focused) activeBuffs.push("【破甲標記 / MARK】: 護甲被完全撕裂，防禦歸零，受到傷害時無法享有減傷。\n(Defense armor becomes 0. Automatically takes unmitigated raw damage.)");
             if(pState.poison > 0) activeBuffs.push(`【中毒 / POISON x${pState.poison}】: 每當增加或減少 AP（操作計數）時，將受到 3 點真實傷害。`);
             if(pState.bleed > 0) activeBuffs.push(`【出血 / BLEED x${pState.bleed}】: 每當施展需要消耗能量（EN > 0）的招式時，將受到 8 點真實傷害。`);
 
@@ -1416,7 +1418,7 @@
             "時之沙漏": "【時之沙漏 / Hourglass of Time】\n時間倒流！雙方當前血量直接恢復/調整至各自最大生命值的 50%。\n(Time flows backward! Directly sets both players' current HP to 50% of their maximum HP.)",
             "破滅之咒": "【破滅之咒 / Curse of Ruin】\n夜空中降下毀滅詛咒，使雙方同時失去當前生命值的 20%（無視防禦）。\n(A destructive curse descends, causing both players to simultaneously lose 20% of their current HP.)",
             "神聖新星": "【神聖新星 / Holy Nova】\n新月綻放溫暖的光芒，雙方同時恢復各自最大生命值的 30%。\n(The new moon emits a warm glow, allowing both players to restore 30% of their maximum HP.)",
-            "狂暴之月": "【狂暴之月 / Frenzied Moon】\n激發骨子裡的嗜血狂暴，雙方的能量（EN）直接全部補滿達 10 點。\n(Ignites the bloodlust within, immediately filling both players' energy back to full.)",
+            "狂暴之月": "【狂暴之月 / Frenzied Moon】\n激發骨子裡的嗜血狂暴，雙方的能量（EN）直接全部補滿達 10 點.\n(Ignites the bloodlust within, immediately filling both players' energy back to full.)",
             "枯竭風暴": "【枯竭風暴 / Depletion Storm】\n元素寂滅的風暴席捲戰場，使雙方當前的能量（EN）全部歸零。\n(A storm of element annihilation sweeps the arena, draining both players' current energy to 0.)",
             "命運天秤": "【命運天秤 / Scales of Fate】\n命運交織！當前生命值百分比較低者，將會與對手的生命值百分比直接對調。\n(The player with the lower HP percentage swaps their HP percentage with their opponent.)",
             "極寒永夜": "【極寒永夜 / Eternal Frost Night】\n絕對零度永夜降臨，雙方同時獲得 2 層「深層凍結（Deep Frost）」狀態。\n(An absolute-zero polar night falls, granting both players 2 stacks of Deep Frost status.)",
@@ -1424,7 +1426,7 @@
             "烈焰風暴": "【烈焰風暴 / Blaze Storm】\n混亂的烈焰席捲戰場，對雙方同時造成 25 點真實傷害（無視防禦）。\n(Chaotic embers sweep the arena, dealing 25 pure damage to both players simultaneously.)"
         };
 
-        // ---------------- 角力系統邏輯程式碼 ----------------
+        // ---------------- 角力系統邏輯程式碼 (已優化以支援 iPad 多點觸控) ----------------
         function openWrestlingMode() {
             if(isOver) return;
             if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -1482,8 +1484,22 @@
             }, 100);
         }
 
+        // 行動裝置觸控專用核心機制：阻止預設縮放/干擾，確保兩側同時按皆有反應
+        function wrestleTouch(e, player) {
+            if (!wrestleActive) return;
+            e.preventDefault(); // 核心：阻止 iPad 多點觸控手勢的預設行為
+            wrestleHandler(player);
+        }
+
+        // 電腦端點擊相容保留
         function wrestleClick(player) {
             if (!wrestleActive) return;
+            // 如果是行動裝置觸控引發的 click，通常會被 preventDefault 攔截，此處做為桌機保險
+            wrestleHandler(player);
+        }
+
+        // 統一處理角力計分與實時進度條刷新
+        function wrestleHandler(player) {
             playSfx('hit');
             if (player === 'boy') {
                 wrestleScores.boy += 1;
@@ -1502,6 +1518,8 @@
             }
             let boyPct = (wrestleScores.boy / total) * 100;
             let girlPct = 100 - boyPct;
+            
+            // 實時更新進度條寬度呈現拉鋸
             document.getElementById('wrestle-bar-boy').style.width = boyPct + '%';
             document.getElementById('wrestle-bar-girl').style.width = girlPct + '%';
         }
