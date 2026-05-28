@@ -24,7 +24,7 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* God System Layout */
+        /* God System Layout - 恢復純粹的雙方神明排版 */
         #god-system {
             position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 20px; z-index: 1500; width: 95%; justify-content: center;
@@ -209,13 +209,14 @@
         
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
 
-        /* ---------------- 角力系統額外樣式 ---------------- */
+        /* ---------------- 角力系統樣式更新（移至最下方、徹底消除延遲） ---------------- */
         #wrestling-system-panel {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 2100; display: none;
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 2100; display: none;
         }
         .wrestle-main-btn {
-            font-size: 0.65rem; padding: 6px 10px; border-radius: 4px; border: 1px solid #e67e22;
+            font-size: 0.85rem; padding: 10px 20px; border-radius: 6px; border: 2px solid #e67e22;
             background: #1a1c2c; color: #e67e22; font-weight: bold; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 0 12px rgba(230, 126, 34, 0.5);
         }
         .wrestle-main-btn:active { transform: scale(0.9); }
 
@@ -233,17 +234,18 @@
             width: 100%; height: 35px; background: #222; border-radius: 10px; overflow: hidden; display: flex; border: 2px solid #555; margin-bottom: 30px; box-shadow: inset 0 0 5px #000;
         }
         .wrestle-bar-boy {
-            width: 50%; height: 100%; background: linear-gradient(90deg, #0077ff, var(--boy)); transition: width 0.1s ease-out;
+            width: 50%; height: 100%; background: linear-gradient(90deg, #0077ff, var(--boy)); transition: width 0.05s ease-out;
         }
         .wrestle-bar-girl {
-            width: 50%; height: 100%; background: linear-gradient(90deg, var(--accent), #f39c12); transition: width 0.1s ease-out;
+            width: 50%; height: 100%; background: linear-gradient(90deg, var(--accent), #f39c12); transition: width 0.05s ease-out;
         }
 
-        /* 雙方按鈕佈局 */
+        /* 雙方按鈕佈局（加入關閉觸控延遲核心 CSS） */
         .wrestle-btn-zone { display: flex; width: 100%; justify-content: space-between; gap: 30px; margin-top: 10px; }
         .wrestle-press-btn {
-            flex: 1; padding: 20px; font-size: 1.4rem; font-weight: 900; border-radius: 12px; border: 2px solid #fff; cursor: pointer; color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.05s;
-            -webkit-user-select: none; user-select: none;
+            flex: 1; padding: 25px 20px; font-size: 1.5rem; font-weight: 900; border-radius: 12px; border: 2px solid #fff; cursor: pointer; color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.05s;
+            /* 核心：關閉行動裝置的雙擊延遲及圈選干擾 */
+            touch-action: none; -webkit-user-select: none; user-select: none;
         }
         .wrestle-press-btn:active { transform: scale(0.92); }
         .wrestle-btn-boy { background: linear-gradient(135deg, #0055cc, var(--boy)); border-color: var(--boy); }
@@ -259,6 +261,7 @@
         .wrestle-win-overlay {
             position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 9000; display: none; flex-direction: column; align-items: center; justify-content: center;
         }
+        .wrestle-continue-btn:disabled { filter: brightness(0.5); opacity: 0.6; cursor: not-allowed; }
         /* ------------------------------------------------ */
         
         @media (max-width: 768px) { 
@@ -283,15 +286,16 @@
             .job-detail-panel { width: 100%; height: 65%; }
             .detail-title { font-size: 1.2rem; }
 
-            /* 角力系統行動端修正 */
-            #wrestling-system-panel { top: 38px; left: 50%; transform: translateX(-50%); }
+            /* 角力開啟按鈕行動端適配（置於畫面中央下方，避開所有技能） */
+            #wrestling-system-panel { bottom: 25px; left: 50%; transform: translateX(-50%); }
             .wrestle-box { padding: 15px; width: 95%; }
-            .wrestle-press-btn { padding: 15px 5px; font-size: 1rem; }
+            .wrestle-press-btn { padding: 18px 5px; font-size: 1.1rem; }
         }
     </style>
 </head>
 <body>
 
+    <!-- 天神系統：還原純淨的群組，徹底移除內部的角力面板 -->
     <div id="god-system">
         <div class="god-group" id="god-boy">
             <button id="god-btn-fire-boy" class="god-btn btn-fire" onclick="godIntervention('boy', 'fire')">Fire 10%</button>
@@ -299,15 +303,17 @@
             <button class="god-btn btn-rage" onclick="godIntervention('boy', 'rage')">God Rage</button>
             <button class="god-btn btn-hate" onclick="godIntervention('boy', 'hate')">God Hate</button>
         </div>
-        <div id="wrestling-system-panel">
-            <button class="wrestle-main-btn" onclick="openWrestlingMode()">角力模式 / Wrestle</button>
-        </div>
         <div class="god-group" id="god-girl">
             <button id="god-btn-fire-girl" class="god-btn btn-fire" onclick="godIntervention('girl', 'fire')">Fire 10%</button>
             <button class="god-btn btn-mercy" onclick="godIntervention('girl', 'mercy')">God Mercy</button>
             <button class="god-btn btn-rage" onclick="godIntervention('girl', 'rage')">God Rage</button>
             <button class="god-btn btn-hate" onclick="godIntervention('girl', 'hate')">God Hate</button>
         </div>
+    </div>
+
+    <!-- 角力入口：獨立抽離至外部，完全避開 God System 排版 -->
+    <div id="wrestling-system-panel">
+        <button class="wrestle-main-btn" onclick="openWrestlingMode()">角力模式 / Wrestle</button>
     </div>
 
     <div id="event-trigger-panel">
@@ -418,7 +424,7 @@
 
     <div id="wrestle-overlay" class="wrestle-overlay">
         <div class="wrestle-box">
-            <h2 class="wrestle-title">⚔️ 力量角力對決 / POWER WRESTLING ⚔|</h2>
+            <h2 class="wrestle-title">⚔️ 力量角力對決 / POWER WRESTLING ⚔</h2>
             <div id="wrestle-timer" class="wrestle-timer">準備就緒</div>
             
             <div class="wrestle-bar-container">
@@ -439,7 +445,7 @@
 
     <div id="wrestle-win-overlay" class="wrestle-win-overlay">
         <h1 id="wrestle-win-title" style="font-size: 3rem; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 20px rgba(241,196,15,0.6); font-weight:900; text-align:center;">BOY WINS THE WRESTLING!</h1>
-        <button onclick="closeWrestleWinOverlay()" style="padding: 15px 40px; font-size: 1.3rem; font-weight: bold; background: white; color: black; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,255,255,0.3);">繼續戰鬥 / CONTINUE</button>
+        <button id="wrestle-continue-btn" class="wrestle-continue-btn" onclick="closeWrestleWinOverlay()" style="padding: 15px 40px; font-size: 1.3rem; font-weight: bold; background: white; color: black; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,255,255,0.3);">繼續戰鬥 / CONTINUE</button>
     </div>
 
     <div id="win-overlay" class="overlay">
@@ -451,7 +457,7 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSfx(type) {
             const now = audioCtx.currentTime;
-            const osc = audioTracing = audioCtx.createOscillator();
+            const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -1300,7 +1306,6 @@
                 document.getElementById('arena').style.display = 'flex'; 
                 document.getElementById('btn-draw-event').style.display = 'block'; 
                 document.getElementById('wrestling-system-panel').style.display = 'block'; 
-                // 【還原】此處已移除原本隱藏 save-system 的程式碼，使其在進入戰場後依然存在
                 update(); 
             }
         }
@@ -1514,7 +1519,25 @@
 
             document.getElementById('wrestle-timer').innerText = "戰鬥結束!";
             document.getElementById('wrestle-win-title').innerText = winnerText;
+            
+            const continueBtn = document.getElementById('wrestle-continue-btn');
+            continueBtn.disabled = true; 
+            
+            let lockTime = 1.5; 
+            continueBtn.innerText = `繼續戰鬥 / CONTINUE (${lockTime.toFixed(1)}s)`;
+            
             document.getElementById('wrestle-win-overlay').style.display = 'flex';
+
+            let lockInterval = setInterval(() => {
+                lockTime -= 0.1;
+                if (lockTime <= 0) {
+                    clearInterval(lockInterval);
+                    continueBtn.disabled = false; 
+                    continueBtn.innerText = "繼續戰鬥 / CONTINUE";
+                } else {
+                    continueBtn.innerText = `繼續戰鬥 / CONTINUE (${lockTime.toFixed(1)}s)`;
+                }
+            }, 100);
         }
 
         function closeWrestleWinOverlay() {
