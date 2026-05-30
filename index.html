@@ -24,7 +24,7 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* God System Layout - 恢復純粹的雙方神明排版 */
+        /* God System Layout */
         #god-system {
             position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 20px; z-index: 1500; width: 95%; justify-content: center;
@@ -209,7 +209,7 @@
         
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
 
-        /* ---------------- 角力系統樣式更新（移至最下方、徹底消除延遲） ---------------- */
+        /* ---------------- 角力系統樣式（分離位置、移除 transition 改為 0 延遲） ---------------- */
         #wrestling-system-panel {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 2100; display: none;
         }
@@ -233,18 +233,18 @@
         .wrestle-bar-container {
             width: 100%; height: 35px; background: #222; border-radius: 10px; overflow: hidden; display: flex; border: 2px solid #555; margin-bottom: 30px; box-shadow: inset 0 0 5px #000;
         }
+        /* 【重要更正】將 transition 設為 none，避免連續點擊時瀏覽器處理動畫隊列產生的嚴重卡頓與延遲 */
         .wrestle-bar-boy {
-            width: 50%; height: 100%; background: linear-gradient(90deg, #0077ff, var(--boy)); transition: width 0.05s ease-out;
+            width: 50%; height: 100%; background: linear-gradient(90deg, #0077ff, var(--boy)); transition: none !important;
         }
         .wrestle-bar-girl {
-            width: 50%; height: 100%; background: linear-gradient(90deg, var(--accent), #f39c12); transition: width 0.05s ease-out;
+            width: 50%; height: 100%; background: linear-gradient(90deg, var(--accent), #f39c12); transition: none !important;
         }
 
-        /* 雙方按鈕佈局（加入關閉觸控延遲核心 CSS） */
+        /* 雙方按鈕佈局 */
         .wrestle-btn-zone { display: flex; width: 100%; justify-content: space-between; gap: 30px; margin-top: 10px; }
         .wrestle-press-btn {
             flex: 1; padding: 25px 20px; font-size: 1.5rem; font-weight: 900; border-radius: 12px; border: 2px solid #fff; cursor: pointer; color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.05s;
-            /* 核心：關閉行動裝置的雙擊延遲及圈選干擾 */
             touch-action: none; -webkit-user-select: none; user-select: none;
         }
         .wrestle-press-btn:active { transform: scale(0.92); }
@@ -286,7 +286,7 @@
             .job-detail-panel { width: 100%; height: 65%; }
             .detail-title { font-size: 1.2rem; }
 
-            /* 角力開啟按鈕行動端適配（置於畫面中央下方，避開所有技能） */
+            /* 角力開啟按鈕行動端適配 */
             #wrestling-system-panel { bottom: 25px; left: 50%; transform: translateX(-50%); }
             .wrestle-box { padding: 15px; width: 95%; }
             .wrestle-press-btn { padding: 18px 5px; font-size: 1.1rem; }
@@ -295,7 +295,6 @@
 </head>
 <body>
 
-    <!-- 天神系統：還原純淨的群組，徹底移除內部的角力面板 -->
     <div id="god-system">
         <div class="god-group" id="god-boy">
             <button id="god-btn-fire-boy" class="god-btn btn-fire" onclick="godIntervention('boy', 'fire')">Fire 10%</button>
@@ -311,7 +310,6 @@
         </div>
     </div>
 
-    <!-- 角力入口：獨立抽離至外部，完全避開 God System 排版 -->
     <div id="wrestling-system-panel">
         <button class="wrestle-main-btn" onclick="openWrestlingMode()">角力模式 / Wrestle</button>
     </div>
@@ -455,6 +453,8 @@
 
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // 【優化音效機制】將連點打擊的持續時間縮減為 0.05s，並優化記憶體釋放，防止 Web Audio 引擎超載導致 JavaScript 阻塞
         function playSfx(type) {
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
@@ -465,11 +465,11 @@
             if(type === 'hit') {
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(180, now);
-                osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
                 osc.start();
-                osc.stop(now + 0.15);
+                osc.stop(now + 0.05);
             } else if(type === 'heal' || type === 'en') {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(523.25, now);
@@ -872,8 +872,8 @@
             if(pState.frost > 0) activeBuffs.push(`【凍結 / FROST x${pState.frost}】: 冰霜覆蓋！下一次施展消耗能量技能時，能量消耗量加倍。\n(Frost cover! Your next EN-consuming skill will cost double/triple EN.)`);
             if(pState.focused) activeBuffs.push("【暴擊蓄力 / FOCUS】: 專注狀態，下一次輸出的傷害技能必定觸發 200% 暴擊。\n(Your next offensive action will guarantee a 100% critical strike.)");
             if(pState.marked) activeBuffs.push("【破甲標記 / MARK】: 護甲被完全撕裂，防禦歸零，受到傷害時無法享有減傷。\n(Defense armor becomes 0. Automatically takes unmitigated raw damage.)");
-            if(pState.poison > 0) activeBuffs.push(`【中毒 / POISON x${pState.poison}】: 每當增加或減少 AP（操作計數）時，將受到 3 點真實傷害。`);
-            if(pState.bleed > 0) activeBuffs.push(`【出血 / BLEED x${pState.bleed}】: 每當施展需要消耗能量（EN > 0）的招式時，將受到 8 點真實傷害。`);
+            if(pState.poison > 0) activeBuffs.push(`【中毒 / POISON x${pState.poison}】: 每當增加 or 減少 AP 時，將受到 3 點真實傷害。`);
+            if(pState.bleed > 0) activeBuffs.push(`【出血 / BLEED x${pState.bleed}】: 每當施展需要消耗能量的招式時，將受到 8 點真實傷害。`);
 
             if(activeBuffs.length === 0) {
                 alert(`ℹ️ ${player.toUpperCase()} 當前沒有任何異常或增益狀態。\n(${player.toUpperCase()} currently has no active buffs or debuffs.)`);
@@ -981,7 +981,7 @@
 
             let attackIsFocused = state[p].focused;
 
-            // --- EXECUTE SKILL INDEPENDENT ACTIONS (Before damage) ---
+            // --- EXECUTE SKILL INDEPENDENT ACTIONS ---
             if(s.t === 'en_weak') { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); }
             if(s.t === 'weak_self_focus') { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             if(s.t === 'def_draw_en') { if(state[opp].en > 0) { state[opp].en--; state[p].en = Math.min(10, state[p].en + 1); pop(opp, "-1 EN", "var(--purple)", 0); pop(p, "+1 EN", "var(--info)", 0); } }
