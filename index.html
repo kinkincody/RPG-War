@@ -491,8 +491,8 @@
 
         let selecting = 'boy', isOver = false, currentSelectedJobKey = 'Warrior';
         let state = {
-            boy: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0, ultCount: 0, poison: 0, bleed: 0 },
-            girl: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0, ultCount: 0, poison: 0, bleed: 0 }
+            boy: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, pandaGuard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0, ultCount: 0, poison: 0, bleed: 0 },
+            girl: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, pandaGuard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0, ultCount: 0, poison: 0, bleed: 0 }
         };
 
         let wrestleScores = { boy: 0, girl: 0 };
@@ -840,7 +840,7 @@
                 }
             }},
             { name: "極寒永夜", run: () => { ['boy','girl'].forEach(p => state[p].frost = 2); } },
-            { name: "神明沉默", run: () => { ['boy','girl'].forEach(p => { state[p].stunned=false; state[p].guard=false; state[p].reflect=false; state[p].dodge=0; state[p].weakened=false; state[p].frost=0; state[p].focused=false; state[p].marked=false; state[p].counter=false; state[p].poison=0; state[p].bleed=0; }); } },
+            { name: "神明沉默", run: () => { ['boy','girl'].forEach(p => { state[p].stunned=false; state[p].guard=false; state[p].pandaGuard=false; state[p].reflect=false; state[p].dodge=0; state[p].weakened=false; state[p].frost=0; state[p].focused=false; state[p].marked=false; state[p].counter=false; state[p].poison=0; state[p].bleed=0; }); } },
             { name: "烈焰風暴", run: () => { ['boy','girl'].forEach(p => { state[p].hp = Math.max(0, state[p].hp - 25); pop(p, '-25', 'var(--dmg)'); }); } }
         ];
 
@@ -866,6 +866,7 @@
 
             if(pState.stunned) activeBuffs.push("【暈眩 / STUN】: 無法行動（可施展解控技或以基礎攻擊、充能來度過回合）。\n(Cannot act. Basic attacks or energy charge will advance the turn count to melt this.)");
             if(pState.guard) activeBuffs.push("【完美護盾 / GUARD】: 抵擋下一次受到的攻擊傷害高達 80%。\n(Reduces the damage of the next incoming attack by 80%.)");
+            if(pState.pandaGuard) activeBuffs.push("【熊貓護盾 / PANDA GUARD】: 功夫熊貓以靜制動的防禦氣場，抵擋下一次受到的攻擊傷害 20%。\n(Reduces the damage of the next incoming attack by 20%.)");
             if(pState.reflect) activeBuffs.push("【鏡面反射 / REFLECT】: 100% 將下一次受到的技能傷害全額回彈給對手。\n(Bounces 100% of the next incoming skill damage directly back to the attacker.)");
             if(pState.counter) activeBuffs.push("【反傷荊棘 / THORNS】: 受到敵方攻擊傷害時，將對進攻方進行 20 點真實傷害反彈。");
             if(pState.dodge > 0) activeBuffs.push(`【迴避中 / DODGE x${pState.dodge}】: 處於高機率閃避敵方攻擊的狀態中，只有受到真正攻擊後才會取消層數。`);
@@ -1030,7 +1031,8 @@
             if(s.t === 'mark_gain_en') { state[opp].marked = true; state[p].en = Math.min(10, state[p].en + 1); pop(opp, "MARKED!", "var(--purple)", 0); pop(p, "+1 EN", "var(--info)", 0); }
             if(s.t === 'dodge70_focus') { state[p].dodge = 2; state[p].focused = true; pop(p, "DODGE & FOCUS", "var(--info)", 0); }
             
-            if(s.t === 'en_panda_peace') { state[p].guard = true; pop(p, "GUARD BUFF READY", "var(--info)", 0); }
+            // 【更正】功夫熊貓施展 Inner Peace 回復能量技能時，獲得特製的減傷 20% 護盾
+            if(s.t === 'en_panda_peace') { state[p].pandaGuard = true; pop(p, "PANDA SHIELD READY", "var(--info)", 0); }
             if(s.t === 'weak_opp') { state[opp].weakened = true; pop(opp, "WEAKENED", "var(--purple)", 0); }
 
             if(s.t === 'berserk_ult') {
@@ -1067,7 +1069,7 @@
 
             if(s.t === 'exec' && state[opp].hp < (state[opp].max * 0.5)) { baseD *= 1.5; }
 
-            // 【重構：迴避判定時機】只有當對方使用了真正有傷害的進攻招式（baseD > 0）時，才觸發迴避層數的消耗與躲避判定
+            // --- DODGE framework ---
             if(baseD > 0 && s.t !== 'boxer_ult' && s.t !== 'rock_ult' && s.t !== 'panda_ult') {
                 let dodgeChance = 0.10; 
                 if(state[opp].dodge > 0) {
@@ -1082,7 +1084,6 @@
                     else if(oppJob === 'Joker') { dodgeChance = 0.75; }
                     else if(oppJob === 'KungFuPanda') { dodgeChance = 0.10; }
                     
-                    // 被實質傷害招式攻擊，減少 1 層迴避狀態
                     state[opp].dodge--;
                 } else if(state[opp].job === 'Joker') {
                     dodgeChance = 0.25; 
@@ -1111,19 +1112,23 @@
                     baseD = Math.max(1, Math.floor(baseD * (1 - armor)));
                 }
 
-                if(state[opp].guard && s.t !== 'panda_ult') {
-                    baseD = Math.floor(baseD * 0.2);
-                    state[opp].guard = false;
+                // 【更正】護盾傷害吸收邏輯分配：區分 80% 通用護盾與功夫熊貓的 20% 特製護盾
+                if (s.t !== 'panda_ult') {
+                    if (state[opp].pandaGuard) {
+                        baseD = Math.floor(baseD * 0.8); // 減傷 20%
+                        state[opp].pandaGuard = false;
+                    } else if (state[opp].guard) {
+                        baseD = Math.floor(baseD * 0.2); // 減傷 80%
+                        state[opp].guard = false;
+                    }
                 }
 
                 // 反射機制與荊棘傷害
                 if(isReflect && s.t !== 'panda_ult') {
-                    // 全額技能鏡面反彈
                     state[p].hp = Math.max(0, state[p].hp - baseD);
                     pop(p, `${baseD} (REFLECT)`, "var(--purple)", 0);
                     playSfx('hit');
                 } else {
-                    // 正常承傷
                     state[opp].hp = Math.max(0, state[opp].hp - baseD);
                     
                     let hI = attackIsFocused ? 1 : (isCrit ? 1 : 0);
@@ -1138,7 +1143,6 @@
                     if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
                     if(state[opp].job === 'Paladin' && Math.random() < 0.5) state[opp].en = Math.min(10, state[opp].en + 1);
 
-                    // 固定型荊棘反傷：檢查防禦者是否開啟了反傷狀態 (Thorns / Crystal Spikes)
                     let hasThorns = state[opp].counter;
                     if(hasThorns) {
                         state[p].hp = Math.max(0, state[p].hp - 20);
@@ -1239,6 +1243,7 @@
             }
             if(s.t === 'shield_breaker') {
                 state[opp].guard = false;
+                state[opp].pandaGuard = false;
                 pop(opp, "SHIELD BROKEN", "var(--rock)", 0);
             }
 
@@ -1354,8 +1359,9 @@
                 let statusText = [];
                 if(state[p].stunned) statusText.push("暈眩 (STUN)");
                 if(state[p].guard) statusText.push("完美護盾 (GUARD)");
+                if(state[p].pandaGuard) statusText.push("熊貓護盾-減傷20% (PANDA GUARD)"); // 【更正】明確將減傷 20% 的熊貓護盾標示於狀態列
                 if(state[p].reflect) statusText.push("鏡面反射 (REFLECT)");
-                if(state[p].counter) statusText.push("反傷 (THORNS)"); // 【更正】正確將荊棘反傷狀態顯示在面板上
+                if(state[p].counter) statusText.push("反傷 (THORNS)");
                 if(state[p].dodge > 0) statusText.push(`迴避中 (DODGE x${state[p].dodge})`);
                 if(state[p].weakened) statusText.push("虛弱 (WEAK)");
                 if(state[p].frost > 0) statusText.push(`凍結 (FROST x${state[p].frost})`);
