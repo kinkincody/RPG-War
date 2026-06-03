@@ -816,7 +816,7 @@
                     { n: "Soul Feast", c: 2, v: [30, 45], t: 'heal', e: "Devour secret dumplings to restore massive HP pool." },
                     { n: "Pressure Point", c: 2, d: [14, 20], t: 'stun_pierce_guard', v: 0.4, fx: "bolt", e: "Accurate strike: 40% Stun Chance + Completely Pierce Guard." },
                     { n: "Chi Blast", c: 3, d: [22, 30], t: 'weak_opp', fx: "shake", e: "Release inner energy flow: High DMG + Weaken Target's attack." },
-                    { n: "WUXI FINGER HOLD", c: 9, d: [75, 95], t: 'panda_ult', fx: "shake", e: "ULT: Unleash the legendary move. Bypasses all defense mechanisms." }
+                    { n: "WUXI FINGER HOLD", c: 9, d: [60, 76], t: 'panda_ult', fx: "shake", e: "ULT: Unleash the legendary move. Bypasses all defense mechanisms." } // 【更正】大招攻擊力下降 20% (由 75-95 降至 60-76)
                 ]
             }
         };
@@ -866,7 +866,7 @@
 
             if(pState.stunned) activeBuffs.push("【暈眩 / STUN】: 無法行動（可施展解控技或以基礎攻擊、充能來度過回合）。\n(Cannot act. Basic attacks or energy charge will advance the turn count to melt this.)");
             if(pState.guard) activeBuffs.push("【完美護盾 / GUARD】: 抵擋下一次受到的攻擊傷害高達 80%。\n(Reduces the damage of the next incoming attack by 80%.)");
-            if(pState.pandaGuard) activeBuffs.push("【熊貓護盾 / PANDA GUARD】: 功夫熊貓以靜制動的防禦氣場，抵擋下一次受到的攻擊傷害 20%。\n(Reduces the damage of the next incoming attack by 20%.)");
+            if(pState.pandaGuard) activeBuffs.push("【熊貓護盾 / PANDA GUARD】: 功夫熊貓以靜制動的防禦氣場，抵擋下一次受到的攻擊傷害 5%。\n(Reduces the damage of the next incoming attack by 5%.)"); // 【更正】文字同步修正為 5%
             if(pState.reflect) activeBuffs.push("【鏡面反射 / REFLECT】: 100% 將下一次受到的技能傷害全額回彈給對手。\n(Bounces 100% of the next incoming skill damage directly back to the attacker.)");
             if(pState.counter) activeBuffs.push("【反傷荊棘 / THORNS】: 受到敵方攻擊傷害時，將對進攻方進行 20 點真實傷害反彈。");
             if(pState.dodge > 0) activeBuffs.push(`【迴避中 / DODGE x${pState.dodge}】: 處於高機率閃避敵方攻擊的狀態中，只有受到真正攻擊後才會取消層數。`);
@@ -1031,7 +1031,6 @@
             if(s.t === 'mark_gain_en') { state[opp].marked = true; state[p].en = Math.min(10, state[p].en + 1); pop(opp, "MARKED!", "var(--purple)", 0); pop(p, "+1 EN", "var(--info)", 0); }
             if(s.t === 'dodge70_focus') { state[p].dodge = 2; state[p].focused = true; pop(p, "DODGE & FOCUS", "var(--info)", 0); }
             
-            // 【更正】功夫熊貓施展 Inner Peace 回復能量技能時，獲得特製的減傷 20% 護盾
             if(s.t === 'en_panda_peace') { state[p].pandaGuard = true; pop(p, "PANDA SHIELD READY", "var(--info)", 0); }
             if(s.t === 'weak_opp') { state[opp].weakened = true; pop(opp, "WEAKENED", "var(--purple)", 0); }
 
@@ -1112,10 +1111,10 @@
                     baseD = Math.max(1, Math.floor(baseD * (1 - armor)));
                 }
 
-                // 【更正】護盾傷害吸收邏輯分配：區分 80% 通用護盾與功夫熊貓的 20% 特製護盾
+                // 【更正】護盾減傷修改：熊貓護盾減傷改為 5% (承受 95% 傷害)
                 if (s.t !== 'panda_ult') {
                     if (state[opp].pandaGuard) {
-                        baseD = Math.floor(baseD * 0.8); // 減傷 20%
+                        baseD = Math.floor(baseD * 0.95); // 減傷 5%
                         state[opp].pandaGuard = false;
                     } else if (state[opp].guard) {
                         baseD = Math.floor(baseD * 0.2); // 減傷 80%
@@ -1359,7 +1358,7 @@
                 let statusText = [];
                 if(state[p].stunned) statusText.push("暈眩 (STUN)");
                 if(state[p].guard) statusText.push("完美護盾 (GUARD)");
-                if(state[p].pandaGuard) statusText.push("熊貓護盾-減傷20% (PANDA GUARD)"); // 【更正】明確將減傷 20% 的熊貓護盾標示於狀態列
+                if(state[p].pandaGuard) statusText.push("熊貓護盾-減傷5% (PANDA GUARD)"); // 【更正】明確標示為減傷 5%
                 if(state[p].reflect) statusText.push("鏡面反射 (REFLECT)");
                 if(state[p].counter) statusText.push("反傷 (THORNS)");
                 if(state[p].dodge > 0) statusText.push(`迴避中 (DODGE x${state[p].dodge})`);
