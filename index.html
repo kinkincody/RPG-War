@@ -867,7 +867,8 @@
             if(pState.stunned) activeBuffs.push("【暈眩 / STUN】: 無法行動（可施展解控技或以基礎攻擊、充能來度過回合）。\n(Cannot act. Basic attacks or energy charge will advance the turn count to melt this.)");
             if(pState.guard) activeBuffs.push("【完美護盾 / GUARD】: 抵擋下一次受到的攻擊傷害高達 80%。\n(Reduces the damage of the next incoming attack by 80%.)");
             if(pState.reflect) activeBuffs.push("【鏡面反射 / REFLECT】: 100% 將下一次受到的技能傷害全額回彈給對手。\n(Bounces 100% of the next incoming skill damage directly back to the attacker.)");
-            if(pState.dodge > 0) activeBuffs.push(`【迴避中 / DODGE x${pState.dodge}】: 處於高機率閃避敵方攻擊的狀態中。\n(Has high probability to entirely dodge enemy skills.)`);
+            if(pState.counter) activeBuffs.push("【反傷荊棘 / THORNS】: 受到敵方攻擊傷害時，將對進攻方進行 20 點真實傷害反彈。");
+            if(pState.dodge > 0) activeBuffs.push(`【迴避中 / DODGE x${pState.dodge}】: 處於高機率閃避敵方攻擊的狀態中，只有受到真正攻擊後才會取消層數。`);
             if(pState.weakened) activeBuffs.push("【虛弱 / WEAK】: 自身輸出的攻擊技能傷害降低。\n(The damage dealt by your next attacking skills will be heavily reduced.)");
             if(pState.frost > 0) activeBuffs.push(`【凍結 / FROST x${pState.frost}】: 冰霜覆蓋！下一次施展消耗能量技能時，能量消耗量加倍。\n(Frost cover! Your next EN-consuming skill will cost double/triple EN.)`);
             if(pState.focused) activeBuffs.push("【暴擊蓄力 / FOCUS】: 專注狀態，下一次輸出的傷害技能必定觸發 200% 暴擊。\n(Your next offensive action will guarantee a 100% critical strike.)");
@@ -876,7 +877,7 @@
             if(pState.bleed > 0) activeBuffs.push(`【出血 / BLEED x${pState.bleed}】: 每當施展需要消耗能量的招式時，將受到 8 點真實傷害。`);
 
             if(activeBuffs.length === 0) {
-                alert(`ℹ️ ${player.toUpperCase()} 當前沒有任何異常或增益狀態。\n(${player.toUpperCase()} currently has no active buffs or debuffs.)`);
+                alert(`ℹ️ ${player.toUpperCase()} 當前沒有任何異常 or 增益狀態。\n(${player.toUpperCase()} currently has no active buffs or debuffs.)`);
             } else {
                 alert(`📋 ${player.toUpperCase()} 當前狀態詳情 / Status Details:\n\n` + activeBuffs.join("\n\n"));
             }
@@ -973,6 +974,10 @@
             state[p].ap--;
             if(cost > 0) state[p].frost = 0;
 
+            // 暫存防禦者的反射狀態
+            let isReflect = jobs[state[opp].job].skills.some(sk => sk.n === 'Barrier') && state[opp].reflect;
+            
+            // 使用完招式後清除自身的鏡面反射狀態
             state[p].reflect = false; 
 
             if(isUlt) {
@@ -1062,30 +1067,34 @@
 
             if(s.t === 'exec' && state[opp].hp < (state[opp].max * 0.5)) { baseD *= 1.5; }
 
-            // --- DODGE framework ---
-            let dodgeChance = 0.10; 
-            if(state[opp].dodge > 0) {
-                const oppJob = state[opp].job;
-                if(oppJob === 'Assassin') {
-                    dodgeChance = state[opp].focused ? 0.90 : 0.60;
-                    if(state[opp].dodge === 2 && state[opp].hp < state[opp].max) dodgeChance = 0.30; 
-                } else if(oppJob === 'Archer') { dodgeChance = 1.0; } 
-                else if(oppJob === 'Gunner') { dodgeChance = 0.70; } 
-                else if(oppJob === 'Boxer') { dodgeChance = 0.70; } 
-                else if(oppJob === 'Demon Hunter') { dodgeChance = 0.70; } 
-                else if(oppJob === 'Joker') { dodgeChance = 0.75; }
-                else if(oppJob === 'KungFuPanda') { dodgeChance = 0.10; }
-                state[opp].dodge--;
-            } else if(state[opp].job === 'Joker') {
-                dodgeChance = 0.25; 
-            }
+            // 【重構：迴避判定時機】只有當對方使用了真正有傷害的進攻招式（baseD > 0）時，才觸發迴避層數的消耗與躲避判定
+            if(baseD > 0 && s.t !== 'boxer_ult' && s.t !== 'rock_ult' && s.t !== 'panda_ult') {
+                let dodgeChance = 0.10; 
+                if(state[opp].dodge > 0) {
+                    const oppJob = state[opp].job;
+                    if(oppJob === 'Assassin') {
+                        dodgeChance = state[opp].focused ? 0.90 : 0.60;
+                        if(state[opp].dodge === 2 && state[opp].hp < state[opp].max) dodgeChance = 0.30; 
+                    } else if(oppJob === 'Archer') { dodgeChance = 1.0; } 
+                    else if(oppJob === 'Gunner') { dodgeChance = 0.70; } 
+                    else if(oppJob === 'Boxer') { dodgeChance = 0.70; } 
+                    else if(oppJob === 'Demon Hunter') { dodgeChance = 0.70; } 
+                    else if(oppJob === 'Joker') { dodgeChance = 0.75; }
+                    else if(oppJob === 'KungFuPanda') { dodgeChance = 0.10; }
+                    
+                    // 被實質傷害招式攻擊，減少 1 層迴避狀態
+                    state[opp].dodge--;
+                } else if(state[opp].job === 'Joker') {
+                    dodgeChance = 0.25; 
+                }
 
-            if(Math.random() < dodgeChance && s.d && s.t !== 'boxer_ult' && s.t !== 'rock_ult' && s.t !== 'panda_ult') {
-                pop(opp, "DODGED!", "var(--info)", 0);
-                playSfx('en');
-                checkWin();
-                update();
-                return;
+                if(Math.random() < dodgeChance) {
+                    pop(opp, "DODGED!", "var(--info)", 0);
+                    playSfx('en');
+                    checkWin();
+                    update();
+                    return;
+                }
             }
 
             // --- APPLY DAMAGE ---
@@ -1107,12 +1116,14 @@
                     state[opp].guard = false;
                 }
 
-                let isReflect = jobs[state[opp].job].skills.some(sk => sk.n === 'Barrier') && state[opp].reflect;
+                // 反射機制與荊棘傷害
                 if(isReflect && s.t !== 'panda_ult') {
+                    // 全額技能鏡面反彈
                     state[p].hp = Math.max(0, state[p].hp - baseD);
                     pop(p, `${baseD} (REFLECT)`, "var(--purple)", 0);
                     playSfx('hit');
                 } else {
+                    // 正常承傷
                     state[opp].hp = Math.max(0, state[opp].hp - baseD);
                     
                     let hI = attackIsFocused ? 1 : (isCrit ? 1 : 0);
@@ -1127,6 +1138,7 @@
                     if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
                     if(state[opp].job === 'Paladin' && Math.random() < 0.5) state[opp].en = Math.min(10, state[opp].en + 1);
 
+                    // 固定型荊棘反傷：檢查防禦者是否開啟了反傷狀態 (Thorns / Crystal Spikes)
                     let hasThorns = state[opp].counter;
                     if(hasThorns) {
                         state[p].hp = Math.max(0, state[p].hp - 20);
@@ -1343,6 +1355,7 @@
                 if(state[p].stunned) statusText.push("暈眩 (STUN)");
                 if(state[p].guard) statusText.push("完美護盾 (GUARD)");
                 if(state[p].reflect) statusText.push("鏡面反射 (REFLECT)");
+                if(state[p].counter) statusText.push("反傷 (THORNS)"); // 【更正】正確將荊棘反傷狀態顯示在面板上
                 if(state[p].dodge > 0) statusText.push(`迴避中 (DODGE x${state[p].dodge})`);
                 if(state[p].weakened) statusText.push("虛弱 (WEAK)");
                 if(state[p].frost > 0) statusText.push(`凍結 (FROST x${state[p].frost})`);
