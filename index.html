@@ -208,61 +208,6 @@
         @keyframes pop { 0% { opacity: 0; transform: translateY(0) scale(0.5); } 20% { opacity: 1; transform: translateY(-20px) scale(1.1); } 100% { opacity: 0; transform: translateY(-100px) scale(1); } }
         
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-
-        /* ---------------- 角力系統樣式（分離位置、移除 transition 改為 0 延遲） ---------------- */
-        #wrestling-system-panel {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 2100; display: none;
-        }
-        .wrestle-main-btn {
-            font-size: 0.85rem; padding: 10px 20px; border-radius: 6px; border: 2px solid #e67e22;
-            background: #1a1c2c; color: #e67e22; font-weight: bold; cursor: pointer; transition: 0.2s;
-            box-shadow: 0 0 12px rgba(230, 126, 34, 0.5);
-        }
-        .wrestle-main-btn:active { transform: scale(0.9); }
-
-        .wrestle-overlay {
-            position: absolute; inset: 0; background: rgba(10, 11, 22, 0.95); z-index: 8000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-        }
-        .wrestle-box {
-            background: var(--card-bg); border: 2px solid #e67e22; border-radius: 15px; width: 100%; max-width: 650px; padding: 30px; box-shadow: 0 0 20px rgba(230, 126, 34, 0.4); text-align: center;
-        }
-        .wrestle-title { color: #e67e22; font-size: 1.8rem; margin: 0 0 15px 0; font-weight: 900; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        .wrestle-timer { font-size: 2.5rem; font-weight: bold; color: #fff; margin-bottom: 20px; min-height: 60px; }
-        
-        /* 角力進度條容器 */
-        .wrestle-bar-container {
-            width: 100%; height: 35px; background: #222; border-radius: 10px; overflow: hidden; display: flex; border: 2px solid #555; margin-bottom: 30px; box-shadow: inset 0 0 5px #000;
-        }
-        /* 【重要更正】將 transition 設為 none，避免連續點擊時瀏覽器處理動畫隊列產生的嚴重卡頓與延遲 */
-        .wrestle-bar-boy {
-            width: 50%; height: 100%; background: linear-gradient(90deg, #0077ff, var(--boy)); transition: none !important;
-        }
-        .wrestle-bar-girl {
-            width: 50%; height: 100%; background: linear-gradient(90deg, var(--accent), #f39c12); transition: none !important;
-        }
-
-        /* 雙方按鈕佈局 */
-        .wrestle-btn-zone { display: flex; width: 100%; justify-content: space-between; gap: 30px; margin-top: 10px; }
-        .wrestle-press-btn {
-            flex: 1; padding: 25px 20px; font-size: 1.5rem; font-weight: 900; border-radius: 12px; border: 2px solid #fff; cursor: pointer; color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.05s;
-            touch-action: none; -webkit-user-select: none; user-select: none;
-        }
-        .wrestle-press-btn:active { transform: scale(0.92); }
-        .wrestle-btn-boy { background: linear-gradient(135deg, #0055cc, var(--boy)); border-color: var(--boy); }
-        .wrestle-btn-girl { background: linear-gradient(135deg, #d35400, var(--accent)); border-color: var(--accent); }
-        .wrestle-press-btn:disabled { filter: brightness(0.3) grayscale(0.8); opacity: 0.5; cursor: not-allowed; transform: none !important; }
-
-        .wrestle-start-btn {
-            padding: 12px 40px; font-size: 1.5rem; font-weight: bold; background: #e67e22; color: #fff; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(230,126,34,0.4); margin-bottom: 10px;
-        }
-        .wrestle-start-btn:active { transform: scale(0.95); }
-
-        /* 角力獨立獲勝彈窗 */
-        .wrestle-win-overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 9000; display: none; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .wrestle-continue-btn:disabled { filter: brightness(0.5); opacity: 0.6; cursor: not-allowed; }
-        /* ------------------------------------------------ */
         
         @media (max-width: 768px) { 
             .arena { flex-direction: column; padding-top: 100px;} 
@@ -285,11 +230,6 @@
             .job-list-item { min-width: 130px; justify-content: center; height: 100%; text-align: center; }
             .job-detail-panel { width: 100%; height: 65%; }
             .detail-title { font-size: 1.2rem; }
-
-            /* 角力開啟按鈕行動端適配 */
-            #wrestling-system-panel { bottom: 25px; left: 50%; transform: translateX(-50%); }
-            .wrestle-box { padding: 15px; width: 95%; }
-            .wrestle-press-btn { padding: 18px 5px; font-size: 1.1rem; }
         }
     </style>
 </head>
@@ -308,10 +248,6 @@
             <button class="god-btn btn-rage" onclick="godIntervention('girl', 'rage')">God Rage</button>
             <button class="god-btn btn-hate" onclick="godIntervention('girl', 'hate')">God Hate</button>
         </div>
-    </div>
-
-    <div id="wrestling-system-panel">
-        <button class="wrestle-main-btn" onclick="openWrestlingMode()">角力模式 / Wrestle</button>
     </div>
 
     <div id="event-trigger-panel">
@@ -420,32 +356,6 @@
         </div>
     </div>
 
-    <div id="wrestle-overlay" class="wrestle-overlay">
-        <div class="wrestle-box">
-            <h2 class="wrestle-title">⚔️ 力量角力對決 / POWER WRESTLING ⚔</h2>
-            <div id="wrestle-timer" class="wrestle-timer">準備就緒</div>
-            
-            <div class="wrestle-bar-container">
-                <div id="wrestle-bar-boy" class="wrestle-bar-boy"></div>
-                <div id="wrestle-bar-girl" class="wrestle-bar-girl"></div>
-            </div>
-
-            <button id="wrestle-start-btn" class="wrestle-start-btn" onclick="startWrestlingCountdown()">START</button>
-
-            <div class="wrestle-btn-zone">
-                <button id="wrestle-press-boy" class="wrestle-press-btn wrestle-btn-boy" ontouchstart="wrestleTouch(event, 'boy')" onclick="wrestleClick('boy')" disabled>BOY<br>PRESS!</button>
-                <button id="wrestle-press-girl" class="wrestle-press-btn wrestle-btn-girl" ontouchstart="wrestleTouch(event, 'girl')" onclick="wrestleClick('girl')" disabled>GIRL<br>PRESS!</button>
-            </div>
-            
-            <button class="btn-confirm-selection" style="margin-top:20px; background:#7f8c8d; max-width:150px;" onclick="closeWrestlingMode()">退出 / Exit</button>
-        </div>
-    </div>
-
-    <div id="wrestle-win-overlay" class="wrestle-win-overlay">
-        <h1 id="wrestle-win-title" style="font-size: 3rem; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 20px rgba(241,196,15,0.6); font-weight:900; text-align:center;">BOY WINS THE WRESTLING!</h1>
-        <button id="wrestle-continue-btn" class="wrestle-continue-btn" onclick="closeWrestleWinOverlay()" style="padding: 15px 40px; font-size: 1.3rem; font-weight: bold; background: white; color: black; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,255,255,0.3);">繼續戰鬥 / CONTINUE</button>
-    </div>
-
     <div id="win-overlay" class="overlay">
         <h1 id="win-title" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 20px rgba(241,196,15,0.6); font-weight:900;">BOY WINS!</h1>
         <button onclick="location.reload()" style="padding: 15px 40px; font-size: 1.5rem; font-weight: bold; background: white; color: black; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,255,255,0.3);">PLAY AGAIN</button>
@@ -453,8 +363,6 @@
 
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // 【優化音效機制】將連點打擊的持續時間縮減為 0.05s，並優化記憶體釋放，防止 Web Audio 引擎超載導致 JavaScript 阻塞
         function playSfx(type) {
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
@@ -465,11 +373,11 @@
             if(type === 'hit') {
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(180, now);
-                osc.frequency.exponentialRampToValueAtTime(40, now + 0.05);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
                 osc.start();
-                osc.stop(now + 0.05);
+                osc.stop(now + 0.15);
             } else if(type === 'heal' || type === 'en') {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(523.25, now);
@@ -491,13 +399,13 @@
 
         let selecting = 'boy', isOver = false, currentSelectedJobKey = 'Warrior';
         let state = {
-            boy: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, pandaGuard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0, ultCount: 0, poison: 0, bleed: 0 },
-            girl: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, pandaGuard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0, ultCount: 0, poison: 0, bleed: 0 }
+            boy: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0, ultCount: 0, poison: 0, bleed: 0 },
+            girl: { hp:0, max:0, en:0, job:'', def:0, ap: 0, stunned:false, guard:false, reflect:false, dodge:0, weakened:false, frost:0, focused:false, marked:false, counter: false, hardened: 0, fireStep: 0, godAtk: 0, ultCount: 0, poison: 0, bleed: 0 }
         };
 
-        let wrestleScores = { boy: 0, girl: 0 };
-        let wrestleActive = false;
-        let wrestleTimerInterval = null;
+        // Redesigned dynamic fire indexes
+        let godFireIndex = { boy: 0, girl: 0 };
+        const fireSequence = [0.1, 0.2, 0.5, 1.0];
 
         function saveGame(slot) {
             const data = {
@@ -554,6 +462,7 @@
             if(type === 'fire') {
                 let currentIdx = godFireIndex[targetPlayer];
                 let ratio = fireSequence[Math.min(currentIdx, 3)];
+                // Calculates based on maximum HP
                 let dmg = Math.floor(state[targetPlayer].max * ratio);
                 
                 state[targetPlayer].hp = Math.max(0, state[targetPlayer].hp - dmg);
@@ -652,9 +561,9 @@
             Berserker: {
                 icon: "🪓", hp: 140, def: 0.05,
                 desc: [
-                    "Passive: Base Critical chance is 30%.", 
+                    "Passive: Base Critical chance is 30%. Lose 1 EN when hit.", 
                     "Tactics: Sacrifices life for damage, lifesteal & execute.", 
-                    "ULT: Lifesteal strike + Instant Full EN."
+                    "ULT: Lifesteal strike + Instant Full EN. (20% lower raw power)"
                 ],
                 skills: [
                     { n: "Wild Swing", c: 0, d: [12, 18], t: 'bleed_self', fx: "slash", e: "Slam strike + Self Gain 10% Crit + Inflict Bleed on Target." },
@@ -663,7 +572,7 @@
                     { n: "Enrage", c: 1, t: 'focus', e: "Roar to force next strike to be Critical." },
                     { n: "Bloodthirst", c: 2, d: [12, 18], t: 'leech', v: 0.6, fx: "slash", e: "Strike with 60% Lifesteal to heal self." },
                     { n: "Execute", c: 3, d: [20, 30], t: 'exec', fx: "slash", e: "Executes target under 50% HP (deals 1.5x DMG)." },
-                    { n: "DECIMATE", c: 9, d: [66, 84], t: 'berserk_ult', fx: "shake", e: "ULT: Lower DMG + 100% Lifesteal + Full EN." }
+                    { n: "DECIMATE", c: 9, d: [53, 67], t: 'berserk_ult', fx: "shake", e: "ULT: Lower DMG (Nerfed) + 100% Lifesteal + Full EN." }
                 ]
             },
             Archer: {
@@ -744,7 +653,7 @@
                 skills: [
                     { n: "Rock Throw", c: 0, d: [8, 12], t: 'stun_chance_15', v: 0.15, fx: "slash", e: "Heavy rock toss + 15% Stun Chance." },
                     { n: "Fortify", c: 0, v: 2, t: 'en_fortify', e: "Gain 2 EN + Permanently increase +2% DEF." },
-                    { n: "Earth Shield", c: 1, t: 'def_heal15', e: "80% Block (Once) + Self Restore 15 HP." },
+                    { n: "Earth Shield", c: 1, t: 'def_heal15_guard', e: "80% Block (Once) + Self Restore 15 HP + Activate Guard." },
                     { n: "Crystal Spikes", c: 2, d: [12, 18], t: 'counter_thorns', e: "Deals DMG + Reflect 20 real Dmg back." },
                     { n: "Granite Slam", c: 2, d: [14, 20], t: 'weak', fx: "shake", e: "Ground slam to severely Weaken enemy damage." },
                     { n: "Obsidian Core", c: 2, t: 'harden', v: 0.05, e: "Permanently gain +5% base DEF scaling buff." },
@@ -816,13 +725,10 @@
                     { n: "Soul Feast", c: 2, v: [30, 45], t: 'heal', e: "Devour secret dumplings to restore massive HP pool." },
                     { n: "Pressure Point", c: 2, d: [14, 20], t: 'stun_pierce_guard', v: 0.4, fx: "bolt", e: "Accurate strike: 40% Stun Chance + Completely Pierce Guard." },
                     { n: "Chi Blast", c: 3, d: [22, 30], t: 'weak_opp', fx: "shake", e: "Release inner energy flow: High DMG + Weaken Target's attack." },
-                    { n: "WUXI FINGER HOLD", c: 9, d: [60, 76], t: 'panda_ult', fx: "shake", e: "ULT: Unleash the legendary move. Bypasses all defense mechanisms." } // 【更正】大招攻擊力下降 20% (由 75-95 降至 60-76)
+                    { n: "WUXI FINGER HOLD", c: 9, d: [75, 95], t: 'panda_ult', fx: "shake", e: "ULT: Unleash the legendary move. Bypasses all defense mechanisms." }
                 ]
             }
         };
-
-        let godFireIndex = { boy: 0, girl: 0 };
-        const fireSequence = [0.1, 0.2, 0.5, 1.0];
 
         const events = [
             { name: "時之沙漏", run: () => { ['boy','girl'].forEach(p => state[p].hp = Math.floor(state[p].max * 0.5)); } },
@@ -840,7 +746,7 @@
                 }
             }},
             { name: "極寒永夜", run: () => { ['boy','girl'].forEach(p => state[p].frost = 2); } },
-            { name: "神明沉默", run: () => { ['boy','girl'].forEach(p => { state[p].stunned=false; state[p].guard=false; state[p].pandaGuard=false; state[p].reflect=false; state[p].dodge=0; state[p].weakened=false; state[p].frost=0; state[p].focused=false; state[p].marked=false; state[p].counter=false; state[p].poison=0; state[p].bleed=0; }); } },
+            { name: "神明沉默", run: () => { ['boy','girl'].forEach(p => { state[p].stunned=false; state[p].guard=false; state[p].reflect=false; state[p].dodge=0; state[p].weakened=false; state[p].frost=0; state[p].focused=false; state[p].marked=false; state[p].counter=false; state[p].poison=0; state[p].bleed=0; }); } },
             { name: "烈焰風暴", run: () => { ['boy','girl'].forEach(p => { state[p].hp = Math.max(0, state[p].hp - 25); pop(p, '-25', 'var(--dmg)'); }); } }
         ];
 
@@ -865,20 +771,18 @@
             let pState = state[player];
 
             if(pState.stunned) activeBuffs.push("【暈眩 / STUN】: 無法行動（可施展解控技或以基礎攻擊、充能來度過回合）。\n(Cannot act. Basic attacks or energy charge will advance the turn count to melt this.)");
-            if(pState.guard) activeBuffs.push("【完美護盾 / GUARD】: 抵擋下一次受到的攻擊傷害高達 80%。\n(Reduces the damage of the next incoming attack by 80%.)");
-            if(pState.pandaGuard) activeBuffs.push("【熊貓護盾 / PANDA GUARD】: 功夫熊貓以靜制動的防禦氣場，抵擋下一次受到的攻擊傷害 5%。\n(Reduces the damage of the next incoming attack by 5%.)"); // 【更正】文字同步修正為 5%
+            if(pState.guard) activeBuffs.push("【完美護盾 / GUARD】: 護盾張開！抵擋下一次受到的攻擊傷害高達 80%。\n(Reduces the damage of the next incoming attack by 80%.)");
             if(pState.reflect) activeBuffs.push("【鏡面反射 / REFLECT】: 100% 將下一次受到的技能傷害全額回彈給對手。\n(Bounces 100% of the next incoming skill damage directly back to the attacker.)");
-            if(pState.counter) activeBuffs.push("【反傷荊棘 / THORNS】: 受到敵方攻擊傷害時，將對進攻方進行 20 點真實傷害反彈。");
-            if(pState.dodge > 0) activeBuffs.push(`【迴避中 / DODGE x${pState.dodge}】: 處於高機率閃避敵方攻擊的狀態中，只有受到真正攻擊後才會取消層數。`);
+            if(pState.dodge > 0) activeBuffs.push(`【迴避中 / DODGE x${pState.dodge}】: 處於高機率閃避敵方攻擊的狀態中。\n(Has high probability to entirely dodge enemy skills.)`);
             if(pState.weakened) activeBuffs.push("【虛弱 / WEAK】: 自身輸出的攻擊技能傷害降低。\n(The damage dealt by your next attacking skills will be heavily reduced.)");
             if(pState.frost > 0) activeBuffs.push(`【凍結 / FROST x${pState.frost}】: 冰霜覆蓋！下一次施展消耗能量技能時，能量消耗量加倍。\n(Frost cover! Your next EN-consuming skill will cost double/triple EN.)`);
             if(pState.focused) activeBuffs.push("【暴擊蓄力 / FOCUS】: 專注狀態，下一次輸出的傷害技能必定觸發 200% 暴擊。\n(Your next offensive action will guarantee a 100% critical strike.)");
             if(pState.marked) activeBuffs.push("【破甲標記 / MARK】: 護甲被完全撕裂，防禦歸零，受到傷害時無法享有減傷。\n(Defense armor becomes 0. Automatically takes unmitigated raw damage.)");
-            if(pState.poison > 0) activeBuffs.push(`【中毒 / POISON x${pState.poison}】: 每當增加 or 減少 AP 時，將受到 3 點真實傷害。`);
-            if(pState.bleed > 0) activeBuffs.push(`【出血 / BLEED x${pState.bleed}】: 每當施展需要消耗能量的招式時，將受到 8 點真實傷害。`);
+            if(pState.poison > 0) activeBuffs.push(`【中毒 / POISON x${pState.poison}】: 每當增加或減少 AP（操作計數）時，將受到 3 點真實傷害。`);
+            if(pState.bleed > 0) activeBuffs.push(`【出血 / BLEED x${pState.bleed}】: 每當施展需要消耗能量（EN > 0）的招式時，將受到 8 點真實傷害。`);
 
             if(activeBuffs.length === 0) {
-                alert(`ℹ️ ${player.toUpperCase()} 當前沒有任何異常 or 增益狀態。\n(${player.toUpperCase()} currently has no active buffs or debuffs.)`);
+                alert(`ℹ️ ${player.toUpperCase()} 當前沒有任何異常或增益狀態。\n(${player.toUpperCase()} currently has no active buffs or debuffs.)`);
             } else {
                 alert(`📋 ${player.toUpperCase()} 當前狀態詳情 / Status Details:\n\n` + activeBuffs.join("\n\n"));
             }
@@ -887,6 +791,7 @@
         function changeAP(player, amt) {
             state[player].ap = Math.max(0, state[player].ap + amt);
             
+            // Poison Damage check when AP fluctuates
             if (state[player].poison > 0) {
                 state[player].hp = Math.max(0, state[player].hp - 3);
                 pop(player, "-3 (POISON)", "var(--green)", 0);
@@ -965,6 +870,7 @@
             const isUlt = (i === jobs[state[p].job].skills.length - 1);
             if(isUlt && (state[p].ultCount >= 3)) return;
 
+            // Bleed check when using EN skills
             if (cost > 0 && state[p].bleed > 0) {
                 state[p].hp = Math.max(0, state[p].hp - 8);
                 pop(p, "-8 (BLEED)", "var(--dmg)", 0);
@@ -975,19 +881,16 @@
             state[p].ap--;
             if(cost > 0) state[p].frost = 0;
 
-            // 暫存防禦者的反射狀態
-            let isReflect = jobs[state[opp].job].skills.some(sk => sk.n === 'Barrier') && state[opp].reflect;
-            
-            // 使用完招式後清除自身的鏡面反射狀態
             state[p].reflect = false; 
 
             if(isUlt) {
                 state[p].ultCount = (state[p].ultCount || 0) + 1;
             }
 
+            // 保存目前蓄力暴擊狀態以利後續傷害倍率判斷
             let attackIsFocused = state[p].focused;
 
-            // --- EXECUTE SKILL INDEPENDENT ACTIONS ---
+            // --- EXECUTE SKILL INDEPENDENT ACTIONS (Before damage) ---
             if(s.t === 'en_weak') { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); }
             if(s.t === 'weak_self_focus') { state[opp].weakened = true; pop(opp, "WEAKEN!", "var(--purple)", 0); state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             if(s.t === 'def_draw_en') { if(state[opp].en > 0) { state[opp].en--; state[p].en = Math.min(10, state[p].en + 1); pop(opp, "-1 EN", "var(--purple)", 0); pop(p, "+1 EN", "var(--info)", 0); } }
@@ -1002,6 +905,7 @@
             if(s.t === 'perm_reduce_def') { jobs[state[opp].job].def = Math.max(0, jobs[state[opp].job].def - 0.04); pop(opp, "DEF DECREASED", "var(--purple)", 0); }
             if(s.t === 'en_heal10') { state[p].hp = Math.min(state[p].max, state[p].hp + 10); pop(p, "+10", "var(--heal)", 0); }
             
+            // Berserker Unique Blood Rage (能確實賦予 Focus)
             if(s.t === 'en_blood_rage') { state[p].hp = Math.max(1, state[p].hp - 5); pop(p, "-5 HP", "var(--dmg)", 0); state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             
             if(s.t === 'en_focus') { state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
@@ -1019,7 +923,7 @@
             if(s.t === 'sway_act') { state[p].dodge = 2; state[p].focused = true; pop(p, "DODGE & FOCUS", "var(--info)", 0); }
             
             if(s.t === 'en_fortify') { jobs[state[p].job].def = Math.min(0.75, jobs[state[p].job].def + 0.02); pop(p, "+2% DEF STACK", "var(--info)", 0); }
-            if(s.t === 'def_heal15') { state[p].hp = Math.min(state[p].max, state[p].hp + 15); pop(p, "+15", "var(--heal)", 0); }
+            if(s.t === 'def_heal15_guard') { state[p].hp = Math.min(state[p].max, state[p].hp + 15); state[p].guard = true; pop(p, "+15 & 完美護盾!", "var(--heal)", 0); }
             if(s.t === 'counter_thorns') { state[p].counter = true; pop(p, "THORNS ACTIVE", "var(--info)", 0); }
             
             if(s.t === 'harden_cleanse_mark') { state[p].marked = false; pop(p, "MARK CLEANSED", "var(--info)", 0); }
@@ -1031,14 +935,17 @@
             if(s.t === 'mark_gain_en') { state[opp].marked = true; state[p].en = Math.min(10, state[p].en + 1); pop(opp, "MARKED!", "var(--purple)", 0); pop(p, "+1 EN", "var(--info)", 0); }
             if(s.t === 'dodge70_focus') { state[p].dodge = 2; state[p].focused = true; pop(p, "DODGE & FOCUS", "var(--info)", 0); }
             
-            if(s.t === 'en_panda_peace') { state[p].pandaGuard = true; pop(p, "PANDA SHIELD READY", "var(--info)", 0); }
+            // Panda specific
+            if(s.t === 'en_panda_peace') { state[p].guard = true; pop(p, "GUARD BUFF READY", "var(--info)", 0); }
             if(s.t === 'weak_opp') { state[opp].weakened = true; pop(opp, "WEAKENED", "var(--purple)", 0); }
 
+            // Berserker 大招判定對齊：獲得滿額 EN
             if(s.t === 'berserk_ult') {
                 state[p].en = 10;
                 pop(p, "FULL EN (10)", "var(--accent)", 0);
             }
 
+            // 全局 EN 統一增加框架
             if(s.t && s.t.startsWith('en') && typeof s.v === 'number') {
                 state[p].en = Math.min(10, state[p].en + s.v);
                 playSfx('en');
@@ -1053,6 +960,7 @@
             let isCrit = false;
             let critChance = (state[p].job === 'Berserker' ? 0.3 : (state[p].job === 'Assassin' ? 0.4 : 0.10));
             
+            // 核心：若攻擊發動前是 Focus 蓄力狀態，則必定觸發 200% 加成
             if(attackIsFocused) { 
                 isCrit = true; 
                 baseD *= 2.0; 
@@ -1069,32 +977,31 @@
             if(s.t === 'exec' && state[opp].hp < (state[opp].max * 0.5)) { baseD *= 1.5; }
 
             // --- DODGE framework ---
-            if(baseD > 0 && s.t !== 'boxer_ult' && s.t !== 'rock_ult' && s.t !== 'panda_ult') {
-                let dodgeChance = 0.10; 
-                if(state[opp].dodge > 0) {
-                    const oppJob = state[opp].job;
-                    if(oppJob === 'Assassin') {
-                        dodgeChance = state[opp].focused ? 0.90 : 0.60;
-                        if(state[opp].dodge === 2 && state[opp].hp < state[opp].max) dodgeChance = 0.30; 
-                    } else if(oppJob === 'Archer') { dodgeChance = 1.0; } 
-                    else if(oppJob === 'Gunner') { dodgeChance = 0.70; } 
-                    else if(oppJob === 'Boxer') { dodgeChance = 0.70; } 
-                    else if(oppJob === 'Demon Hunter') { dodgeChance = 0.70; } 
-                    else if(oppJob === 'Joker') { dodgeChance = 0.75; }
-                    else if(oppJob === 'KungFuPanda') { dodgeChance = 0.10; }
-                    
-                    state[opp].dodge--;
-                } else if(state[opp].job === 'Joker') {
-                    dodgeChance = 0.25; 
-                }
+            // 所有技能的基本命中率為 100%，只有在敵方有閃避層數時才會根據職業計算閃避率
+            let dodgeChance = 0.0; 
+            if(state[opp].dodge > 0) {
+                const oppJob = state[opp].job;
+                if(oppJob === 'Assassin') {
+                    dodgeChance = state[opp].focused ? 0.90 : 0.60;
+                    if(state[opp].dodge === 2 && state[opp].hp < state[opp].max) dodgeChance = 0.30; 
+                } else if(oppJob === 'Archer') { dodgeChance = 1.0; } 
+                else if(oppJob === 'Gunner') { dodgeChance = 0.70; } 
+                else if(oppJob === 'Boxer') { dodgeChance = 0.70; } 
+                else if(oppJob === 'Demon Hunter') { dodgeChance = 0.70; } 
+                else if(oppJob === 'Joker') { dodgeChance = 0.75; }
+                else if(oppJob === 'KungFuPanda') { dodgeChance = 0.10; }
+                state[opp].dodge--;
+            } else if(state[opp].job === 'Joker') {
+                dodgeChance = 0.25; 
+            }
 
-                if(Math.random() < dodgeChance) {
-                    pop(opp, "DODGED!", "var(--info)", 0);
-                    playSfx('en');
-                    checkWin();
-                    update();
-                    return;
-                }
+            // 熊貓大招不可被閃避
+            if(Math.random() < dodgeChance && s.d && s.t !== 'boxer_ult' && s.t !== 'rock_ult' && s.t !== 'panda_ult') {
+                pop(opp, "DODGED!", "var(--info)", 0);
+                playSfx('en');
+                checkWin();
+                update();
+                return;
             }
 
             // --- APPLY DAMAGE ---
@@ -1111,18 +1018,13 @@
                     baseD = Math.max(1, Math.floor(baseD * (1 - armor)));
                 }
 
-                // 【更正】護盾減傷修改：熊貓護盾減傷改為 5% (承受 95% 傷害)
-                if (s.t !== 'panda_ult') {
-                    if (state[opp].pandaGuard) {
-                        baseD = Math.floor(baseD * 0.95); // 減傷 5%
-                        state[opp].pandaGuard = false;
-                    } else if (state[opp].guard) {
-                        baseD = Math.floor(baseD * 0.2); // 減傷 80%
-                        state[opp].guard = false;
-                    }
+                // 完美護盾阻擋 (熊貓大招無視護盾)
+                if(state[opp].guard && s.t !== 'panda_ult') {
+                    baseD = Math.floor(baseD * 0.2);
+                    state[opp].guard = false;
                 }
 
-                // 反射機制與荊棘傷害
+                let isReflect = jobs[state[opp].job].skills.some(sk => sk.n === 'Barrier') && state[opp].reflect;
                 if(isReflect && s.t !== 'panda_ult') {
                     state[p].hp = Math.max(0, state[p].hp - baseD);
                     pop(p, `${baseD} (REFLECT)`, "var(--purple)", 0);
@@ -1135,12 +1037,19 @@
                     pop(opp, floatMsg, "var(--dmg)", hI);
                     playSfx('hit');
 
+                    // 熊貓受到傷害後 Chi 轉換機制
                     if(state[opp].job === 'KungFuPanda' && Math.random() < 0.30) {
                         state[opp].en = Math.min(10, state[opp].en + 1);
                         pop(opp, "+1 EN (CHI)", "var(--info)", 0);
                     }
                     if(state[opp].job === 'Warrior') state[opp].en = Math.min(10, state[opp].en + 1);
                     if(state[opp].job === 'Paladin' && Math.random() < 0.5) state[opp].en = Math.min(10, state[opp].en + 1);
+
+                    // [狂戰士負面被動] 被任何攻擊擊中時，EN自動減少 1
+                    if(state[opp].job === 'Berserker') {
+                        state[opp].en = Math.max(0, state[opp].en - 1);
+                        pop(opp, "-1 EN (被擊中代價)", "var(--purple)", 0);
+                    }
 
                     let hasThorns = state[opp].counter;
                     if(hasThorns) {
@@ -1150,7 +1059,8 @@
                 }
             }
 
-            if (attackIsFocused) {
+            // [核心修正：只有在確實是「傷害攻擊招式（s.d 存在）」結算後，才消耗並解除 Focus 狀態]
+            if (s.d && attackIsFocused) {
                 state[p].focused = false;
             }
 
@@ -1159,6 +1069,7 @@
             if(s.t === 'mark') state[opp].marked = true;
             if(s.t === 'harden' && s.v) state[p].hardened = (state[p].hardened || 0) + s.v;
 
+            // Poison 狀態
             if(s.t === 'leech_poison') {
                 state[opp].poison = (state[opp].poison || 0) + 3;
                 pop(opp, "POISONED!", "var(--green)", 0);
@@ -1169,6 +1080,7 @@
                 if(Math.random() <= s.v) state[opp].stunned = true;
             }
 
+            // Bleed 狀態
             if(s.t === 'bleed_self') {
                 state[opp].bleed = (state[opp].bleed || 0) + 3;
                 pop(opp, "BLEEDING!", "var(--dmg)", 0);
@@ -1180,6 +1092,7 @@
                 pop(p, "MARKED!", "var(--purple)", 0);
             }
 
+            // 治癒及吸血邏輯
             if((s.t === 'heal' || s.t === 'leech_poison') && s.v) {
                 let f = Array.isArray(s.v) ? r(s.v[0], s.v[1]) : s.v;
                 let ratio = (state[p].job === 'Alchemist') ? 1.3 : 1.0;
@@ -1196,6 +1109,7 @@
                 }
             }
 
+            // 控場效果
             if(s.t === 'stun' && Math.random() <= s.v) state[opp].stunned = true;
             if(s.t === 'stun_chance_15' && Math.random() <= s.v) state[opp].stunned = true;
             if(s.t === 'panda_punch' && Math.random() <= 0.15) state[opp].marked = true;
@@ -1242,10 +1156,10 @@
             }
             if(s.t === 'shield_breaker') {
                 state[opp].guard = false;
-                state[opp].pandaGuard = false;
                 pop(opp, "SHIELD BROKEN", "var(--rock)", 0);
             }
 
+            // 被動機制結算
             if(state[p].job === 'Mage' && Math.random() < 0.4) { state[p].en = Math.min(10, state[p].en + 1); pop(p, "REFUND 1 EN", "var(--info)", 0); }
             if(state[p].job === 'Butcher' && baseD > 0) { state[p].hp = Math.min(state[p].max, state[p].hp + 5); pop(p, "+5 (PASSIVE)", "var(--heal)", 0); }
             if(state[p].job === 'Joker' && Math.random() < 0.05) { state[p].dodge = 2; pop(p, "PASSIVE DODGE!", "var(--info)", 0); }
@@ -1321,7 +1235,7 @@
                 document.getElementById('selection-screen').style.display = 'none'; 
                 document.getElementById('arena').style.display = 'flex'; 
                 document.getElementById('btn-draw-event').style.display = 'block'; 
-                document.getElementById('wrestling-system-panel').style.display = 'block'; 
+                document.getElementById('save-system').style.display = 'none';
                 update(); 
             }
         }
@@ -1357,10 +1271,8 @@
 
                 let statusText = [];
                 if(state[p].stunned) statusText.push("暈眩 (STUN)");
-                if(state[p].guard) statusText.push("完美護盾 (GUARD)");
-                if(state[p].pandaGuard) statusText.push("熊貓護盾-減傷5% (PANDA GUARD)"); // 【更正】明確標示為減傷 5%
+                if(state[p].guard) statusText.push("完美護盾 (GUARD)"); 
                 if(state[p].reflect) statusText.push("鏡面反射 (REFLECT)");
-                if(state[p].counter) statusText.push("反傷 (THORNS)");
                 if(state[p].dodge > 0) statusText.push(`迴避中 (DODGE x${state[p].dodge})`);
                 if(state[p].weakened) statusText.push("虛弱 (WEAK)");
                 if(state[p].frost > 0) statusText.push(`凍結 (FROST x${state[p].frost})`);
@@ -1424,145 +1336,9 @@
             "枯竭風暴": "【枯竭風暴 / Depletion Storm】\n元素寂滅的風暴席捲戰場，使雙方當前的能量（EN）全部歸零。\n(A storm of element annihilation sweeps the arena, draining both players' current energy to 0.)",
             "命運天秤": "【命運天秤 / Scales of Fate】\n命運交織！當前生命值百分比較低者，將會與對手的生命值百分比直接對調。\n(The player with the lower HP percentage swaps their HP percentage with their opponent.)",
             "極寒永夜": "【極寒永夜 / Eternal Frost Night】\n絕對零度永夜降臨，雙方同時獲得 2 層「深層凍結（Deep Frost）」狀態。\n(An absolute-zero polar night falls, granting both players 2 stacks of Deep Frost status.)",
-            "神明沉默": "【神明沉默 / Divine Silence】\n任何凡人不可稱聖，雙方身上所有的增益與減益狀態（護盾、反傷、標記、凍結等）全部清除。\n(Clears all buffs and debuffs from both players.)",
+            "神明沉默": "【神明沉默 / Divine Silence】\n任何凡人不可稱聖，雙方身上目的所有增益與減益狀態（護盾、反傷、標記、凍結等）全部清除。\n(Clears all buffs and debuffs from both players.)",
             "烈焰風暴": "【烈焰風暴 / Blaze Storm】\n混亂的烈焰席捲戰場，對雙方同時造成 25 點真實傷害（無視防禦）。\n(Chaotic embers sweep the arena, dealing 25 pure damage to both players simultaneously.)"
         };
-
-        // ---------------- 角力系統邏輯程式碼 ----------------
-        function openWrestlingMode() {
-            if(isOver) return;
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            wrestleScores = { boy: 0, girl: 0 };
-            wrestleActive = false;
-            document.getElementById('wrestle-timer').innerText = "準備就緒";
-            document.getElementById('wrestle-start-btn').style.display = 'inline-block';
-            document.getElementById('wrestle-press-boy').disabled = true;
-            document.getElementById('wrestle-press-girl').disabled = true;
-            updateWrestleBar();
-            document.getElementById('wrestle-overlay').style.display = 'flex';
-        }
-
-        function closeWrestlingMode() {
-            clearInterval(wrestleTimerInterval);
-            document.getElementById('wrestle-overlay').style.display = 'none';
-        }
-
-        function startWrestlingCountdown() {
-            document.getElementById('wrestle-start-btn').style.display = 'none';
-            let count = 3;
-            document.getElementById('wrestle-timer').innerText = count;
-            playSfx('en');
-
-            let cdInterval = setInterval(() => {
-                count--;
-                if (count > 0) {
-                    document.getElementById('wrestle-timer').innerText = count;
-                    playSfx('en');
-                } else if (count === 0) {
-                    clearInterval(cdInterval);
-                    document.getElementById('wrestle-timer').innerText = "🔥 PRESS!!! 🔥";
-                    playSfx('shake');
-                    wrestleScores = { boy: 10, girl: 10 }; 
-                    updateWrestleBar();
-                    startWrestleMatch();
-                }
-            }, 800);
-        }
-
-        function startWrestleMatch() {
-            wrestleActive = true;
-            document.getElementById('wrestle-press-boy').disabled = false;
-            document.getElementById('wrestle-press-girl').disabled = false;
-
-            let timeLeft = 5.0;
-            wrestleTimerInterval = setInterval(() => {
-                timeLeft -= 0.1;
-                if (timeLeft <= 0) {
-                    clearInterval(wrestleTimerInterval);
-                    endWrestleMatch();
-                } else {
-                    document.getElementById('wrestle-timer').innerText = timeLeft.toFixed(1) + "s";
-                }
-            }, 100);
-        }
-
-        function wrestleTouch(e, player) {
-            if (!wrestleActive) return;
-            e.preventDefault(); 
-            wrestleHandler(player);
-        }
-
-        function wrestleClick(player) {
-            if (!wrestleActive) return;
-            wrestleHandler(player);
-        }
-
-        function wrestleHandler(player) {
-            playSfx('hit');
-            if (player === 'boy') {
-                wrestleScores.boy += 1;
-            } else {
-                wrestleScores.girl += 1;
-            }
-            updateWrestleBar();
-        }
-
-        function updateWrestleBar() {
-            let total = wrestleScores.boy + wrestleScores.girl;
-            if (total === 0) {
-                document.getElementById('wrestle-bar-boy').style.width = '50%';
-                document.getElementById('wrestle-bar-girl').style.width = '50%';
-                return;
-            }
-            let boyPct = (wrestleScores.boy / total) * 100;
-            let girlPct = 100 - boyPct;
-            document.getElementById('wrestle-bar-boy').style.width = boyPct + '%';
-            document.getElementById('wrestle-bar-girl').style.width = girlPct + '%';
-        }
-
-        function endWrestleMatch() {
-            wrestleActive = false;
-            document.getElementById('wrestle-press-boy').disabled = true;
-            document.getElementById('wrestle-press-girl').disabled = true;
-            playSfx('shake');
-
-            let winnerText = "";
-            if (wrestleScores.boy > wrestleScores.girl) {
-                winnerText = "🎉 BOY WINS THE WRESTLING! 🎉";
-            } else if (wrestleScores.girl > wrestleScores.boy) {
-                winnerText = "🎉 GIRL WINS THE WRESTLING! 🎉";
-            } else {
-                winnerText = "🤝 IT'S A TIE DRAG! 🤝";
-            }
-
-            document.getElementById('wrestle-timer').innerText = "戰鬥結束!";
-            document.getElementById('wrestle-win-title').innerText = winnerText;
-            
-            const continueBtn = document.getElementById('wrestle-continue-btn');
-            continueBtn.disabled = true; 
-            
-            let lockTime = 1.5; 
-            continueBtn.innerText = `繼續戰鬥 / CONTINUE (${lockTime.toFixed(1)}s)`;
-            
-            document.getElementById('wrestle-win-overlay').style.display = 'flex';
-
-            let lockInterval = setInterval(() => {
-                lockTime -= 0.1;
-                if (lockTime <= 0) {
-                    clearInterval(lockInterval);
-                    continueBtn.disabled = false; 
-                    continueBtn.innerText = "繼續戰鬥 / CONTINUE";
-                } else {
-                    continueBtn.innerText = `繼續戰鬥 / CONTINUE (${lockTime.toFixed(1)}s)`;
-                }
-            }, 100);
-        }
-
-        function closeWrestleWinOverlay() {
-            document.getElementById('wrestle-win-overlay').style.display = 'none';
-            closeWrestlingMode();
-        }
-        // ---------------------------------------------------
 
         initSelection();
     </script>
