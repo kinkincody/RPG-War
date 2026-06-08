@@ -338,7 +338,7 @@
                 </li>
                 <li>
                     <strong>7. 極寒永夜 / Eternal Frost Night</strong>
-                    <span>絕對零度的永夜降臨，雙方同時獲得 2 層「深層凍結（Deep Frost）」狀態。</span>
+                    <span>絕對零度永夜降臨，雙方同時獲得 2 層「深層凍結（Deep Frost）」狀態。</span>
                     <span class="event-en-desc">An absolute-zero polar night falls, granting both players 2 stacks of Deep Frost status simultaneously.</span>
                 </li>
                 <li>
@@ -911,7 +911,7 @@
             if(s.t === 'en_focus') { state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             if(s.t === 'heal_cleanse_mark') { state[p].marked = false; pop(p, "MARK CLEANSED", "var(--info)", 0); }
             if(s.t === 'mark_weaken_opp') { state[opp].marked = true; state[opp].weakened = true; pop(opp, "MARKED & WEAKENED", "var(--purple)", 0); }
-            if(s.t === 'en_dodge100') { state[p].dodge = 2; pop(p, "100% DODGE", "var(--info)", 0); }
+            if(s.t === 'en_dodge100') { state[p].dodge = 2; pop(p, "100% Dodge!", "var(--info)", 0); }
             
             if(s.t === 'en_cleanse_weak') { state[p].weakened = false; pop(p, "WEAK CLEANSED", "var(--info)", 0); }
             if(s.t === 'heal_cleanse_stun') { if(typeof state[p].stunned !== 'undefined') state[p].stunned = false; }
@@ -1066,6 +1066,7 @@
 
             // --- AFTER EFFECT BUFFS & DEBUFFS ---
             if(s.t === 'focus' || s.t === 'focus_attack') { state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
+            if(s.t === 'focus_attack') { state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             if(s.t === 'mark') state[opp].marked = true;
             if(s.t === 'harden' && s.v) state[p].hardened = (state[p].hardened || 0) + s.v;
 
@@ -1235,7 +1236,6 @@
                 document.getElementById('selection-screen').style.display = 'none'; 
                 document.getElementById('arena').style.display = 'flex'; 
                 document.getElementById('btn-draw-event').style.display = 'block'; 
-                document.getElementById('save-system').style.display = 'none';
                 update(); 
             }
         }
