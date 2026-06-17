@@ -778,7 +778,7 @@
             if(pState.frost > 0) activeBuffs.push(`【凍結 / FROST x${pState.frost}】: 冰霜覆蓋！下一次施展消耗能量技能時，能量消耗量加倍。\n(Frost cover! Your next EN-consuming skill will cost double/triple EN.)`);
             if(pState.focused) activeBuffs.push("【暴擊蓄力 / FOCUS】: 專注狀態，下一次輸出的傷害技能必定觸發 200% 暴擊。\n(Your next offensive action will guarantee a 100% critical strike.)");
             if(pState.marked) activeBuffs.push("【破甲標記 / MARK】: 護甲被完全撕裂，防禦歸零，受到傷害時無法享有減傷。\n(Defense armor becomes 0. Automatically takes unmitigated raw damage.)");
-            if(pState.poison > 0) activeBuffs.push(`【中毒 / POISON x${pState.poison}】: 每當增加或減少 AP（操作計數）時，將受到 3 點真實傷害。`);
+            if(pState.poison > 0) activeBuffs.push(`【中毒 / POISON x${pState.poison}】: 每當增加 or 減少 AP（操作計數）時，將受到 3 點真實傷害。`);
             if(pState.bleed > 0) activeBuffs.push(`【出血 / BLEED x${pState.bleed}】: 每當施展需要消耗能量（EN > 0）的招式時，將受到 8 點真實傷害。`);
 
             if(activeBuffs.length === 0) {
@@ -905,7 +905,7 @@
             if(s.t === 'perm_reduce_def') { jobs[state[opp].job].def = Math.max(0, jobs[state[opp].job].def - 0.04); pop(opp, "DEF DECREASED", "var(--purple)", 0); }
             if(s.t === 'en_heal10') { state[p].hp = Math.min(state[p].max, state[p].hp + 10); pop(p, "+10", "var(--heal)", 0); }
             
-            // Berserker Unique Blood Rage (能確實賦予 Focus)
+            // Berserker Unique Blood Rage 
             if(s.t === 'en_blood_rage') { state[p].hp = Math.max(1, state[p].hp - 5); pop(p, "-5 HP", "var(--dmg)", 0); state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             
             if(s.t === 'en_focus') { state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
@@ -960,7 +960,7 @@
             let isCrit = false;
             let critChance = (state[p].job === 'Berserker' ? 0.3 : (state[p].job === 'Assassin' ? 0.4 : 0.10));
             
-            // 核心：若攻擊發動前是 Focus 蓄力狀態，則必定觸發 200% 加成
+            // 核心 Focus 暴擊機制
             if(attackIsFocused) { 
                 isCrit = true; 
                 baseD *= 2.0; 
@@ -976,8 +976,7 @@
 
             if(s.t === 'exec' && state[opp].hp < (state[opp].max * 0.5)) { baseD *= 1.5; }
 
-            // --- DODGE framework ---
-            // 所有技能的基本命中率為 100%，只有在敵方有閃避層數時才會根據職業計算閃避率
+            // --- 【角力系統完美加回】DODGE & ACCURACY FRAMEWORK ---
             let dodgeChance = 0.0; 
             if(state[opp].dodge > 0) {
                 const oppJob = state[opp].job;
@@ -995,7 +994,7 @@
                 dodgeChance = 0.25; 
             }
 
-            // 熊貓大招不可被閃避
+            // 功夫熊貓大招為必中，其餘受閃避率影響
             if(Math.random() < dodgeChance && s.d && s.t !== 'boxer_ult' && s.t !== 'rock_ult' && s.t !== 'panda_ult') {
                 pop(opp, "DODGED!", "var(--info)", 0);
                 playSfx('en');
@@ -1037,7 +1036,7 @@
                     pop(opp, floatMsg, "var(--dmg)", hI);
                     playSfx('hit');
 
-                    // 熊貓受到傷害後 Chi 轉換機制
+                    // 熊貓被動 Chi 轉換
                     if(state[opp].job === 'KungFuPanda' && Math.random() < 0.30) {
                         state[opp].en = Math.min(10, state[opp].en + 1);
                         pop(opp, "+1 EN (CHI)", "var(--info)", 0);
@@ -1059,14 +1058,13 @@
                 }
             }
 
-            // [核心修正：只有在確實是「傷害攻擊招式（s.d 存在）」結算後，才消耗並解除 Focus 狀態]
+            // 【Focus機制：只有在真正打出傷害的技能結算後，才消耗 Focus 狀態】
             if (s.d && attackIsFocused) {
                 state[p].focused = false;
             }
 
             // --- AFTER EFFECT BUFFS & DEBUFFS ---
             if(s.t === 'focus' || s.t === 'focus_attack') { state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
-            if(s.t === 'focus_attack') { state[p].focused = true; pop(p, "FOCUS蓄力!", "var(--accent)", 0); }
             if(s.t === 'mark') state[opp].marked = true;
             if(s.t === 'harden' && s.v) state[p].hardened = (state[p].hardened || 0) + s.v;
 
@@ -1236,6 +1234,7 @@
                 document.getElementById('selection-screen').style.display = 'none'; 
                 document.getElementById('arena').style.display = 'flex'; 
                 document.getElementById('btn-draw-event').style.display = 'block'; 
+                // 【常駐顯示修正】：不再強制將 save-system 設為 none，使其在戰鬥畫面依然保留
                 update(); 
             }
         }
